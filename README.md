@@ -27,12 +27,22 @@ directory containing this README and, more importantly, a file called
 `pom.xml`. Then run this command:
 
 ```
-mvn clean install spring-boot:run
+mvn install spring-boot:run
 ```
 
 This does a full installation, including running unit tests, and then starts
 the server. This command **will not** complete -- the server will run in your
 terminal until you terminate it with `^C`.
+
+Once you've installed it the first time, you can skip doing an incremental
+compilation on nothing by just running this:
+
+```
+mvn spring-boot:run
+```
+
+However, if you update the source code in any way, you must install again to
+see your changes.
 
 ## Contributing
 
