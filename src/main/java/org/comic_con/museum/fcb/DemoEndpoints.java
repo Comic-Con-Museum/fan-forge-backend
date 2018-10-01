@@ -3,6 +3,7 @@ package org.comic_con.museum.fcb;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -94,7 +95,7 @@ public class DemoEndpoints {
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(value = "/upvote/exhibit/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/upvote/exhibit/{id}", method = RequestMethod.POST)
     public ResponseEntity supportExhibit(@PathVariable int id, @RequestParam String user) {
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
@@ -108,7 +109,7 @@ public class DemoEndpoints {
         }
     }
 
-    @RequestMapping(value = "/upvote/exhibit/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/upvote/exhibit/{id}", method = RequestMethod.DELETE)
     public ResponseEntity upvoteExhibit(@PathVariable int id, @RequestParam String user) {
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
