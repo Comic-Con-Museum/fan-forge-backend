@@ -46,16 +46,18 @@ see your changes.
 
 ## Contributing
 
-On that note, are you interested in helping with... that? There are three main
-ways to help:
+If you're interested in helping with this project, there are three big ways
+you can do it:
 
-1. Reporting bugs
+1. Finding and reporting bugs
 
     Did you find an issue somewhere in the site? Are things behaving wrong, or
     looking strange, or just not doing what you expect them to? You can submit
     a [bug report][gh-br-template], letting us know what's going wrong. 
     **Please watch the bug report**. We may need more information from you; if
-    you disappear, it'll be impossible to fix the issue.
+    you disappear, it'll be impossible to fix the issue, and we'll close the
+    issue. Please also let us know if the issue fixes itself -- we can look
+    at what changed and try to track it down.
 
 2. Requesting features
 
@@ -67,8 +69,8 @@ ways to help:
     
 3. Writing code
 
-    If you're a developer and want to contribute actual code, you can do that,
-    too! Look for issues tagged [help wanted][gh-hw-search],
+    If you're a software developer and want to contribute actual code, you can
+    do that, too! Look for issues tagged [help wanted][gh-hw-search],
     [good first issue][gh-gfi-search], or [both][gh-hw-gfi-search], and work
     on them. The contribution process isn't very complicated, but it helps us
     make sure no one does work that's already being done and keep everything
