@@ -8,9 +8,37 @@ import java.util.Set;
 
 public class Exhibit {
     public class Abbreviated {
-        public int getId() { return Exhibit.this.getId(); }
-        public String getTitle() { return Exhibit.this.getTitle(); }
-        public String getDescription() { return Exhibit.this.getDescription(); }
+        protected String user;
+
+        private Abbreviated(String user) {
+            this.user = user;
+        }
+
+        public int getId() { return Exhibit.this.id; }
+        public String getTitle() { return Exhibit.this.title; }
+        public String getDescription() { return Exhibit.this.description; }
+        public int getSupporterCount() { return Exhibit.this.supporters.size(); }
+        public boolean isSupported() { return Exhibit.this.supporters.contains(this.user); }
+    }
+
+    public class Full extends  Abbreviated {
+        private Full(String user) { super(user); }
+
+        public String getAuthor() { return Exhibit.this.author; }
+        public Instant getCreated() { return Exhibit.this.created; }
+    }
+
+    static class Input {
+        public void setTitle(String title) { this.title = title; }
+        public void setDescription(String description) { this.description = description; }
+
+        String title;
+        String description;
+        Input() {}
+        Input(String title, String description) {
+            this.title = title;
+            this.description = description;
+        }
     }
 
     private int id;
@@ -29,14 +57,14 @@ public class Exhibit {
         this.supporters = new HashSet<>();
     }
 
-    @JsonIgnore
-    public Abbreviated getAbbreviated() { return this.new Abbreviated(); }
+    public Abbreviated getAbbreviated(String user) { return this.new Abbreviated(user); }
+    public Full getFull(String user) { return this.new Full(user); }
 
-    public int getId() { return this.id; }
-    public String getTitle() { return this.title; }
-    public String getDescription() { return this.description; }
-    public String getAuthor() { return this.author; }
-    public Instant getCreated() { return this.created; }
+    public int getId() { return id; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public String getAuthor() { return author; }
+    public Instant getCreated() { return created; }
 
     public void setId(int id) { this.id = id; }
     public void setTitle(String value) { this.title = value; }
@@ -44,9 +72,6 @@ public class Exhibit {
     public void setAuthor(String value) { this.author = value; }
     public void setCreated(Instant value) { this.created = value; }
 
-    @JsonIgnore
-    public int getSupporterCount() { return this.supporters.size(); }
-    public Set<String> getSupporters() { return this.supporters; }
     public boolean addSupporter(String by) { return this.supporters.add(by); }
     public boolean removeSupporter(String by) { return this.supporters.remove(by); }
 }

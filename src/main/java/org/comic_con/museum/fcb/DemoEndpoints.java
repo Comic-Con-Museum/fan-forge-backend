@@ -34,25 +34,28 @@ public class DemoEndpoints {
         Collections.shuffle(titles);
 
         for (String title : titles) {
-            Integer id = createExhibit(new ExhibitInput(title, "Description for " + title)).getBody();
+            Integer id = createExhibit(new Exhibit.Input(title, "Description for " + title)).getBody();
             if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
         }
     }
 
+    // this should return a POJO, not a Map
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> getFeed(@PathVariable("type") String feedType, @RequestParam(value = "start", defaultValue = "0") int startIdx) {
+    public ResponseEntity<Map<String, Object>> getFeed(@PathVariable("type") String feedType, @RequestParam(defaultValue = "0") int startIdx) {
+        String user = "nic";
+        if (startIdx > exhibits.size()) return ResponseEntity.badRequest().build();
         List<Exhibit.Abbreviated> sorted;
         switch (feedType) {
             case "new":
                 sorted = exhibits.values().stream()
                                 .sorted(Comparator.comparing(Exhibit::getCreated))
-                                .map(e -> e.new Abbreviated())
+                                .map(e -> e.getAbbreviated(user))
                                 .collect(Collectors.toList());
                 break;
             case "alphabetical":
                 sorted = exhibits.values().stream()
                                 .sorted(Comparator.comparing(Exhibit::getTitle))
-                                .map(e -> e.new Abbreviated())
+                                .map(e -> e.getAbbreviated(user))
                                 .collect(Collectors.toList());
                 break;
             default:
@@ -70,28 +73,18 @@ public class DemoEndpoints {
     }
 
     @RequestMapping(value = "/exhibit/{id}")
-    public ResponseEntity<Exhibit> getExhibit(@PathVariable int id) {
+    public ResponseEntity<Exhibit.Full> getExhibit(@PathVariable int id) {
+        String user = "nic";
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(ex);
+        return ResponseEntity.ok(ex.getFull(user));
     }
 
-    static class ExhibitInput {
-        public void setTitle(String title) { this.title = title; }
-        public void setDescription(String description) { this.description = description; }
-
-        String title;
-        String description;
-        ExhibitInput() {}
-        ExhibitInput(String title, String description) {
-            this.title = title;
-            this.description = description;
-        }
-    }
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
-    public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitInput data) {
+    public ResponseEntity<Integer> createExhibit(@RequestBody Exhibit.Input data) {
+        String user = "nic";
         String title = data.title;
         if (null == title) {
             return ResponseEntity.badRequest().build();
@@ -101,9 +94,8 @@ public class DemoEndpoints {
             description = "This is a dummy exhibit with a dummy description.";
         }
         LocalDateTime created = LocalDateTime.now();
-        String author = "nic";
         ++lastInserted;
-        Exhibit exhibit = new Exhibit(lastInserted, title, description, "nic");
+        Exhibit exhibit = new Exhibit(lastInserted, title, description, user);
         exhibits.put(lastInserted, exhibit);
         return ResponseEntity.ok(lastInserted);
     }
@@ -116,11 +108,11 @@ public class DemoEndpoints {
 
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.POST)
     public ResponseEntity supportExhibit(@PathVariable int id) {
+        String user = "nic";
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
             return ResponseEntity.notFound().build();
         }
-        String user = "nic";
         boolean newSupporter = ex.addSupporter(user);
         if (newSupporter) {
             return ResponseEntity.ok().build();
@@ -131,11 +123,11 @@ public class DemoEndpoints {
 
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.DELETE)
     public ResponseEntity upvoteExhibit(@PathVariable int id) {
+        String user = "nic";
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
             return ResponseEntity.notFound().build();
         }
-        String user = "nic";
         boolean wasSupporter = ex.removeSupporter(user);
         if (wasSupporter) {
             return ResponseEntity.ok().build();
