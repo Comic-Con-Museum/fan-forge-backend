@@ -139,4 +139,10 @@ public class DemoEndpoints {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @RequestMapping("/*")
+    public ResponseEntity noSuchEndpoint(HttpServletRequest req) {
+        System.out.println("Non-existent " + req.getMethod() + " to " + req.getRequestURI());
+        return ResponseEntity.notFound().build();
+    }
 }
