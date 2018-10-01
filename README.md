@@ -19,6 +19,21 @@ The code has been made publicly available to encourage fans to get even more
 deeply involved, by helping to create the experience they use to create the
 experience they get at the Comic-Con Museum.
 
+## Running
+
+To run the backend, you need to have Maven installed and an internet
+connection (to download dependencies). Once you have both, navigate into the
+directory containing this README and, more importantly, a file called
+`pom.xml`. Then run this command:
+
+```
+mvn clean install spring-boot:run
+```
+
+This does a full installation, including running unit tests, and then starts
+the server. This command **will not** complete -- the server will run in your
+terminal until you terminate it with `^C`.
+
 ## Contributing
 
 On that note, are you interested in helping with... that? There are three main
