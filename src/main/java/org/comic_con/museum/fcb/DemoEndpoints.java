@@ -101,9 +101,11 @@ public class DemoEndpoints {
             description = "This is a dummy exhibit with a dummy description.";
         }
         LocalDateTime created = LocalDateTime.now();
-        Exhibit exhibit = new Exhibit(title, description);
+        String author = "nic";
+        ++lastInserted;
+        Exhibit exhibit = new Exhibit(lastInserted, title, description, "nic");
         exhibits.put(lastInserted, exhibit);
-        return ResponseEntity.ok(lastInserted++);
+        return ResponseEntity.ok(lastInserted);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
@@ -112,12 +114,13 @@ public class DemoEndpoints {
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(value = "/upvote/exhibit/{id}", method = RequestMethod.POST)
-    public ResponseEntity supportExhibit(@PathVariable int id, @RequestParam String user) {
+    @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.POST)
+    public ResponseEntity supportExhibit(@PathVariable int id) {
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
             return ResponseEntity.notFound().build();
         }
+        String user = "nic";
         boolean newSupporter = ex.addSupporter(user);
         if (newSupporter) {
             return ResponseEntity.ok().build();
@@ -126,12 +129,13 @@ public class DemoEndpoints {
         }
     }
 
-    @RequestMapping(value = "/upvote/exhibit/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity upvoteExhibit(@PathVariable int id, @RequestParam String user) {
+    @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity upvoteExhibit(@PathVariable int id) {
         Exhibit ex = exhibits.get(id);
         if (ex == null) {
             return ResponseEntity.notFound().build();
         }
+        String user = "nic";
         boolean wasSupporter = ex.removeSupporter(user);
         if (wasSupporter) {
             return ResponseEntity.ok().build();
