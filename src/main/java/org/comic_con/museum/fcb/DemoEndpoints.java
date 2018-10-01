@@ -7,10 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -19,37 +16,57 @@ public class DemoEndpoints {
     private static int lastInserted = 0;
 
     {
-        Integer id;
-        id = createExhibit(new ExhibitInput("Hello, World!", "demo desc 1")).getBody();
-        if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
-        id = createExhibit(new ExhibitInput("smook", "demo desc 2")).getBody();
-        if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
-        id = createExhibit(new ExhibitInput("Batman in the 1960s", "demo desc 3")).getBody();
-        if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
-        id = createExhibit(new ExhibitInput("Jason Voorhees", "demo desc 4")).getBody();
-        if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
-        id = createExhibit(new ExhibitInput("Yahtzee Croshaw", "demo desc 5")).getBody();
-        if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
+        final List<String> titles = Arrays.asList(
+                "Hello, World!",
+                "smook",
+                "Batman in the 1960s",
+                "Jason Voorhees",
+                "Yahtzee Croshaw",
+                "A banana",
+                "Why Sonic sucks",
+                "Why Sonic rules",
+                "Help, I've fallen and I can't get up!",
+                "HI, BILLY MAYS HERE!",
+                "Have you ever CCIDENTALLY HIT CAPSLOCK ISNTEAD OF a",
+                "How post-2008 retro-terminal-colored ASCII art affected mid-2010s Batman linework",
+                "~none of those are good exhibit titles, I'm sorry"
+        );
+        Collections.shuffle(titles);
+
+        for (String title : titles) {
+            Integer id = createExhibit(new ExhibitInput(title, "Description for " + title)).getBody();
+            if (null != id) exhibits.get(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
+        }
     }
 
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<List<Exhibit>> getFeed(@PathVariable("type") String feedType) {
+    public ResponseEntity<Map<String, Object>> getFeed(@PathVariable("type") String feedType, @RequestParam(value = "start", defaultValue = "0") int startIdx) {
+        List<Exhibit.Abbreviated> sorted;
         switch (feedType) {
             case "new":
-                return ResponseEntity.ok(
-                        exhibits.values().stream()
+                sorted = exhibits.values().stream()
                                 .sorted(Comparator.comparing(Exhibit::getCreated))
-                                .collect(Collectors.toList())
-                );
+                                .map(e -> e.new Abbreviated())
+                                .collect(Collectors.toList());
+                break;
             case "alphabetical":
-                return ResponseEntity.ok(
-                        exhibits.values().stream()
+                sorted = exhibits.values().stream()
                                 .sorted(Comparator.comparing(Exhibit::getTitle))
-                                .collect(Collectors.toList())
-                );
+                                .map(e -> e.new Abbreviated())
+                                .collect(Collectors.toList());
+                break;
             default:
                 return ResponseEntity.notFound().build();
         }
+        final int pageSize = 10;
+        int lastIdx = sorted.size() - 1;
+        sorted = sorted.subList(startIdx, Math.min(lastIdx, startIdx + pageSize));
+        Map<String, Object> respData = new HashMap<>();
+        respData.put("exhibits", sorted);
+        respData.put("startIdx", startIdx);
+        respData.put("count", lastIdx + 1);
+        respData.put("pageSize", pageSize);
+        return ResponseEntity.ok(respData);
     }
 
     @RequestMapping(value = "/exhibit/{id}")
