@@ -10,6 +10,8 @@ A few universal notes:
     path which can have multiple valid values, each of which does something
     very similar. The valid values are described in that endpoint's "Path
     parameters" section.
+*   Some endpoints and properties in normal endpoints are only returned to
+    logged-in users. These are noted in the relevant descriptions.
 
 ## `GET /feed/{type}`
 
@@ -98,6 +100,22 @@ aren't specified here, they're ignored. Invalid values will return a 400.
 }
 ```
 
+### Response body
+
+```
+integer
+```
+
+Returns the ID of the newly-created exhibit idea.
+
 ## `DELETE /exhibit/{id}`
+
+Delete an exhibit by ID.
+
 ## `POST /support/exhibit/{id}`
+
+Mark this exhibit as supported by the current user
+
 ## `DELETE /support/exhibit/{id}`
+
+Remove the current user's support for this exhibit
