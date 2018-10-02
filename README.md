@@ -44,6 +44,10 @@ mvn spring-boot:run
 However, if you update the source code in any way, you must install again to
 see your changes.
 
+## API documentation
+
+API documentation is available in API_DOCS.md.
+
 ## Contributing
 
 If you're interested in helping with this project, there are three big ways
