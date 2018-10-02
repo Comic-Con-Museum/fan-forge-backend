@@ -40,8 +40,20 @@ public class DemoEndpoints {
     }
 
     // this should return a POJO, not a Map
+
+    class FeedResponseData {
+        List<Exhibit.Abbreviated> exhibits;
+        int startIdx;
+        int count;
+        int pageSize;
+
+        public List<Exhibit.Abbreviated> getExhibits() { return exhibits; }
+        public int getStartIdx() { return startIdx; }
+        public int getCount() { return count; }
+        public int getPageSize() { return pageSize; }
+    }
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> getFeed(@PathVariable("type") String feedType, @RequestParam(defaultValue = "0") int startIdx) {
+    public ResponseEntity<FeedResponseData> getFeed(@PathVariable("type") String feedType, @RequestParam(defaultValue = "0") int startIdx) {
         String user = "nic";
         if (startIdx > exhibits.size()) return ResponseEntity.badRequest().build();
         List<Exhibit.Abbreviated> sorted;
@@ -64,11 +76,11 @@ public class DemoEndpoints {
         final int pageSize = 10;
         int lastIdx = sorted.size() - 1;
         sorted = sorted.subList(startIdx, Math.min(lastIdx, startIdx + pageSize));
-        Map<String, Object> respData = new HashMap<>();
-        respData.put("exhibits", sorted);
-        respData.put("startIdx", startIdx);
-        respData.put("count", lastIdx + 1);
-        respData.put("pageSize", pageSize);
+        FeedResponseData respData = new FeedResponseData();
+        respData.exhibits = sorted;
+        respData.startIdx = startIdx;
+        respData.count = lastIdx + 1;
+        respData.pageSize = pageSize;
         return ResponseEntity.ok(respData);
     }
 
