@@ -38,7 +38,8 @@ about any given exhibit, use `GET /exhibit/{id}`.
 
 ### Query parameters
 
-*   `startIdx`: The starting index of the list of exhibits to return.
+*   `startIdx` (**required**): The starting index of the list of exhibits to
+    return.
 
 ### Response
 

@@ -53,7 +53,7 @@ public class DemoEndpoints {
         public int getPageSize() { return pageSize; }
     }
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<FeedResponseData> getFeed(@PathVariable("type") String feedType, @RequestParam(defaultValue = "0") int startIdx) {
+    public ResponseEntity<FeedResponseData> getFeed(@PathVariable("type") String feedType, @RequestParam int startIdx) {
         String user = "nic";
         if (startIdx > exhibits.size()) return ResponseEntity.badRequest().build();
         List<Exhibit.Abbreviated> sorted;
