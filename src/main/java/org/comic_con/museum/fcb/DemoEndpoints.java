@@ -74,12 +74,13 @@ public class DemoEndpoints {
                 return ResponseEntity.notFound().build();
         }
         final int pageSize = 10;
-        int lastIdx = sorted.size() - 1;
-        sorted = sorted.subList(startIdx, Math.min(lastIdx, startIdx + pageSize));
+        int count = sorted.size();
+        int endIdx = Math.min(count, startIdx + pageSize);
+        List<Exhibit.Abbreviated> trimmed = sorted.subList(startIdx, endIdx);
         FeedResponseData respData = new FeedResponseData();
-        respData.exhibits = sorted;
+        respData.exhibits = trimmed;
         respData.startIdx = startIdx;
-        respData.count = lastIdx + 1;
+        respData.count = count;
         respData.pageSize = pageSize;
         return ResponseEntity.ok(respData);
     }
