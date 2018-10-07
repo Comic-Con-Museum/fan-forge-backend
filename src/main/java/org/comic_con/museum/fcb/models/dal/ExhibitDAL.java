@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO: Rewrite this class to do actual database access
+// TODO: Rewrite this class to do actual database access - maybe with JPA?
 // TODO: Might be better off as an instance class, we can have one for normal users and one for admins.
 // nb: all example SQL here is written in Postgres; ideally, our DAL will abstract it away entirely.
 /*
