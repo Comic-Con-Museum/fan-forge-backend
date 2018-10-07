@@ -34,4 +34,9 @@ public class Exhibit {
     public void setAuthor(String value) { this.author = value; }
     public void setCreated(Instant value) { this.created = value; }
     public void setSupporters(Set<String> value) { this.supporters = value; }
+
+    @Override
+    public String toString() {
+        return String.format("Exhibit %d: '%s' by %s}", getId(), getTitle(), getAuthor());
+    }
 }

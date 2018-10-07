@@ -2,17 +2,14 @@ package org.comic_con.museum.fcb.controllers;
 
 import org.comic_con.museum.fcb.models.dal.ExhibitDAL;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class ExhibitSupportEndpoints {
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.POST)
-    public ResponseEntity supportExhibit(@PathVariable int id) {
+    public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody String data) {
         String user = "nic";
-        boolean newSupporter = ExhibitDAL.addSupporter(id, user);
+        boolean newSupporter = ExhibitDAL.addSupporter(id, user, data);
         if (newSupporter) {
             return ResponseEntity.ok().build();
         } else {

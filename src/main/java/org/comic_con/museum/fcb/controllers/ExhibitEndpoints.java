@@ -53,21 +53,22 @@ public class ExhibitEndpoints {
         public int getPageSize() { return pageSize; }
     }
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<FeedResponseData> getFeed(@PathVariable("type") String feedType, @RequestParam int startIdx) {
+    public ResponseEntity<FeedResponseData> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx) {
         String user = "nic";
-        List<Exhibit> feed;
-        switch (feedType) {
+        ExhibitDAL.FeedType feedType;
+        switch (feedName) {
             case "new":
-                feed = ExhibitDAL.getFeed(startIdx, Comparator.comparing(Exhibit::getCreated));
+                feedType = ExhibitDAL.FeedType.NEW;
                 break;
             case "alphabetical":
-                feed = ExhibitDAL.getFeed(startIdx, Comparator.comparing(Exhibit::getTitle));
+                feedType = ExhibitDAL.FeedType.ALPHABETICAL;
                 break;
             default:
                 return ResponseEntity.notFound().build();
         }
+        List<Exhibit> feed = ExhibitDAL.getFeed(startIdx, feedType);
         if (feed == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.notFound().build();
         }
         FeedResponseData respData = new FeedResponseData();
         respData.exhibits = feed.stream().map(e -> new ExhibitAbbreviated(e, user)).collect(Collectors.toList());
@@ -94,14 +95,16 @@ public class ExhibitEndpoints {
         if (built == null) {
             return ResponseEntity.badRequest().build();
         }
-        ExhibitDAL.create(built);
-        return ResponseEntity.ok(built.getId());
+        return ResponseEntity.ok(ExhibitDAL.create(built));
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deleteExhibit(@PathVariable int id) {
         String user = "nic";
-        ExhibitDAL.delete(id, user);
-        return ResponseEntity.noContent().build();
+        if (ExhibitDAL.delete(id, user)) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
