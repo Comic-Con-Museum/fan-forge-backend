@@ -1,5 +1,8 @@
-# Compiled class file
-*.class
+# Compiler output
+target/
+
+# Properties file
+application.properties
 
 # Log file
 *.log
