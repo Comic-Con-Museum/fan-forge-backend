@@ -64,16 +64,16 @@ Once the JAR is correctly set up, three more things are needed:
 
 *   An S3-API-compatible object store.
 
-   ...which, in practice, means S3. However, [there are other options][minio],
-   if you either don't want to use AWS or want to run everything locally. You
-   need to provide:
-   
-   *   `s3.url`: The URL to the S3 server. If no protocol is included, it will
-       default to HTTPS.
-   *   `s3.region`: The region name that S3 is running in. If you're using a
-       separate service, the value to put here will depend on that.
-   *   `s3.access-key`: The access key. Sometimes called a username.
-   *   `s3.secret-key`: The secret key. Sometimes called a password.
+    ...which, in practice, means S3. However, [there are other options][minio],
+    if you either don't want to use AWS or want to run everything locally. You
+    need to provide:
+    
+    *   `s3.url`: The URL to the S3 server. If no protocol is included, it will
+        default to HTTPS.
+    *   `s3.region`: The region name that S3 is running in. If you're using a
+        separate service, the value to put here will depend on that.
+    *   `s3.access-key`: The access key. Sometimes called a username.
+    *   `s3.secret-key`: The secret key. Sometimes called a password.
 
 Once you have all three set up, just run the fat JAR like any other normal
 jarfile:
