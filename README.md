@@ -30,23 +30,27 @@ Once the JAR is correctly set up, three more things are needed:
 
 *   An `application.properties` file.
 
-    This is how both Spring and the backend are configured. Any configuration
-    format supported by Spring will work; however, this guide references
-    `application.properties`, and it's on you to convert between formats.
+    This is how both Spring and the backend are configured. The file should
+    be located in the same directory as the fat JAR, and called exactly
+    `application.properties`. Its format looks like this:
     
-    The following properties must be set:
+    ```properties
+    key.one=value of key 1
+    key.two=value of key 2
+    ```
     
-    *   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
-        S3 will be completely cleared when the server restarts. This defaults
-        to `false`, because it's usually only useful during some development.
+    Because the backend only reads properties through Spring, any format
+    and location that Spring supports will work here, too. Explaining all of
+    that is outside the scope of this guide, though.
 
-*   A PostgreSQL-compatible SQL server.
+*   A SQL database.
 
     [PostgreSQL][postgres] is open-source and available for every major
-    platform, and can be run locally.
+    platform, and can be run locally, and is what the default properties are
+    set up to expect.
     
-    To specify the SQL server to connect to, set the following properties in
-    `application.properties`:
+    You need to specify the SQL server to connect to, so set the following
+    properties in `application.properties`:
     
     *   `spring.datasource.url`: The URL of the database.
     *   `spring.datasource.username`: The username needed to connect to that
@@ -54,8 +58,9 @@ Once the JAR is correctly set up, three more things are needed:
     *    `spring.datasource.password`: The password for that username.
     
     There's also `spring.datasource.driver-class-name`. This should *not* need
-    to be set, but it may solve some issues, and is required to use a custom
-    driver.
+    to be set, but if you want to use a custom driver or encounter issues
+    about an appropriate driver class not being found, it may need to be
+    specified.
 
 *   An S3-API-compatible object store.
 
@@ -69,6 +74,30 @@ Once the JAR is correctly set up, three more things are needed:
        separate service, the value to put here will depend on that.
    *   `s3.access-key`: The access key. Sometimes called a username.
    *   `s3.secret-key`: The secret key. Sometimes called a password.
+
+Once you have all three set up, just run the fat JAR like any other normal
+jarfile:
+
+```
+java -jar fcb-fat.jar
+```
+
+It will automatically connect to the SQL server and S3 store you've provided.
+If it can't reach either, it'll fail fast and tell you what's missing. If
+you're missing your `application.properties` file, it may 
+
+### Additional configuration
+
+There are a few more optional configuration options available. You don't need
+to specify any of these in your `application.properties`, as they start out
+with sensible defaults.
+
+*   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
+    S3 will be completely cleared when the server restarts. This defaults
+    to `false`, because it's usually only useful during some development.
+*   `security.pwd.hash-strength`: How strong the password protection should
+    be. The higher the number, the safer the passwords, but the more time
+    authentication will take. This can normally be left at its default.
 
 ### Building a fat JAR from source
 
