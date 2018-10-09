@@ -83,21 +83,21 @@ java -jar fcb-fat.jar
 ```
 
 It will automatically connect to the SQL server and S3 store you've provided.
-If it can't reach either, it'll fail fast and tell you what's missing. If
-you're missing your `application.properties` file, it may 
+If it can't reach either, it'll fail fast and tell you what's missing.
 
 ### Additional configuration
 
-There are a few more optional configuration options available. You don't need
-to specify any of these in your `application.properties`, as they start out
-with sensible defaults.
+There are a few more optional configuration options available. In production,
+these **must** be left unspecified, as changing them could cause catastrophic
+data loss or severely compromise security. They're available only to make
+debugging easier.
 
 *   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
-    S3 will be completely cleared when the server restarts. This defaults
-    to `false`, because it's usually only useful during some development.
+    S3 will be completely cleared when the server starts.
 *   `security.pwd.hash-strength`: How strong the password protection should
     be. The higher the number, the safer the passwords, but the more time
-    authentication will take. This can normally be left at its default.
+    authentication will take. If set to 0, no hashing will be used.
+*   
 
 ### Building a fat JAR from source
 
