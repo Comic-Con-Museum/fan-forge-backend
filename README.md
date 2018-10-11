@@ -42,6 +42,15 @@ Once the JAR is correctly set up, three more things are needed:
     Because the backend only reads properties through Spring, any format
     and location that Spring supports will work here, too. Explaining all of
     that is outside the scope of this guide, though.
+    
+    This file **must not** be checked into Git.
+    
+    You need to specify:
+    *   `security.pwd.secret`: The secret which the password is protected with.
+        This ***must*** be kept secret and constant! It can be any random
+        sequence of characters, so long as it's secret. Changing this will
+        invalidate all of the passwords in the database, and the application
+        intentionally does **not** attempt to detect changes to this property.
 
 *   A SQL database.
 
