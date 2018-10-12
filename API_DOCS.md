@@ -12,6 +12,47 @@ A few universal notes:
     parameters" section.
 *   Some endpoints and properties in normal endpoints are only returned to
     logged-in users. These are noted in the relevant descriptions.
+*   If it's not mentioned, it doesn't exist or is ignored. For example, the
+    request body to `DELETE /exhibit/:id` is ignored, and therefore it's not
+    mentioned in the documentation.
+
+## Authentication
+
+Some endpoints require authentication. The FCB backend uses bearer token
+authentication. To get a token, `POST /login` with the login credentials of
+the user. To authenticate other requests, add the `Authenticate` header to
+the request, in this format:
+
+```
+Authentication: Bearer WW91ciB0b2tlbiBoZXJlIQ==
+```
+
+Note that the token is an arbitrary string, not necessarily base 64; simply
+pass whatever you get from `POST /login`.
+
+Any request over HTTP (as opposed to HTTPS) is treated as unauthenticated, and
+attempts to login over HTTP will be rejected.
+
+To log out, `DELETE /login` with an authenticated request.
+
+## `POST /login`
+
+Get a login token to authenticate as a user.
+
+### Request body
+
+```
+{
+  username: string // The username of the user to auth as.
+  password: string // The password of the user to auth as.
+}
+```
+
+### Response body
+
+## `DELETE /login`
+
+Logout
 
 ## `GET /feed/{type}`
 
@@ -25,9 +66,9 @@ that you want to be returned. The page size is fixed server-side, and cannot
 be specified. This is **not** the ID of the artifact, but the index in the
 feed to offset the start of the returned list by.
 
-The feed intentionally doesn't give the full details for an exhibit. It only
-gives what's reasonably necessary for a list of summaries. To get more details
-about any given exhibit, use `GET /exhibit/{id}`.
+To reduce response size, the feed doesn't give the full details for an exhibit.
+It only gives what's reasonably necessary for a list of summaries. To get more
+details about any given exhibit, use `GET /exhibit/{id}`.
 
 ### Path parameters
 
@@ -54,6 +95,7 @@ about any given exhibit, use `GET /exhibit/{id}`.
       title: string // The title or headline of the exhibit
       description: string // A much longer explanation, with details
       supporterCount: integer // How many people have supported the exhibit
+      // requires login:
       isSupported: boolean // Whether or not the current user supports it
     }
   ]
@@ -79,15 +121,20 @@ returns a 404.
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
   supporterCount: integer // How many people have supported the exhibit
-  isSupported: boolean // Whether or not the current user supports it
   author: string // The username of the creator of the exhibit
   created: datetime // When the exhibit was created
+  // requires login:
+  isSupported: boolean // Whether or not the current user supports it
 }
 ```
 
 ## `POST /exhibit`
 
 Create an exhibit with the given details.
+
+### Authentication
+
+You must be authenticated to hit this URL.
 
 ### Request body
 
@@ -113,10 +160,30 @@ Returns the ID of the newly-created exhibit idea.
 
 Delete an exhibit by ID.
 
+### Authentication
+
+You must be authenticated as the creator of the exhibit.
+
 ## `POST /support/exhibit/{id}`
 
-Mark this exhibit as supported by the current user
+Mark this exhibit as supported by the current user.
+
+### Authentication
+
+You must be authenticated to hit this endpoint. The user you're authenticated
+as is the one which will be recorded as supporting this endpoint.
+
+### Request body
+
+When supporting an exhibit, a survey is presented by the frontend. The request
+body contains the survey data. As the specific survey questions haven't been
+decided yet, this is taken as a raw string and saved as-is.
 
 ## `DELETE /support/exhibit/{id}`
 
 Remove the current user's support for this exhibit
+
+### Authentication
+
+You must be authenticated to hit this endpint. The user you're authenticated
+as is the one whose support will be removed.
