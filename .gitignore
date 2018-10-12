@@ -1,5 +1,10 @@
-# Compiled class file
-*.class
+# Compiler output
+target/
+
+# Properties file
+application.properties
+# ...but include the one with defaults that gets built into the jar
+!src/main/resources/application.properties
 
 # Log file
 *.log

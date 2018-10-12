@@ -48,11 +48,18 @@ Get a login token to authenticate as a user.
 }
 ```
 
-### Response body
+### Authentication
+
+This request must not be authenticated.
 
 ## `DELETE /login`
 
-Logout
+Invalidate the current token.
+
+### Authentication
+
+This request must be authenticated; the authentication token used is what
+will be invalidated.
 
 ## `GET /feed/{type}`
 
