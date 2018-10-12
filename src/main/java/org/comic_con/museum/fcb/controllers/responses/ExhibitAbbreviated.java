@@ -5,7 +5,7 @@ import org.comic_con.museum.fcb.models.User;
 
 public class ExhibitAbbreviated {
     private final User user;
-    private Exhibit exhibit;
+    private final Exhibit exhibit;
 
     public ExhibitAbbreviated(Exhibit showing, User toUser) {
         this.exhibit = showing;

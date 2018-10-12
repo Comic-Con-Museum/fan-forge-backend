@@ -17,8 +17,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
-    private Logger LOG = LoggerFactory.getLogger(Application.class);
+    private final Logger LOG = LoggerFactory.getLogger(Application.class);
 
+    // TODO Replace JDBC usage with JPA
     @Autowired
     JdbcTemplate jdbcTemplate;
 
@@ -39,7 +40,7 @@ public class Application implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         try {
             LOG.info("Demoing DB connection:");
             jdbcTemplate.execute("DROP TABLE IF EXISTS demo");

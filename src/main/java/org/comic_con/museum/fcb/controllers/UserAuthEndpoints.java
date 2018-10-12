@@ -4,6 +4,7 @@ import org.comic_con.museum.fcb.controllers.inputs.LoginParams;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,11 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class UserAuthEndpoints {
-    private Logger LOG = LoggerFactory.getLogger(UserAuthEndpoints.class);
+    private final Logger LOG = LoggerFactory.getLogger(UserAuthEndpoints.class);
+    @Value("${security.pwd.secret}")
+    private String secret;
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseEntity<String> login(@RequestBody LoginParams info) {
-        LOG.info("Logging in as user {}", info.username);
+        LOG.info("Logging in as user {} with password {}", info.username, info.password);
         return ResponseEntity.ok(info.username);
     }
 

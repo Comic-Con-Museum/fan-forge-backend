@@ -50,7 +50,7 @@ public class ExhibitDAL {
         NEW("created_on"),
         ALPHABETICAL("title");
 
-        private String column;
+        private final String column;
         FeedType(String column) { this.column = column; }
 
         public String column() { return this.column; }
@@ -137,10 +137,6 @@ public class ExhibitDAL {
         SELECT COUNT(*) FROM exhibits;
          */
         return exhibits.size();
-    }
-
-    public static boolean addSupporter(int eid, User user) {
-        return addSupporter(eid, user, null);
     }
 
     public static boolean addSupporter(int eid, User user, String surveyData) {

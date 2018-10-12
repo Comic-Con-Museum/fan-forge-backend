@@ -1,13 +1,10 @@
 package org.comic_con.museum.fcb.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,20 +25,17 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    @Value("${security.pwd.secret}")
-    private String secret;
-
-    private RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
+    private final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
             new AntPathRequestMatcher("/login", "POST"),
             new AntPathRequestMatcher("/exhibit/*", "GET"),
             new AntPathRequestMatcher("/feed/*", "GET")
     );
 
-    private RequestMatcher ADMIN_URLS = new AntPathRequestMatcher("/admin/**");
+    private final RequestMatcher ADMIN_URLS = new AntPathRequestMatcher("/admin/**");
 
-    private RequestMatcher AUTH_REQ_URLS = new NegatedRequestMatcher(PUBLIC_URLS);
+    private final RequestMatcher AUTH_REQ_URLS = new NegatedRequestMatcher(PUBLIC_URLS);
 
-    private TokenAuthProvider authProvider;
+    private final TokenAuthProvider authProvider;
 
     public WebSecurityConfig(@Autowired TokenAuthProvider authProvider) {
         this.authProvider = authProvider;
@@ -53,7 +47,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    public void configure(WebSecurity web) throws Exception {
+    public void configure(WebSecurity web) {
         web.ignoring().requestMatchers(PUBLIC_URLS);
     }
 

@@ -2,21 +2,14 @@ package org.comic_con.museum.fcb.controllers.inputs;
 
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ExhibitCreation {
-    private final Logger LOG = LoggerFactory.getLogger(ExhibitCreation.class);
+    private String title;
+    private String description;
 
-    public String title;
-    public String description;
-
-    ExhibitCreation() {
-        LOG.info("Creating ExhibitCreation");
-    }
+    ExhibitCreation() {}
 
     public ExhibitCreation(String title, String description) {
-        this();
         this.title = title;
         this.description = description;
     }

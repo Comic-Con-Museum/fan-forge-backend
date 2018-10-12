@@ -6,8 +6,8 @@ import org.comic_con.museum.fcb.models.User;
 import java.time.Instant;
 
 public class ExhibitFull {
-    private Exhibit exhibit;
-    private User user;
+    private final Exhibit exhibit;
+    private final User user;
 
     public ExhibitFull(Exhibit showing, User toUser) {
         this.exhibit = showing;

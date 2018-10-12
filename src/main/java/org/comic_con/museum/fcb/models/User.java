@@ -15,17 +15,17 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false, updatable = false)
-    private int uid;
+    private final int uid;
 
     @Column(unique = true, nullable = false)
-    private String username;
+    private final String username;
 
     // BCrypt hash
     @Column(length = 60, nullable = false)
-    private byte[] password;
+    private final byte[] password;
 
     @Column(name = "admin")
-    private boolean admin;
+    private final boolean admin;
 
     public User(int uid, String username, byte[] password, boolean admin) {
         this.uid = uid;
