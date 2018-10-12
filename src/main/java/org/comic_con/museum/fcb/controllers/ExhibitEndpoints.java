@@ -40,7 +40,7 @@ public class ExhibitEndpoints {
         );
         Collections.shuffle(titles);
 
-        User original = new User(0, "nic", null, false);
+        User original = new User("nic".hashCode(), "nic", null, false);
         for (String title : titles) {
             Integer id = createExhibit(title, "Description for " + title, original).getBody();
             if (null != id) {
