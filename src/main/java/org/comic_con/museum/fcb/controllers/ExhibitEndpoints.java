@@ -42,7 +42,7 @@ public class ExhibitEndpoints {
 
         User original = new User(0, "nic", null, false);
         for (String title : titles) {
-            Integer id = createExhibit(new ExhibitCreation(title, "Description for " + title), original).getBody();
+            Integer id = createExhibit(title, "Description for " + title, original).getBody();
             if (null != id) {
                 ExhibitDAL.getById(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
             }
@@ -84,9 +84,9 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
-    public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) {
+    public ResponseEntity<Integer> createExhibit(@RequestParam String title, @RequestParam String description, @AuthenticationPrincipal User user) {
         LOG.info("Creating exhibit from user {}", user);
-        Exhibit built = data.build(user);
+        Exhibit built = new ExhibitCreation(title, description).build(user);
         if (built == null) {
             return ResponseEntity.badRequest().build();
         }
