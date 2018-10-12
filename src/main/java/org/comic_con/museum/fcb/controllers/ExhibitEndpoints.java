@@ -3,9 +3,14 @@ package org.comic_con.museum.fcb.controllers;
 import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitAbbreviated;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
+import org.comic_con.museum.fcb.controllers.responses.Feed;
 import org.comic_con.museum.fcb.models.Exhibit;
+import org.comic_con.museum.fcb.models.User;
 import org.comic_con.museum.fcb.models.dal.ExhibitDAL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -15,6 +20,8 @@ import java.util.stream.Collectors;
 
 @RestController
 public class ExhibitEndpoints {
+    private final Logger LOG = LoggerFactory.getLogger(ExhibitEndpoints.class);
+
     {
         final List<String> titles = Arrays.asList(
                 "Hello, World!",
@@ -33,28 +40,17 @@ public class ExhibitEndpoints {
         );
         Collections.shuffle(titles);
 
+        User original = new User(0, "nic", null, false);
         for (String title : titles) {
-            Integer id = createExhibit(new ExhibitCreation(title, "Description for " + title)).getBody();
-            if (null != id) ExhibitDAL.getById(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
+            Integer id = createExhibit(new ExhibitCreation(title, "Description for " + title), original).getBody();
+            if (null != id) {
+                ExhibitDAL.getById(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
+            }
         }
     }
 
-    // this should return a POJO, not a Map
-
-    class FeedResponseData {
-        List<ExhibitAbbreviated> exhibits;
-        int startIdx;
-        int count;
-        int pageSize;
-
-        public List<ExhibitAbbreviated> getExhibits() { return exhibits; }
-        public int getStartIdx() { return startIdx; }
-        public int getCount() { return count; }
-        public int getPageSize() { return pageSize; }
-    }
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<FeedResponseData> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx) {
-        String user = "nic";
+    public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx, @AuthenticationPrincipal User user) {
         ExhibitDAL.FeedType feedType;
         switch (feedName) {
             case "new":
@@ -70,7 +66,7 @@ public class ExhibitEndpoints {
         if (feed == null) {
             return ResponseEntity.notFound().build();
         }
-        FeedResponseData respData = new FeedResponseData();
+        Feed respData = new Feed();
         respData.exhibits = feed.stream().map(e -> new ExhibitAbbreviated(e, user)).collect(Collectors.toList());
         respData.startIdx = startIdx;
         respData.count = ExhibitDAL.getTotalCount();
@@ -79,8 +75,7 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/exhibit/{id}")
-    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable int id) {
-        String user = "nic";
+    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
         Exhibit ex = ExhibitDAL.getById(id);
         if (ex == null) {
             return ResponseEntity.notFound().build();
@@ -89,8 +84,8 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
-    public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitCreation data) {
-        String user = "nic";
+    public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) {
+        LOG.info("Creating exhibit from user {}", user);
         Exhibit built = data.build(user);
         if (built == null) {
             return ResponseEntity.badRequest().build();

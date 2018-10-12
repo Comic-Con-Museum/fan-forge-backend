@@ -1,6 +1,7 @@
 package org.comic_con.museum.fcb.models.dal;
 
 import org.comic_con.museum.fcb.models.Exhibit;
+import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO: Rewrite this class to do actual database access - maybe with JPA?
-// TODO: Might be better off as an instance class, we can have one for normal users and one for admins.
+// TODO Replace all calls to this with JPA
 // nb: all example SQL here is written in Postgres; ideally, our DAL will abstract it away entirely.
 /*
 Schemae:
@@ -68,14 +68,14 @@ public class ExhibitDAL {
     }
 
     public static int create(Exhibit adding) {
-        LOG.info("Creating exhibit: {}", adding);
+        ++lastInserted;
+        LOG.info("Creating exhibit {} at ID {}", adding, lastInserted);
         /*
         INSERT INTO exhibits
         (title, description, author)
         VALUES (?, ?, ?)
         RETURNING id
          */
-        ++lastInserted;
         adding.setId(lastInserted);
         exhibits.put(lastInserted, adding);
         return lastInserted;
@@ -139,11 +139,11 @@ public class ExhibitDAL {
         return exhibits.size();
     }
 
-    public static boolean addSupporter(int eid, String user) {
+    public static boolean addSupporter(int eid, User user) {
         return addSupporter(eid, user, null);
     }
 
-    public static boolean addSupporter(int eid, String user, String surveyData) {
+    public static boolean addSupporter(int eid, User user, String surveyData) {
         LOG.info("Adding support by {} of {}, data: {}", user, eid, surveyData);
         /*
         INSERT INTO supporters (exhibit, user, survey_data)
@@ -153,11 +153,11 @@ public class ExhibitDAL {
         if (exhibit == null) {
             return false;
         }
-        exhibit.getSupporters().add(user);
+        exhibit.getSupporters().add(user.getId());
         return true;
     }
 
-    public static boolean removeSupporter(int eid, String user) {
+    public static boolean removeSupporter(int eid, User user) {
         LOG.info("Removing support by {} on {}", user, eid);
         /*
         DELETE FROM supporters
@@ -168,7 +168,7 @@ public class ExhibitDAL {
         if (exhibit == null) {
             return false;
         }
-        exhibit.getSupporters().remove(user);
+        exhibit.getSupporters().remove(user.getId());
         return true;
     }
 }

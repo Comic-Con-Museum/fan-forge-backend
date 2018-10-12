@@ -2,53 +2,112 @@ package org.comic_con.museum.fcb.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 // https://medium.com/@nydiarra/secure-a-spring-boot-rest-api-with-json-web-token-reference-to-angular-integration-e57a25806c50
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    @Value("${security.pwd.hash-strength")
-    int pwdHashStrength;
+    @Value("${security.pwd.secret}")
+    private String secret;
 
-    private UserDetailsService userDetailsService;
+    private RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
+            new AntPathRequestMatcher("/login", "POST"),
+            new AntPathRequestMatcher("/exhibit/*", "GET"),
+            new AntPathRequestMatcher("/feed/*", "GET")
+    );
 
-    public WebSecurityConfig(@Autowired UserDetailsService service) {
-        this.userDetailsService = service;
+    private RequestMatcher ADMIN_URLS = new AntPathRequestMatcher("/admin/**");
+
+    private RequestMatcher AUTH_REQ_URLS = new NegatedRequestMatcher(PUBLIC_URLS);
+
+    private TokenAuthProvider authProvider;
+
+    public WebSecurityConfig(@Autowired TokenAuthProvider authProvider) {
+        this.authProvider = authProvider;
     }
 
     @Override
-    protected AuthenticationManager authenticationManager() throws Exception {
-        return super.authenticationManager();
+    protected void configure(AuthenticationManagerBuilder auth) {
+        auth.authenticationProvider(authProvider);
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService)
-                .passwordEncoder(new BCryptPasswordEncoder(pwdHashStrength));
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().requestMatchers(PUBLIC_URLS);
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                // No sessions, because we want them to provide the auth token every
-                // time.
                 .sessionManagement()
+                    // No sessions, because we want them to provide the auth token
+                    // every time.
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                // TODO: Figure out how we can enable CSRF protections.
-                .csrf().disable();
+                .and()
+                .exceptionHandling()
+                    .defaultAuthenticationEntryPointFor(http403ForbiddenEntryPoint(), AUTH_REQ_URLS)
+                .and()
+                .authenticationProvider(authProvider)
+                .addFilterBefore(bearerTokenAuthFilter(), AnonymousAuthenticationFilter.class)
+                .authorizeRequests()
+                    // Require admin privileges to hit these endpoints
+                    .requestMatchers(ADMIN_URLS).hasRole("ADMIN")
+                    // No auth needed on the no-login-required endpoints
+                    .requestMatchers(PUBLIC_URLS).permitAll()
+                    // Require auth (but not admin) for the rest
+                    .requestMatchers(AUTH_REQ_URLS).authenticated()
+                .and()
+                .csrf().disable()
+                .formLogin().disable()
+                .httpBasic().disable()
+                .logout().disable();
+    }
 
+    @Bean
+    FilterRegistrationBean<BearerTokenAuthFilter> disableAutoRegistration(BearerTokenAuthFilter filter) {
+        FilterRegistrationBean<BearerTokenAuthFilter> registrationBean = new FilterRegistrationBean<>(filter);
+        registrationBean.setEnabled(false);
+        return registrationBean;
+    }
+
+    @Bean
+    AuthenticationSuccessHandler authSuccessHandler() {
+        SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler();
+        successHandler.setRedirectStrategy((req, res, url) -> {});
+        return successHandler;
+    }
+
+    @Bean
+    BearerTokenAuthFilter bearerTokenAuthFilter() throws Exception {
+        BearerTokenAuthFilter filter = new BearerTokenAuthFilter(AUTH_REQ_URLS);
+        filter.setAuthenticationManager(authenticationManager());
+        filter.setAuthenticationSuccessHandler(authSuccessHandler());
+        return filter;
+    }
+
+    @Bean
+    AuthenticationEntryPoint http403ForbiddenEntryPoint() {
+        return new Http403ForbiddenEntryPoint();
     }
 }
