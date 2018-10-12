@@ -42,6 +42,15 @@ Once the JAR is correctly set up, three more things are needed:
     Because the backend only reads properties through Spring, any format
     and location that Spring supports will work here, too. Explaining all of
     that is outside the scope of this guide, though.
+    
+    This file **must not** be checked into Git.
+    
+    You need to specify:
+    *   `security.pwd.secret`: The secret which the password is protected with.
+        This ***must*** be kept secret and constant! It can be any random
+        sequence of characters, so long as it's secret. Changing this will
+        invalidate all of the passwords in the database, and the application
+        intentionally does **not** attempt to detect changes to this property.
 
 *   A SQL database.
 
@@ -64,16 +73,16 @@ Once the JAR is correctly set up, three more things are needed:
 
 *   An S3-API-compatible object store.
 
-   ...which, in practice, means S3. However, [there are other options][minio],
-   if you either don't want to use AWS or want to run everything locally. You
-   need to provide:
-   
-   *   `s3.url`: The URL to the S3 server. If no protocol is included, it will
-       default to HTTPS.
-   *   `s3.region`: The region name that S3 is running in. If you're using a
-       separate service, the value to put here will depend on that.
-   *   `s3.access-key`: The access key. Sometimes called a username.
-   *   `s3.secret-key`: The secret key. Sometimes called a password.
+    ...which, in practice, means S3. However, [there are other options][minio],
+    if you either don't want to use AWS or want to run everything locally. You
+    need to provide:
+    
+    *   `s3.url`: The URL to the S3 server. If no protocol is included, it will
+        default to HTTPS.
+    *   `s3.region`: The region name that S3 is running in. If you're using a
+        separate service, the value to put here will depend on that.
+    *   `s3.access-key`: The access key. Sometimes called a username.
+    *   `s3.secret-key`: The secret key. Sometimes called a password.
 
 Once you have all three set up, just run the fat JAR like any other normal
 jarfile:
@@ -83,21 +92,21 @@ java -jar fcb-fat.jar
 ```
 
 It will automatically connect to the SQL server and S3 store you've provided.
-If it can't reach either, it'll fail fast and tell you what's missing. If
-you're missing your `application.properties` file, it may 
+If it can't reach either, it'll fail fast and tell you what's missing.
 
 ### Additional configuration
 
-There are a few more optional configuration options available. You don't need
-to specify any of these in your `application.properties`, as they start out
-with sensible defaults.
+There are a few more optional configuration options available. In production,
+these **must** be left unspecified, as changing them could cause catastrophic
+data loss or severely compromise security. They're available only to make
+debugging easier.
 
 *   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
-    S3 will be completely cleared when the server restarts. This defaults
-    to `false`, because it's usually only useful during some development.
+    S3 will be completely cleared when the server starts.
 *   `security.pwd.hash-strength`: How strong the password protection should
     be. The higher the number, the safer the passwords, but the more time
-    authentication will take. This can normally be left at its default.
+    authentication will take. If set to 0, no hashing will be used.
+*   
 
 ### Building a fat JAR from source
 
