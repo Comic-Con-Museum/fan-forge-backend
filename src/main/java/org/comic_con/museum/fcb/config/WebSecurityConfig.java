@@ -28,7 +28,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
             new AntPathRequestMatcher("/login", "POST"),
             new AntPathRequestMatcher("/exhibit/*", "GET"),
-            new AntPathRequestMatcher("/feed/*", "GET")
+            new AntPathRequestMatcher("/feed/*", "GET"),
+            new AntPathRequestMatcher("/healthcheck/**", "GET")
     );
 
     private final RequestMatcher ADMIN_URLS = new AntPathRequestMatcher("/admin/**");
