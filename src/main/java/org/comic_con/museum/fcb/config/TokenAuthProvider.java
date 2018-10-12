@@ -22,6 +22,6 @@ public class TokenAuthProvider extends AbstractUserDetailsAuthenticationProvider
     protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         // TODO replace with JPA call
         LOG.info("Getting user {}", username);
-        return new User(0, username, null, username.equals("admin"));
+        return new User(username.hashCode(), username, null, username.equals("admin"));
     }
 }
