@@ -149,6 +149,11 @@ public class DemoEndpoints {
         }
     }
 
+    @RequestMapping(value = "/healthcheck", method = RequestMethod.GET)
+    public ResponseEntity healthheck() {
+        return ResponseEntity.ok("Healthcheck OK");
+    }
+
     @RequestMapping("/*")
     public ResponseEntity noSuchEndpoint(HttpServletRequest req) {
         System.out.println("Non-existent " + req.getMethod() + " to " + req.getRequestURI());
