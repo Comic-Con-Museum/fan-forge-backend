@@ -54,9 +54,9 @@ public class User implements UserDetails {
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (admin) {
-            return Collections.emptyList();
-        } else {
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            return Collections.emptyList();
         }
     }
 
