@@ -26,10 +26,17 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
+            // Everyone needs access to POST /login to get bearer tokens
             new AntPathRequestMatcher("/login", "POST"),
+            // Getting exhibit details and the feeds is available to everyone
             new AntPathRequestMatcher("/exhibit/*", "GET"),
             new AntPathRequestMatcher("/feed/*", "GET"),
-            new AntPathRequestMatcher("/healthcheck/**", "GET")
+            // Healthcheck is used for automatic deployment and monitoring, and
+            //  shouldn't require auth
+            new AntPathRequestMatcher("/healthcheck/**", "GET"),
+            // And /error is the default error page; it should never be shown,
+            //  but in case it is, we don't want to give a 404.
+            new AntPathRequestMatcher("/error", "GET")
     );
 
     private final RequestMatcher ADMIN_URLS = new AntPathRequestMatcher("/admin/**");
@@ -61,7 +68,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .exceptionHandling()
-                    .defaultAuthenticationEntryPointFor(http403ForbiddenEntryPoint(), AUTH_REQ_URLS)
+                    .defaultAuthenticationEntryPointFor(new Http403ForbiddenEntryPoint(), AUTH_REQ_URLS)
                 .and()
                 .authenticationProvider(authProvider)
                 .addFilterBefore(bearerTokenAuthFilter(), AnonymousAuthenticationFilter.class)
@@ -79,30 +86,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logout().disable();
     }
 
-    @Bean
-    FilterRegistrationBean<BearerTokenAuthFilter> disableAutoRegistration(BearerTokenAuthFilter filter) {
-        FilterRegistrationBean<BearerTokenAuthFilter> registrationBean = new FilterRegistrationBean<>(filter);
-        registrationBean.setEnabled(false);
-        return registrationBean;
-    }
-
-    @Bean
-    AuthenticationSuccessHandler authSuccessHandler() {
-        SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler();
-        successHandler.setRedirectStrategy((req, res, url) -> {});
-        return successHandler;
-    }
-
-    @Bean
     BearerTokenAuthFilter bearerTokenAuthFilter() throws Exception {
+        // create the token auth filter for attachment
         BearerTokenAuthFilter filter = new BearerTokenAuthFilter(AUTH_REQ_URLS);
         filter.setAuthenticationManager(authenticationManager());
-        filter.setAuthenticationSuccessHandler(authSuccessHandler());
+        SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler();
+        successHandler.setRedirectStrategy((req, res, url) -> {});
+        filter.setAuthenticationSuccessHandler(successHandler);
         return filter;
-    }
-
-    @Bean
-    AuthenticationEntryPoint http403ForbiddenEntryPoint() {
-        return new Http403ForbiddenEntryPoint();
     }
 }
