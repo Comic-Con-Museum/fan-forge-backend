@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @RestController
 public class ExhibitEndpoints {
-    private final Logger LOG = LoggerFactory.getLogger(ExhibitEndpoints.class);
+    private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
 
     {
         final List<String> titles = Arrays.asList(

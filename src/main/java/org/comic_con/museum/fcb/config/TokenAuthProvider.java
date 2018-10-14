@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TokenAuthProvider extends AbstractUserDetailsAuthenticationProvider {
-    private final Logger LOG = LoggerFactory.getLogger(TokenAuthProvider.class);
+    private final Logger LOG = LoggerFactory.getLogger("auth.provider");
 
     @Override
     protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {

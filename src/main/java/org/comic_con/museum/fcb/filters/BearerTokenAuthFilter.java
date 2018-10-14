@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.config;
+package org.comic_con.museum.fcb.filters;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class BearerTokenAuthFilter extends AbstractAuthenticationProcessingFilter {
-    private static final Logger LOG = LoggerFactory.getLogger(BearerTokenAuthFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger("filter.auth");
 
-    BearerTokenAuthFilter(RequestMatcher requestMatcher) {
+    public BearerTokenAuthFilter(RequestMatcher requestMatcher) {
         super(requestMatcher);
     }
 

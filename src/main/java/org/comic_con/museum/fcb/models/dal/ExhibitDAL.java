@@ -56,7 +56,7 @@ public class ExhibitDAL {
         public String column() { return this.column; }
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExhibitDAL.class);
+    private static final Logger LOG = LoggerFactory.getLogger("old.dal.exhibit");
 
     public static final int FEED_PAGE_SIZE = 10;
 

@@ -4,7 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-//@Entity
+@Entity
 public class Support {
     @ManyToOne
     @JoinColumn(name = "supported_eid")

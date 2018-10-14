@@ -17,7 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
-    private final Logger LOG = LoggerFactory.getLogger(Application.class);
+    private final Logger LOG = LoggerFactory.getLogger("application");
 
     // TODO Replace JDBC usage with JPA
     @Autowired

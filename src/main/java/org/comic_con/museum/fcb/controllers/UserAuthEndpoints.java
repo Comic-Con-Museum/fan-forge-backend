@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class UserAuthEndpoints {
-    private final Logger LOG = LoggerFactory.getLogger(UserAuthEndpoints.class);
+    private final Logger LOG = LoggerFactory.getLogger("endpoints.auth");
     @Value("${security.pwd.secret}")
     private String secret;
 
