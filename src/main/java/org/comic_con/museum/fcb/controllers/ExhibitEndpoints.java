@@ -94,8 +94,7 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity deleteExhibit(@PathVariable int id) {
-        String user = "nic";
+    public ResponseEntity deleteExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
         if (ExhibitDAL.delete(id, user)) {
             return ResponseEntity.noContent().build();
         } else {

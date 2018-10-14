@@ -26,7 +26,7 @@ public class HealthcheckEndpoints {
     public ResponseEntity<Map<String, Boolean>> allHealthcheck() {
         Map<String, Boolean> successes = new HashMap<>();
         successes.put("db", dbHealthcheck().getStatusCode().is2xxSuccessful());
-        successes.put("s3", dbHealthcheck().getStatusCode().is2xxSuccessful());
+        successes.put("s3", s3Healthcheck().getStatusCode().is2xxSuccessful());
         return new ResponseEntity<>(successes, successes.containsValue(false) ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.OK);
     }
 }
