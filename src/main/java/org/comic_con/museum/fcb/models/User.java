@@ -1,6 +1,8 @@
 package org.comic_con.museum.fcb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,18 +12,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 
-@Entity
+//@Entity
 public class User implements UserDetails {
+    Logger LOG = LoggerFactory.getLogger("dao.user");
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false, updatable = false)
     private final int uid;
 
-    @Column(unique = true, nullable = false)
     private final String username;
 
-    // BCrypt hash
-    @Column(length = 60, nullable = false)
+    // BCrypt hash is 60 characters long
+    @Lob
+    @Column(length = 60)
     private final byte[] password;
 
     @Column(name = "admin")

@@ -18,7 +18,6 @@ public class ExhibitCreation {
     public void setDescription(String description) { this.description = description; }
 
     public Exhibit build(User author) {
-        // it's not inserted yet, so its ID can't be trusted
-        return new Exhibit(-1, this.title, this.description, author.getUsername());
+        return new Exhibit(this.title, this.description, author);
     }
 }

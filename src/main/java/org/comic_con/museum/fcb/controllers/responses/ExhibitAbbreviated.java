@@ -15,6 +15,11 @@ public class ExhibitAbbreviated {
     public int getId() { return this.exhibit.getId(); }
     public String getTitle() { return this.exhibit.getTitle(); }
     public String getDescription() { return this.exhibit.getDescription(); }
-    public int getSupporterCount() { return this.exhibit.getSupporters().size(); }
-    public boolean isSupported() { return this.user != null && this.exhibit.getSupporters().contains(this.user.getId()); }
+    public int getSupporterCount() { return this.exhibit.getSupports().size(); }
+    public boolean isSupported() {
+        return this.user != null &&
+                this.exhibit.getSupports().stream().anyMatch(
+                        s -> s.user.getUsername().equals(user.getUsername())
+                );
+    }
 }

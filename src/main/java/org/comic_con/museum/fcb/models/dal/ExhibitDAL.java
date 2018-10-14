@@ -82,7 +82,7 @@ public class ExhibitDAL {
     }
 
     // TODO Should this return an enum for more information?
-    public static boolean delete(int id, String user) {
+    public static boolean delete(int id, User user) {
         LOG.info("{} attempting to delete: {}", user, id);
         /*
         DELETE FROM exhibits
@@ -149,7 +149,7 @@ public class ExhibitDAL {
         if (exhibit == null) {
             return false;
         }
-        exhibit.getSupporters().add(user.getId());
+        exhibit.addSupporter(user);
         return true;
     }
 
@@ -164,7 +164,7 @@ public class ExhibitDAL {
         if (exhibit == null) {
             return false;
         }
-        exhibit.getSupporters().remove(user.getId());
+        exhibit.removeSupporter(user);
         return true;
     }
 }
