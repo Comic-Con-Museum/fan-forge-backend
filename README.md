@@ -56,7 +56,7 @@ Once the JAR is correctly set up, three more things are needed:
 
     [PostgreSQL][postgres] is open-source and available for every major
     platform, and can be run locally, and is what the default properties are
-    set up to expect.
+    set up to expect. 
     
     You need to specify the SQL server to connect to, so set the following
     properties in `application.properties`:
@@ -173,3 +173,4 @@ standards we expect. See CONTRIBUTING.md for more information.
  [gh-hw-search]: https://github.com/Comic-ConMuseum/fan-curation-spring/labels/help%20wanted
  [gh-hw-gfi-search]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues?q=is%3Aopen+label%3A%22good+first+issue%22+label%3A%22help+wanted%22
  [minio]: https://minio.io/
+ [postgres]: https://www.postgresql.org/download/
