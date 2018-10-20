@@ -1,12 +1,11 @@
 package org.comic_con.museum.fcb.controllers;
 
 import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
-import org.comic_con.museum.fcb.controllers.responses.ExhibitAbbreviated;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
 import org.comic_con.museum.fcb.controllers.responses.Feed;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.models.dal.ExhibitDAL;
+import org.comic_con.museum.fcb.models.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,7 +20,11 @@ import java.util.stream.Collectors;
 public class ExhibitEndpoints {
     private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
 
-    {
+    private ExhibitQueryBean exhibits;
+    
+    public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean) {
+        this.exhibits = exhibitQueryBean;
+        
         final List<String> titles = Arrays.asList(
                 "Hello, World!",
                 "smook",
@@ -42,63 +44,52 @@ public class ExhibitEndpoints {
 
         User original = new User("nic".hashCode(), "nic", null, false);
         for (String title : titles) {
-            Integer id = createExhibit(new ExhibitCreation(title, "Description for " + title), original).getBody();
-            if (null != id) {
-                ExhibitDAL.getById(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
-            }
+            Integer id = createExhibit(new ExhibitCreation(
+                    title,
+                    "Description for " + title,
+                    new String[] { "tag1", "tag2" }
+            ), original).getBody();
         }
     }
 
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx, @AuthenticationPrincipal User user) {
-        ExhibitDAL.FeedType feedType;
         switch (feedName) {
             case "new":
-                feedType = ExhibitDAL.FeedType.NEW;
+                LOG.info("NEW feed");
                 break;
             case "alphabetical":
-                feedType = ExhibitDAL.FeedType.ALPHABETICAL;
+                LOG.info("ALPHABETICAL feed");
                 break;
             default:
                 return ResponseEntity.notFound().build();
         }
-        List<Exhibit> feed = ExhibitDAL.getFeed(startIdx, feedType);
-        if (feed == null) {
-            return ResponseEntity.notFound().build();
-        }
-        Feed respData = new Feed();
-        respData.exhibits = feed.stream().map(e -> new ExhibitAbbreviated(e, user)).collect(Collectors.toList());
-        respData.startIdx = startIdx;
-        respData.count = ExhibitDAL.getTotalCount();
-        respData.pageSize = ExhibitDAL.FEED_PAGE_SIZE;
+        Feed respData = new Feed(
+                startIdx,
+                7,
+                new Feed.Entry(0, "item 0", "desc", 4),
+                new Feed.Entry(1, "item 1", "desc", 4),
+                new Feed.Entry(2, "item 2", "desc", 4),
+                new Feed.Entry(3, "item 3", "desc", 4),
+                new Feed.Entry(4, "item 4", "desc", 4),
+                new Feed.Entry(5, "item 5", "desc", 4),
+                new Feed.Entry(6, "item 6", "desc", 4)
+        );
         return ResponseEntity.ok(respData);
     }
 
     @RequestMapping(value = "/exhibit/{id}")
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
-        Exhibit ex = ExhibitDAL.getById(id);
-        if (ex == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new ExhibitFull(ex, user));
+        return ResponseEntity.ok(new ExhibitFull(id, "item " + id, "asda", 3, 15, Instant.now()));
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
     public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) {
-        LOG.info("Creating exhibit from user {}", user);
-        Exhibit built = data.build(user);
-        if (built == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(ExhibitDAL.create(built));
+        return ResponseEntity.ok(8);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deleteExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
-        if (ExhibitDAL.delete(id, user)) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.noContent().build();
     }
 }

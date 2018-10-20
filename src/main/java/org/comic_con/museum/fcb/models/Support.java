@@ -1,22 +1,21 @@
 package org.comic_con.museum.fcb.models;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
-@Entity
 public class Support {
-    @ManyToOne
-    @JoinColumn(name = "supported_eid")
-    public Exhibit exhibit;
-    @ManyToOne
-    @JoinColumn(name = "supporter_uid")
-    public User user;
-    
+    private int id;
+    private int exhibit;
+    private int user;
     // TODO: Survey data
     
-    public Support(Exhibit of, User by) {
-        this.exhibit = of;
-        this.user = by;
+    public Support(int sid, int exhibit, int user) {
+        this.id = sid;
+        this.exhibit = exhibit;
+        this.user = user;
     }
+    
+    public int getId() { return id; }
+    public int getExhibit() { return exhibit; }
+    public int getUser() { return user; }
+    
+    public void setExhibit(int exhibit) { this.exhibit = exhibit; }
+    public void setUser(int user) { this.user = user; }
 }

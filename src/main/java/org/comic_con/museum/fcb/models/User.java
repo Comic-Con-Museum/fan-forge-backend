@@ -7,28 +7,17 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 
-//@Entity
 public class User implements UserDetails {
-    Logger LOG = LoggerFactory.getLogger("dao.user");
+    private static final Logger LOG = LoggerFactory.getLogger("dao.user");
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private final int uid;
-
-    private final String username;
-
-    // BCrypt hash is 60 characters long
-    @Lob
-    @Column(length = 60)
-    private final byte[] password;
-
-    @Column(name = "admin")
-    private final boolean admin;
+    private long uid;
+    private String username;
+    private byte[] password;
+    private boolean admin;
 
     public User(int uid, String username, byte[] password, boolean admin) {
         this.uid = uid;
@@ -37,7 +26,7 @@ public class User implements UserDetails {
         this.admin = admin;
     }
 
-    public int getId() {
+    public long getId() {
         return this.uid;
     }
 

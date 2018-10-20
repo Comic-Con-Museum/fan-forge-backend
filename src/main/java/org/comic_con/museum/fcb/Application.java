@@ -6,6 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import org.comic_con.museum.fcb.models.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class Application implements CommandLineRunner {
     // TODO Replace JDBC usage with JPA
     @Autowired
     JdbcTemplate jdbcTemplate;
+    
+    @Autowired
+    ExhibitQueryBean exhibits;
 
     @Value("${s3.access-key}")
     String accessKey;
@@ -34,6 +38,9 @@ public class Application implements CommandLineRunner {
 
     @Value("${s3.region}")
     String region;
+    
+    @Value("${fcb.reset-on-start}")
+    boolean resetOnStart;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -70,6 +77,15 @@ public class Application implements CommandLineRunner {
             LOG.info("Done with S3 stuff");
         } catch (Exception e) {
             LOG.error("Error occurred while doing S3 stuff", e);
+        }
+        
+        try {
+            LOG.info("Initializing DB");
+            exhibits.setupExhibitTable(resetOnStart);
+            LOG.info("Done initializing DB");
+        } catch (Exception e) {
+            LOG.error("Failed while initializing DB", e);
+            throw e; // crash on error, but log it first
         }
     }
 }
