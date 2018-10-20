@@ -3,6 +3,7 @@ package org.comic_con.museum.fcb.controllers;
 import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
 import org.comic_con.museum.fcb.controllers.responses.Feed;
+import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
@@ -52,17 +53,24 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/exhibit/{id}")
-    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(new ExhibitFull(id, "item " + id, "asda", 3, 15, Instant.now()));
+    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
+        Exhibit ex = exhibits.getById(id);
+        return ResponseEntity.ok(new ExhibitFull(
+                ex.getId(), ex.getTitle(), ex.getDescription(), 4, ex.getAuthor(), ex.getCreated(), ex.getTags()
+        ));
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
-    public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(8);
+    public ResponseEntity<Long> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) throws SQLException {
+        long id = exhibits.create(new Exhibit(
+                0, data.getTitle(), data.getDescription(), user.getId(), Instant.now(), data.getTags()
+        ), user);
+        return ResponseEntity.ok(id);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity deleteExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
+    public ResponseEntity deleteExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
+        exhibits.delete(id, user);
         return ResponseEntity.noContent().build();
     }
 }

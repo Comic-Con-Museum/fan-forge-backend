@@ -3,6 +3,7 @@ package org.comic_con.museum.fcb.dal;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -125,8 +126,11 @@ public class ExhibitQueryBean {
                 eid,
                 by.getId()
         );
-        if (count != 1) {
+        if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + eid);
+        }
+        if (count == 0) {
+            throw new EmptyResultDataAccessException("No exhibits with ID " + eid + " by " + by.getUsername(), 1);
         }
     }
     

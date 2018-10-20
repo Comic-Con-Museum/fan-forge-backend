@@ -2,6 +2,7 @@ package org.comic_con.museum.fcb.controllers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -54,6 +55,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(new MissingParamErrorResponse(e.getParameterName(), e.getParameterType()));
+    }
+    
+    @ExceptionHandler(EmptyResultDataAccessException.class)
+    public ResponseEntity<ErrorResponse> noResult(HttpServletRequest req, EmptyResultDataAccessException e) {
+        return ResponseEntity.notFound().build();
     }
     
     @ExceptionHandler(Exception.class)
