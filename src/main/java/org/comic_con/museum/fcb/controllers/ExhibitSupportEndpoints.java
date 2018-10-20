@@ -2,11 +2,13 @@ package org.comic_con.museum.fcb.controllers;
 
 import org.comic_con.museum.fcb.models.dal.ExhibitDAL;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+@CrossOrigin(origins = "*")
 @RestController
 public class ExhibitSupportEndpoints {
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.POST)
