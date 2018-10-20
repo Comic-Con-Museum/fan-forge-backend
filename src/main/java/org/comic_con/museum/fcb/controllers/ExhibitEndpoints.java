@@ -13,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins="*")
 @RestController
 public class ExhibitEndpoints {
     {
