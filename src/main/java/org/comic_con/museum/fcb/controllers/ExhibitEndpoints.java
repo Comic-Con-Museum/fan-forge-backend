@@ -9,6 +9,7 @@ import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +21,11 @@ public class ExhibitEndpoints {
     private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
 
     private final ExhibitQueryBean exhibits;
+    private final DataSourceTransactionManager transactionManager;
     
-    public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean) {
+    public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, DataSourceTransactionManager transactionManager) {
         this.exhibits = exhibitQueryBean;
+        this.transactionManager = transactionManager;
     }
 
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
