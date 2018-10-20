@@ -11,12 +11,10 @@ import org.comic_con.museum.fcb.models.User;
 import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -29,30 +27,29 @@ import java.util.List;
 public class Application implements CommandLineRunner {
     private final Logger LOG = LoggerFactory.getLogger("application");
 
-    // TODO Replace JDBC usage with JPA
-    @Autowired
-    JdbcTemplate jdbcTemplate;
-    
-    @Autowired
-    ExhibitQueryBean exhibits;
+    private final ExhibitQueryBean exhibits;
 
     @Value("${s3.access-key}")
-    String accessKey;
+    private String accessKey;
 
     @Value("${s3.secret-key}")
-    String secretKey;
+    private String secretKey;
 
     @Value("${s3.url}")
-    String url;
+    private String url;
 
     @Value("${s3.region}")
-    String region;
+    private String region;
     
     @Value("${fcb.reset-on-start}")
-    boolean resetOnStart;
+    private boolean resetOnStart;
     
     @Value("${fcb.add-test-data}")
-    boolean addTestData;
+    private boolean addTestData;
+    
+    public Application(ExhibitQueryBean exhibits) {
+        this.exhibits = exhibits;
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -95,26 +92,6 @@ public class Application implements CommandLineRunner {
             LOG.info("Initializing DB");
             exhibits.setupExhibitTable(resetOnStart);
             addTestData();
-        
-            LOG.info("Testing DB connection");
-            User author = new User(3, "me", new byte[0], false);
-            long id = exhibits.create(new Exhibit(
-                    0, "title example", "description example", 7, Instant.now().minus(1, ChronoUnit.DAYS),
-                    new String[] { "tag1", "tag2" }
-            ), author);
-            LOG.info("Created exhibit {}", id);
-            Exhibit queried = exhibits.getById(id);
-            LOG.info("Exhibit has ID {}, author {}", queried.getId(), queried.getAuthor());
-            queried.setDescription("Updated description for " + id);
-            exhibits.update(queried, author);
-            exhibits.delete(id, author);
-            
-            LOG.info("Testing feed:");
-            List<Exhibit> feed = exhibits.getFeedBy(ExhibitQueryBean.FeedType.NEW, 2);
-            for (Exhibit e : feed) {
-                LOG.info("#{}: {}", e.getId(), e.getDescription());
-            }
-        
             LOG.info("Done initializing DB");
         } catch (Exception e) {
             LOG.error("Failed while initializing DB", e);

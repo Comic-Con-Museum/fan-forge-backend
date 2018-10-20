@@ -18,19 +18,19 @@ import java.util.Map;
 public class ExhibitQueryBean {
     public static final int PAGE_SIZE = 10;
     
-    public static enum FeedType {
+    public enum FeedType {
         NEW("created DESC"),
         ALPHABETICAL("title DESC");
         
-        private String orderBy;
+        private final String orderBy;
         
         FeedType(String orderBy) { this.orderBy = orderBy; }
         
         private String getOrderBy() { return this.orderBy; }
     }
     
-    private JdbcTemplate sql;
-    private SimpleJdbcInsert insert;
+    private final JdbcTemplate sql;
+    private final SimpleJdbcInsert insert;
     
     @Autowired
     public ExhibitQueryBean(JdbcTemplate jdbcTemplate) {

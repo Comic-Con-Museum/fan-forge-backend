@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    Logger LOG = LoggerFactory.getLogger("endpoints.exception");
+    private static final Logger LOG = LoggerFactory.getLogger("endpoints.exception");
     
     // TODO: Custom error handler for 404 and 401
     // TODO: Explicit mapping for /error

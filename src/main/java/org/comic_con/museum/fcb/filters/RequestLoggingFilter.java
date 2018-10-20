@@ -16,10 +16,10 @@ import java.nio.charset.StandardCharsets;
 @Component
 @Order(Integer.MIN_VALUE + 1) // happen just after the request ID generator
 public class RequestLoggingFilter implements Filter {
-    Logger LOG = LoggerFactory.getLogger("filter.req_log");
+    private static final Logger LOG = LoggerFactory.getLogger("filter.req_log");
     
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         // no init needed
     }
 

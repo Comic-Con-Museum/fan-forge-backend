@@ -13,14 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class ExhibitEndpoints {
     private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
 
-    private ExhibitQueryBean exhibits;
+    private final ExhibitQueryBean exhibits;
     
     public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean) {
         this.exhibits = exhibitQueryBean;
