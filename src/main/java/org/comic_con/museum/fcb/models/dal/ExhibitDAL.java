@@ -1,6 +1,9 @@
 package org.comic_con.museum.fcb.models.dal;
 
 import org.comic_con.museum.fcb.models.Exhibit;
+import org.comic_con.museum.fcb.models.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -8,8 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO: Rewrite this class to do actual database access
-// TODO: Might be better off as an instance class, we can have one for normal users and one for admins.
+// TODO Replace all calls to this with JPA
 // nb: all example SQL here is written in Postgres; ideally, our DAL will abstract it away entirely.
 /*
 Schemae:
@@ -44,6 +46,18 @@ CREATE TABLE support (
 
  */
 public class ExhibitDAL {
+    public enum FeedType {
+        NEW("created_on"),
+        ALPHABETICAL("title");
+
+        private final String column;
+        FeedType(String column) { this.column = column; }
+
+        public String column() { return this.column; }
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(ExhibitDAL.class);
+
     public static final int FEED_PAGE_SIZE = 10;
 
     private static final Map<Integer, Exhibit> exhibits = new HashMap<>();
@@ -54,13 +68,14 @@ public class ExhibitDAL {
     }
 
     public static int create(Exhibit adding) {
+        ++lastInserted;
+        LOG.info("Creating exhibit {} at ID {}", adding, lastInserted);
         /*
         INSERT INTO exhibits
         (title, description, author)
         VALUES (?, ?, ?)
         RETURNING id
          */
-        ++lastInserted;
         adding.setId(lastInserted);
         exhibits.put(lastInserted, adding);
         return lastInserted;
@@ -68,11 +83,11 @@ public class ExhibitDAL {
 
     // TODO Should this return an enum for more information?
     public static boolean delete(int id, String user) {
+        LOG.info("{} attempting to delete: {}", user, id);
         /*
         DELETE FROM exhibits
         WHERE id = ?
           AND author = ?
-
          */
         Exhibit exhibit = exhibits.get(id);
         if (exhibit == null) {
@@ -85,7 +100,8 @@ public class ExhibitDAL {
         return true;
     }
 
-    public static List<Exhibit> getFeed(int startIdx, Comparator<Exhibit> sorter) {
+    public static List<Exhibit> getFeed(int startIdx, FeedType feed) {
+        LOG.info("Getting {} feed, sorted by {}", feed.name(), feed.column());
         /*
         SELECT id, title, description FROM exhibits
         ORDER BY ? -- TODO: Might require multiple functions, or validated string-concat'd input
@@ -94,6 +110,17 @@ public class ExhibitDAL {
          */
         if (startIdx > exhibits.size()) {
             return null;
+        }
+        Comparator<Exhibit> sorter;
+        switch (feed) {
+            case NEW:
+                sorter = Comparator.comparing(Exhibit::getCreated);
+                break;
+            case ALPHABETICAL:
+                sorter = Comparator.comparing(Exhibit::getTitle);
+                break;
+            default:
+                return null;
         }
         List<Exhibit> sorted = exhibits.values().stream()
                 .sorted(sorter)
@@ -105,26 +132,29 @@ public class ExhibitDAL {
     }
 
     public static int getTotalCount() {
+        LOG.info("Getting count");
         /*
         SELECT COUNT(*) FROM exhibits;
          */
         return exhibits.size();
     }
 
-    public static boolean addSupporter(int eid, String user) {
+    public static boolean addSupporter(int eid, User user, String surveyData) {
+        LOG.info("Adding support by {} of {}, data: {}", user, eid, surveyData);
         /*
-        INSERT INTO supporters (exhibit, user)
-        VALUES (?, ?);
+        INSERT INTO supporters (exhibit, user, survey_data)
+        VALUES (?, ?, ?);
          */
         Exhibit exhibit = exhibits.get(eid);
         if (exhibit == null) {
             return false;
         }
-        exhibit.getSupporters().add(user);
+        exhibit.getSupporters().add(user.getId());
         return true;
     }
 
-    public static boolean removeSupporter(int eid, String user) {
+    public static boolean removeSupporter(int eid, User user) {
+        LOG.info("Removing support by {} on {}", user, eid);
         /*
         DELETE FROM supporters
         WHERE user = ?
@@ -134,7 +164,7 @@ public class ExhibitDAL {
         if (exhibit == null) {
             return false;
         }
-        exhibit.getSupporters().remove(user);
+        exhibit.getSupporters().remove(user.getId());
         return true;
     }
 }

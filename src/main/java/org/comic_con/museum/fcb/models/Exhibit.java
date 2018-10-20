@@ -10,7 +10,7 @@ public class Exhibit {
     private String description;
     private String author;
     private Instant created;
-    private Set<String> supporters;
+    private Set<Integer> supporters;
 
     public Exhibit(int id, String title, String description, String author) {
         this.id = id;
@@ -26,12 +26,17 @@ public class Exhibit {
     public String getDescription() { return description; }
     public String getAuthor() { return author; }
     public Instant getCreated() { return created; }
-    public Set<String> getSupporters() { return supporters; }
+    public Set<Integer> getSupporters() { return supporters; }
 
     public void setId(int id) { this.id = id; }
     public void setTitle(String value) { this.title = value; }
     public void setDescription(String value) { this.description = value; }
     public void setAuthor(String value) { this.author = value; }
     public void setCreated(Instant value) { this.created = value; }
-    public void setSupporters(Set<String> value) { this.supporters = value; }
+    public void setSupporters(Set<Integer> value) { this.supporters = value; }
+
+    @Override
+    public String toString() {
+        return String.format("Exhibit %d: '%s' by %s}", getId(), getTitle(), getAuthor());
+    }
 }
