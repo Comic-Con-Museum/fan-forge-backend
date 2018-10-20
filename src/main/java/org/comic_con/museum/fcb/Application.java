@@ -112,7 +112,7 @@ public class Application implements CommandLineRunner {
             s3.listBuckets().forEach(b -> LOG.info(b.getName()));
             LOG.info("Done with S3 stuff");
         } catch (Exception e) {
-            LOG.error("Error occurred while doing S3 stuff", e);
+            LOG.error("Non-fatal error during S3 demo: {}", e.getMessage());
         }
     }
 }
