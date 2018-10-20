@@ -6,10 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 
 public class Exhibit {
-    private static final Logger LOG = LoggerFactory.getLogger("dao.exhibit");
-    
-    private static final int MAX_TAGS = 5;
-    
     private long id;
     private String title;
     private String description;
@@ -36,7 +32,7 @@ public class Exhibit {
     public void setId(long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
-    public void setAuthor(int author) { this.author = author; }
+    public void setAuthor(long author) { this.author = author; }
     public void setCreated(Instant created) { this.created = created; }
     public void setTags(String[] tags) { this.tags = tags; }
 }

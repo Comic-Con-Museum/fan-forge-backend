@@ -1,7 +1,7 @@
 package org.comic_con.museum.fcb.controllers.responses;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import org.comic_con.museum.fcb.models.dal.ExhibitQueryBean;
+import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
 
 public class Feed {
     public static class Entry {
