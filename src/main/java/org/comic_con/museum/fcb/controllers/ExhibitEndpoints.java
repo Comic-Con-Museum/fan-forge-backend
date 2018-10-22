@@ -1,16 +1,12 @@
 package org.comic_con.museum.fcb.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
 import org.comic_con.museum.fcb.controllers.responses.Feed;
-import org.comic_con.museum.fcb.controllers.responses.Views;
 import org.comic_con.museum.fcb.dal.TransactionWrapper;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
-import org.comic_con.museum.fcb.util.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +32,8 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<String> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
-                                     @AuthenticationPrincipal User user) throws JsonProcessingException {
+    public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
+                                     @AuthenticationPrincipal User user) {
         ExhibitQueryBean.FeedType feed;
         switch (feedName) {
             case "new":
@@ -61,18 +57,15 @@ public class ExhibitEndpoints {
             tr.commit();
         } // no catch because we're just closing the transaction, we want errors to fall through
         List<Feed.Entry> entries = feedRaw.stream()
-                .map(e -> new Feed.Entry(e, 4, true))
+                .map(e -> new Feed.Entry(e, 4, user == null ? null : true))
                 .collect(Collectors.toList());
-        Feed f = new Feed(startIdx, count, entries);
-        
-        return ResponseEntity.ok(JSONUtil.toString(f, user));
+        return ResponseEntity.ok(new Feed(startIdx, count, entries));
     }
 
     @RequestMapping(value = "/exhibit/{id}")
-    public ResponseEntity<String> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) throws JsonProcessingException {
+    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
-        ExhibitFull resp = new ExhibitFull(e, 8, false);
-        return ResponseEntity.ok(new ObjectMapper().writerWithView(Views.byPrincipal(user)).writeValueAsString(resp));
+        return ResponseEntity.ok(new ExhibitFull(e, 8, false));
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
