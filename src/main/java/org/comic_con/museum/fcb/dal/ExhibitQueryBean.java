@@ -2,14 +2,14 @@ package org.comic_con.museum.fcb.dal;
 
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
-import org.springframework.dao.TransientDataAccessException;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -20,6 +20,8 @@ import java.util.Map;
 
 @Component
 public class ExhibitQueryBean {
+    private static final Logger LOG = LoggerFactory.getLogger("query.exhibits");
+    
     public static final int PAGE_SIZE = 10;
     
     public enum FeedType {
@@ -60,6 +62,7 @@ public class ExhibitQueryBean {
     }
     
     public void setupExhibitTable(boolean reset) {
+        LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
             sql.execute("DROP TABLE IF EXISTS exhibits");
         }
@@ -77,6 +80,7 @@ public class ExhibitQueryBean {
     }
     
     public Exhibit getById(long id) {
+        LOG.info("Getting exhibit with ID {}", id);
         return sql.queryForObject(
                 "SELECT * FROM exhibits WHERE eid = ?",
                 new Object[] { id },
@@ -85,6 +89,7 @@ public class ExhibitQueryBean {
     }
 
     public long create(Exhibit ex, User by) throws SQLException {
+        LOG.info("{} creating exhibit '{}'", by.getUsername(), ex.getTitle());
         Instant now = Instant.now();
         Map<String, Object> args = new HashMap<>();
         args.put("title", ex.getTitle());
@@ -103,6 +108,8 @@ public class ExhibitQueryBean {
     }
     
     public void update(Exhibit ex, User by) {
+        LOG.info("{} updating exhibit {}", by.getUsername(), ex.getId());
+        
         int count = sql.update(
                 "UPDATE exhibits " +
                 "SET title = ?, " +
@@ -122,6 +129,8 @@ public class ExhibitQueryBean {
     }
     
     public void delete(long eid, User by) {
+        LOG.info("{} deleting exhibit {}", by.getUsername(), eid);
+        
         int count = sql.update(
                 "DELETE FROM exhibits " +
                 "WHERE eid = ? " +
@@ -138,6 +147,8 @@ public class ExhibitQueryBean {
     }
     
     public List<Exhibit> getFeedBy(FeedType type, int startIdx) {
+        LOG.info("Getting {} feed", type);
+        
         return sql.query(
                 "SELECT * FROM exhibits " +
                 // this concatenation isn't a SQL injection vulnerability because it's
@@ -151,6 +162,8 @@ public class ExhibitQueryBean {
     }
     
     public long getCount() throws DataAccessException {
+        LOG.info("Getting total exhibit count");
+        
         Long count = sql.queryForObject("SELECT COUNT(*) FROM exhibits;", Long.class);
         if (count == null) {
             throw new EmptyResultDataAccessException("Somehow no count returned", 1);
