@@ -12,6 +12,7 @@ import java.util.Collections;
 public class User implements UserDetails {
     private long uid;
     private String username;
+    // we don't worry about zeroing this out because it only ever contains the password hash
     private byte[] password;
     private boolean admin;
 

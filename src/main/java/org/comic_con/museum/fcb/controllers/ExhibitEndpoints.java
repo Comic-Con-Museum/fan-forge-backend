@@ -3,6 +3,7 @@ package org.comic_con.museum.fcb.controllers;
 import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
 import org.comic_con.museum.fcb.controllers.responses.Feed;
+import org.comic_con.museum.fcb.dal.SupportQueryBean;
 import org.comic_con.museum.fcb.dal.TransactionWrapper;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
@@ -15,25 +16,28 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class ExhibitEndpoints {
     private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
 
     private final ExhibitQueryBean exhibits;
+    private final SupportQueryBean supports;
     private final TransactionWrapper transactions;
     
     @Autowired
-    public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, TransactionWrapper transactionWrapperBean) {
+    public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
+                            TransactionWrapper transactionWrapperBean) {
         this.exhibits = exhibitQueryBean;
+        this.supports = supportQueryBean;
         this.transactions = transactionWrapperBean;
     }
 
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
-                                     @AuthenticationPrincipal User user) {
+                                        @AuthenticationPrincipal User user) {
         ExhibitQueryBean.FeedType feed;
         switch (feedName) {
             case "new":
@@ -46,19 +50,25 @@ public class ExhibitEndpoints {
                 break;
             default:
                 LOG.info("Unknown feed: {}", feedName);
+                // 404 instead of 400 because they're trying to hit a nonexistent endpoint (/feed/whatever), not passing
+                // bad data to a real endpoint
                 return ResponseEntity.notFound().build();
         }
         
-        List<Exhibit> feedRaw;
         long count;
+        List<Feed.Entry> entries;
         try (TransactionWrapper.Transaction tr = transactions.start()) {
-            feedRaw = exhibits.getFeedBy(feed, startIdx);
             count = exhibits.getCount();
+            List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
+            entries = new ArrayList<>(feedRaw.size());
+            for (Exhibit exhibit : feedRaw) {
+                entries.add(new Feed.Entry(
+                        exhibit, supports.supporterCount(exhibit),
+                        user == null ? null : supports.isSupporting(user, exhibit)
+                ));
+            }
             tr.commit();
         } // no catch because we're just closing the transaction, we want errors to fall through
-        List<Feed.Entry> entries = feedRaw.stream()
-                .map(e -> new Feed.Entry(e, 4, user == null ? null : true))
-                .collect(Collectors.toList());
         return ResponseEntity.ok(new Feed(startIdx, count, entries));
     }
 

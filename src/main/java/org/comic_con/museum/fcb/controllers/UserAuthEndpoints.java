@@ -20,8 +20,9 @@ public class UserAuthEndpoints {
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseEntity<String> login(@RequestBody LoginParams info) {
-        LOG.info("Logging in as user {} with password {}", info.username, info.password);
-        return ResponseEntity.ok(info.username);
+        LOG.info("Logging in as user {} with password length {}", info.getUsername(), info.getPassword().length);
+        info.zeroPassword(); // don't let the sensitive data linger in memory
+        return ResponseEntity.ok(info.getUsername());
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.DELETE)

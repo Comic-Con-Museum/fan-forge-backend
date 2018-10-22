@@ -6,6 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import org.comic_con.museum.fcb.dal.SupportQueryBean;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
@@ -22,12 +23,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
     private final Logger LOG = LoggerFactory.getLogger("application");
-
-    private final ExhibitQueryBean exhibits;
 
     @Value("${s3.access-key}")
     private String accessKey;
@@ -47,8 +47,12 @@ public class Application implements CommandLineRunner {
     @Value("${fcb.add-test-data}")
     private boolean addTestData;
     
-    public Application(ExhibitQueryBean exhibits) {
+    private final ExhibitQueryBean exhibits;
+    private final SupportQueryBean supports;
+    
+    public Application(ExhibitQueryBean exhibits, SupportQueryBean supports) {
         this.exhibits = exhibits;
+        this.supports = supports;
     }
 
     public static void main(String[] args) {
@@ -76,13 +80,25 @@ public class Application implements CommandLineRunner {
         Collections.shuffle(exhibitTitles);
         
         User original = new User("nic".hashCode(), "nic", null, false);
-        for (int i = 0; i < exhibitTitles.size(); ++i) {
-            String title = exhibitTitles.get(i);
-            exhibits.create(new Exhibit(
+        User[] supporters = IntStream.range(0, 5)
+                .mapToObj(i -> new User(i, "user" + i, null, false))
+                .toArray(User[]::new);
+        for (int exIdx = 0; exIdx < exhibitTitles.size(); ++exIdx) {
+            String title = exhibitTitles.get(exIdx);
+            long newId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, 0,
-                    Instant.now().minus(i, ChronoUnit.DAYS),
-                    new String[] { "post", "exhibit", "index:" + i }
+                    Instant.now().minus(exIdx, ChronoUnit.DAYS),
+                    new String[] { "post", "exhibit", "index:" + exIdx }
             ), original);
+            for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
+                if ((exIdx & sIdx) == sIdx) {
+                    supports.support(
+                            new Exhibit(newId, null, null, 0, null, null),
+                            supporters[sIdx],
+                            String.format("Support for %d by %s", newId, supporters[sIdx].getUsername())
+                    );
+                }
+            }
         }
     }
 

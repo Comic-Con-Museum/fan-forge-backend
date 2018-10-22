@@ -11,11 +11,11 @@ public class Feed {
         public final long id;
         public final String title;
         public final String description;
-        public final int supporters;
+        public final long supporters;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         public final Boolean supported;
         
-        public Entry(Exhibit of, int supporters, Boolean supported) {
+        public Entry(Exhibit of, long supporters, Boolean supported) {
             this.id = of.getId();
             this.title = of.getTitle();
             this.description = of.getDescription();

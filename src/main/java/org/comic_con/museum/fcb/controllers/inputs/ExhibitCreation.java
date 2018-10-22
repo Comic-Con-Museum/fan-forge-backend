@@ -10,14 +10,6 @@ public class ExhibitCreation {
     private String description;
     private String[] tags;
 
-    ExhibitCreation() {}
-
-    public ExhibitCreation(String title, String description, String[] tags) {
-        this.title = title;
-        this.description = description;
-        this.tags = tags;
-    }
-    
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String[] getTags() { return tags; }
