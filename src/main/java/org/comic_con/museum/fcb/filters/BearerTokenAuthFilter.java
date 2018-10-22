@@ -24,7 +24,7 @@ public class BearerTokenAuthFilter extends AbstractAuthenticationProcessingFilte
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
-        LOG.info("Checking auth on URL {}", req.getRequestURI());
+        LOG.info("Checking auth on {} {}", req.getMethod(), req.getRequestURI());
         String header = req.getHeader("Authorization");
         if (header == null) {
             LOG.info("No Authorization header, can't log in");

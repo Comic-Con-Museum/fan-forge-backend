@@ -1,5 +1,6 @@
 package org.comic_con.museum.fcb.controllers;
 
+import org.comic_con.museum.fcb.dal.SupportQueryBean;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +12,17 @@ import org.springframework.web.bind.annotation.*;
 public class ExhibitSupportEndpoints {
     private static final Logger LOG = LoggerFactory.getLogger("endpoints.support.exhibit");
     
+    private final SupportQueryBean supports;
+    
+    public ExhibitSupportEndpoints(SupportQueryBean supportQueryBean) {
+        this.supports = supportQueryBean;
+    }
+    
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.POST)
-    public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody String data, @AuthenticationPrincipal User user) {
+    public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody(required = false) String data,
+                                         @AuthenticationPrincipal User user) {
         LOG.info("Supporting %d as %s", id, user);
-        boolean newSupporter = true;
+        boolean newSupporter = supports.support(id, user, data);
         if (newSupporter) {
             return ResponseEntity.ok().build();
         } else {
@@ -25,7 +33,7 @@ public class ExhibitSupportEndpoints {
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.DELETE)
     public ResponseEntity upvoteExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
         LOG.info("Unsupporting %d as %s", id, user);
-        boolean wasSupporter = true;
+        boolean wasSupporter = supports.unsupport(id, user);
         if (wasSupporter) {
             return ResponseEntity.ok().build();
         } else {

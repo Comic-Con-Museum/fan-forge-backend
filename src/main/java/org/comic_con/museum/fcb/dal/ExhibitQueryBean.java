@@ -61,10 +61,10 @@ public class ExhibitQueryBean {
         }
     }
     
-    public void setupExhibitTable(boolean reset) {
+    public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
-            sql.execute("DROP TABLE IF EXISTS exhibits");
+            sql.execute("DROP TABLE IF EXISTS exhibits CASCADE");
         }
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS exhibits ( " +

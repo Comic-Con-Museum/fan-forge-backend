@@ -81,7 +81,7 @@ public class Application implements CommandLineRunner {
         
         User original = new User("nic".hashCode(), "nic", null, false);
         User[] supporters = IntStream.range(0, 5)
-                .mapToObj(i -> new User(i, "user" + i, null, false))
+                .mapToObj(i -> new User(("user" + i).hashCode(), "user" + i, null, false))
                 .toArray(User[]::new);
         for (int exIdx = 0; exIdx < exhibitTitles.size(); ++exIdx) {
             String title = exhibitTitles.get(exIdx);
@@ -93,8 +93,7 @@ public class Application implements CommandLineRunner {
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((exIdx & sIdx) == sIdx) {
                     supports.support(
-                            new Exhibit(newId, null, null, 0, null, null),
-                            supporters[sIdx],
+                            newId, supporters[sIdx],
                             String.format("Support for %d by %s", newId, supporters[sIdx].getUsername())
                     );
                 }
@@ -106,7 +105,8 @@ public class Application implements CommandLineRunner {
     public void run(String... args) throws Exception {
         try {
             LOG.info("Initializing DB");
-            exhibits.setupExhibitTable(resetOnStart);
+            exhibits.setupTable(resetOnStart);
+            supports.setupTable(resetOnStart);
             addTestData();
             LOG.info("Done initializing DB");
         } catch (Exception e) {
