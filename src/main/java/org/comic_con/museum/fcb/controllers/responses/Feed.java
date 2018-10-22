@@ -2,6 +2,9 @@ package org.comic_con.museum.fcb.controllers.responses;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
+import org.comic_con.museum.fcb.models.Exhibit;
+
+import java.util.List;
 
 public class Feed {
     public static class Entry {
@@ -16,18 +19,10 @@ public class Feed {
         @JsonView(Views.Authed.class)
         public final Boolean supported;
         
-        public Entry(long id, String title, String description, int supporters) {
-            this.id = id;
-            this.title = title;
-            this.description = description;
-            this.supporters = supporters;
-            this.supported = null;
-        }
-        
-        public Entry(long id, String title, String shortDescription, int supporters, boolean supported) {
-            this.id = id;
-            this.title = title;
-            this.description = shortDescription;
+        public Entry(Exhibit of, int supporters, Boolean supported) {
+            this.id = of.getId();
+            this.title = of.getTitle();
+            this.description = of.getDescription();
             this.supporters = supporters;
             this.supported = supported;
         }
@@ -40,9 +35,9 @@ public class Feed {
     @JsonView(Views.Unauthed.class)
     public final int pageSize;
     @JsonView(Views.Unauthed.class)
-    public final Entry[] exhibits;
+    public final List<Entry> exhibits;
     
-    public Feed(long startIdx, long count, Entry... exhibits) {
+    public Feed(long startIdx, long count, List<Entry> exhibits) {
         this.startIdx = startIdx;
         this.count = count;
         this.pageSize = ExhibitQueryBean.PAGE_SIZE;

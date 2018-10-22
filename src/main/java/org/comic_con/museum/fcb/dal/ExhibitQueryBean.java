@@ -3,8 +3,10 @@ package org.comic_con.museum.fcb.dal;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -148,10 +150,10 @@ public class ExhibitQueryBean {
         );
     }
     
-    public long getCount() throws SQLException {
+    public long getCount() throws DataAccessException {
         Long count = sql.queryForObject("SELECT COUNT(*) FROM exhibits;", Long.class);
         if (count == null) {
-            throw new SQLException("This should be impossible");
+            throw new EmptyResultDataAccessException("Somehow no count returned", 1);
         }
         return count;
     }
