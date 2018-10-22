@@ -21,7 +21,7 @@ public class ExhibitSupportEndpoints {
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.POST)
     public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody(required = false) String data,
                                          @AuthenticationPrincipal User user) {
-        LOG.info("Supporting %d as %s", id, user);
+        LOG.info("Supporting {} as {}", id, user);
         boolean newSupporter = supports.support(id, user, data);
         if (newSupporter) {
             return ResponseEntity.ok().build();
@@ -32,7 +32,7 @@ public class ExhibitSupportEndpoints {
 
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.DELETE)
     public ResponseEntity upvoteExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
-        LOG.info("Unsupporting %d as %s", id, user);
+        LOG.info("Unsupporting {} as {}", id, user);
         boolean wasSupporter = supports.unsupport(id, user);
         if (wasSupporter) {
             return ResponseEntity.ok().build();

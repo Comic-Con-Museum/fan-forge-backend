@@ -49,7 +49,11 @@ public class SupportQueryBean {
     
     public long supporterCount(Exhibit exhibit) {
         LOG.info("Getting supporter count for {}", exhibit.getId());
-        Long supporterCount = sql.queryForObject("SELECT COUNT(*) WHERE exhibit = ?", Long.class, exhibit.getId());
+        Long supporterCount = sql.queryForObject(
+                "SELECT COUNT(*) FROM supports WHERE exhibit = ?",
+                Long.class,
+                exhibit.getId()
+        );
         if (supporterCount == null) {
             throw new EmptyResultDataAccessException("Somehow no count returned", 1);
         }
