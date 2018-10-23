@@ -6,12 +6,6 @@ public class Support {
     private int user;
     // TODO: Survey data
     
-    public Support(long sid, int exhibit, int user) {
-        this.id = sid;
-        this.exhibit = exhibit;
-        this.user = user;
-    }
-    
     public long getId() { return id; }
     public int getExhibit() { return exhibit; }
     public int getUser() { return user; }

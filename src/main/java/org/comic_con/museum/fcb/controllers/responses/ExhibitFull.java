@@ -1,6 +1,5 @@
 package org.comic_con.museum.fcb.controllers.responses;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import org.comic_con.museum.fcb.models.Exhibit;
 
 import java.time.Instant;

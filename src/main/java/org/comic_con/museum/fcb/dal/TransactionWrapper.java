@@ -15,7 +15,7 @@ public class TransactionWrapper {
     private static final Logger LOG = LoggerFactory.getLogger("transaction");
     
     public class Transaction implements Closeable {
-        private TransactionStatus status;
+        private final TransactionStatus status;
         private boolean completed;
         
         private Transaction(TransactionStatus status) {
