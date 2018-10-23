@@ -6,6 +6,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -40,9 +41,9 @@ public class User implements UserDetails {
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (admin) {
-            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            return Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
         } else {
-            return Collections.emptyList();
+            return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
         }
     }
 

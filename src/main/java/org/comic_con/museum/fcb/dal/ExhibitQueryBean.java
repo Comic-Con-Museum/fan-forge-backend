@@ -112,9 +112,9 @@ public class ExhibitQueryBean {
         
         int count = sql.update(
                 "UPDATE exhibits " +
-                "SET title = ?, " +
-                "    description = ?, " +
-                "    tags = ? " +
+                "SET title = COALESCE(?, title), " +
+                "    description = COALESCE(?, description), " +
+                "    tags = COALESCE(?, tags) " +
                 "WHERE eid = ? " +
                 "  AND author = ?",
                 ex.getTitle(),
@@ -123,7 +123,10 @@ public class ExhibitQueryBean {
                 ex.getId(),
                 by.getId()
         );
-        if (count != 1) {
+        if (count == 0) {
+            throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
+        }
+        if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + ex.getId());
         }
     }

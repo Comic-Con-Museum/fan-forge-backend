@@ -34,7 +34,11 @@ public class SupportQueryBean {
         );
     }
     
-    public boolean isSupporting(User user, Exhibit exhibit) {
+    public Boolean isSupporting(User user, Exhibit exhibit) {
+        if (user == null) {
+            LOG.info("Checked for anon support");
+            return null;
+        }
         LOG.info("Checking if {} supports {}", user.getUsername(), exhibit.getId());
         Integer supportCount = sql.queryForObject(
                 "SELECT COUNT(*) FROM supports WHERE exhibit = ? AND supporter = ?",
@@ -81,7 +85,7 @@ public class SupportQueryBean {
     public boolean unsupport(long eid, User by) {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
-                "DELETE FROM supports" +
+                "DELETE FROM supports " +
                 "WHERE exhibit = ?" +
                 "  AND supporter = ?",
                 eid, by.getId()

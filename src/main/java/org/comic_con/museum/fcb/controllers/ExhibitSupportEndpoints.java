@@ -24,7 +24,7 @@ public class ExhibitSupportEndpoints {
         LOG.info("Supporting {} as {}", id, user);
         boolean newSupporter = supports.support(id, user, data);
         if (newSupporter) {
-            return ResponseEntity.ok().build();
+            return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.badRequest().build();
         }
@@ -35,7 +35,7 @@ public class ExhibitSupportEndpoints {
         LOG.info("Unsupporting {} as {}", id, user);
         boolean wasSupporter = supports.unsupport(id, user);
         if (wasSupporter) {
-            return ResponseEntity.ok().build();
+            return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.badRequest().build();
         }

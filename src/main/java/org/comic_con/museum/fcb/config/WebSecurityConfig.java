@@ -66,10 +66,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                     // Require admin privileges to hit these endpoints
                     .requestMatchers(ADMIN_URLS).hasRole("ADMIN")
+                    // Require auth (but not admin) for the rest
+                    .requestMatchers(AUTH_REQ_URLS).hasRole("USER")
                     // No auth needed on the no-login-required endpoints
                     .requestMatchers(PUBLIC_URLS).permitAll()
-                    // Require auth (but not admin) for the rest
-                    .requestMatchers(AUTH_REQ_URLS).authenticated()
                 .and()
                 .csrf().disable()
                 .formLogin().disable()

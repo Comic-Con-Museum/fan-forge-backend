@@ -9,7 +9,7 @@ public class ExhibitFull extends Feed.Entry {
     public final Instant created;
     public final String[] tags;
     
-    public ExhibitFull(Exhibit of, int supporters, Boolean supported) {
+    public ExhibitFull(Exhibit of, long supporters, Boolean supported) {
         super(of, supporters, supported);
         this.author = of.getAuthor();
         this.created = of.getCreated();

@@ -37,7 +37,7 @@ public class RequestLoggingFilter implements Filter {
         next.doFilter(req, caching);
     
         if (caching.getContentType() == null) {
-            LOG.info("Responded {} with body of unknown (no?) content type", caching.getStatusCode());
+            LOG.info("Responded {} with no set content type", caching.getStatusCode());
         } else if (
                 caching.getContentType().startsWith("application/json") ||
                 caching.getContentType().startsWith("application/xml") ||

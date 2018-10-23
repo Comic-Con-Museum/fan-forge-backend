@@ -64,7 +64,7 @@ public class ExhibitEndpoints {
             for (Exhibit exhibit : feedRaw) {
                 entries.add(new Feed.Entry(
                         exhibit, supports.supporterCount(exhibit),
-                        user == null ? null : supports.isSupporting(user, exhibit)
+                        supports.isSupporting(user, exhibit)
                 ));
             }
             tr.commit();
@@ -75,7 +75,7 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/exhibit/{id}")
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
-        return ResponseEntity.ok(new ExhibitFull(e, 8, false));
+        return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e)));
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
@@ -87,7 +87,19 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/exhibit/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, @RequestBody ExhibitCreation data,
                                                    @AuthenticationPrincipal User user) {
-        throw new UnsupportedOperationException(); // TODO PUT /exhibit/{id}, PATCH /exhibit/{id}
+        Exhibit ex = data.build(user);
+        ex.setId(id);
+        ExhibitFull resp;
+        try (TransactionWrapper.Transaction t = transactions.start()) {
+            exhibits.update(ex, user);
+            resp = new ExhibitFull(
+                    exhibits.getById(ex.getId()),
+                    supports.supporterCount(ex),
+                    supports.isSupporting(user, ex)
+            );
+            t.commit();
+        }
+        return ResponseEntity.ok(resp);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
