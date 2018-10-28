@@ -1,10 +1,11 @@
-# Compiler output
+# Maven output
 target/
 
-# Properties file
+# Exclude properties files
 application.properties
-# ...but include the one with defaults that gets built into the jar
-!src/main/resources/application.properties
+# ...except for the ones that don't contain deployment-specific stuff
+# (the defaults, the test file, etc.)
+!**/resources/application.properties
 
 # Log file
 *.log
