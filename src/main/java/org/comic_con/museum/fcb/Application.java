@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 @SpringBootApplication
@@ -99,6 +100,22 @@ public class Application implements CommandLineRunner {
                 }
             }
         }
+        LOG.info("checking if exhibits supported by 1:");
+        Map<Long, Boolean> supportedBy1 = supports.isSupportingByIds(supporters[1],
+                Arrays.asList(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
+        );
+        for (Map.Entry<Long, Boolean> pair : supportedBy1.entrySet()) {
+            LOG.info("Supporting {}? {}", pair.getKey(), pair.getValue());
+        }
+        LOG.info("done");
+        LOG.info("Getting exhibit supporter counts");
+        Map<Long, Integer> counts = supports.supporterCountsByIds(
+                Arrays.asList(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
+        );
+        for (Map.Entry<Long, Integer> pair : counts.entrySet()) {
+            LOG.info("{} supporters: {}", pair.getKey(), pair.getValue());
+        }
+        LOG.info("done");
     }
 
     @Override

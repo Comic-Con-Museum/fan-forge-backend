@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class ExhibitEndpoints {
@@ -35,6 +36,7 @@ public class ExhibitEndpoints {
         this.transactions = transactionWrapperBean;
     }
 
+    // TODO separate out into its own class?
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
                                         @AuthenticationPrincipal User user) {
@@ -59,6 +61,8 @@ public class ExhibitEndpoints {
         List<Feed.Entry> entries;
         try (TransactionWrapper.Transaction tr = transactions.start()) {
             count = exhibits.getCount();
+            // This can definitely be combined into one query if necessary
+            // or even just two (instead of PAGE_SIZE+1)
             List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
             entries = new ArrayList<>(feedRaw.size());
             for (Exhibit exhibit : feedRaw) {
@@ -84,7 +88,7 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(id);
     }
     
-    @RequestMapping(value = "/exhibit/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT)
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, @RequestBody ExhibitCreation data,
                                                    @AuthenticationPrincipal User user) {
         Exhibit ex = data.build(user);

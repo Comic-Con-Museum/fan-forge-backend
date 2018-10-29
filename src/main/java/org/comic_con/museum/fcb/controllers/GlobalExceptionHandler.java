@@ -1,16 +1,23 @@
 package org.comic_con.museum.fcb.controllers;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.ws.Response;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * The controllers all handle normal errors -- no such exhibit, auth
@@ -27,6 +34,7 @@ public class GlobalExceptionHandler {
     
     private static class ErrorResponse {
         private String error;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         private String fix;
         
         public ErrorResponse(String error, String fix) {
@@ -63,13 +71,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> missingParameter(HttpServletRequest req, MissingServletRequestParameterException e) {
         LOG.info("Required parameter %s not given", e.getParameterName());
         
-        return ResponseEntity
-                .badRequest()
-                .body(new MissingParamErrorResponse(e.getParameterName(), e.getParameterType()));
+        return new ResponseEntity<>(
+                new MissingParamErrorResponse(e.getParameterName(), e.getParameterType()),
+                HttpStatus.BAD_REQUEST
+        );
     }
     
-    @ExceptionHandler(EmptyResultDataAccessException.class)
-    public ResponseEntity<ErrorResponse> noResult(HttpServletRequest req, EmptyResultDataAccessException e) {
+    @ExceptionHandler({EmptyResultDataAccessException.class, DataIntegrityViolationException.class})
+    public ResponseEntity<ErrorResponse> noResult(HttpServletRequest req, Exception e) {
         return ResponseEntity.notFound().build();
     }
     
@@ -90,12 +99,40 @@ public class GlobalExceptionHandler {
         ), HttpStatus.NOT_IMPLEMENTED);
     }
     
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> methodNotSupported(HttpServletRequest req,
+                                                            HttpRequestMethodNotSupportedException e) {
+        LOG.info("Invalid method {} to URL {}", e.getMethod(), req.getRequestURI());
+        
+        return new ResponseEntity<>(new ErrorResponse(
+                "The method used is not supported for this endpoint",
+                "Use one of the supported methods."
+        ), HttpStatus.METHOD_NOT_ALLOWED);
+    }
+    
+    // "unwrap" InvocationTargetException since that contains exceptions a lot of the time
+    @ExceptionHandler(InvocationTargetException.class)
+    public ResponseEntity<ErrorResponse> unwrapReflectionError(HttpServletRequest req, InvocationTargetException e) throws Throwable {
+        LOG.info("Unwrapping exception {}", e);
+        throw e.getTargetException();
+    }
+    
     @ExceptionHandler(Throwable.class)
     public ResponseEntity<ErrorResponse> defaultErrorHandler(HttpServletRequest req, Exception e) {
-        LOG.error("An unknown exception occurred", e);
-        
-        return new ResponseEntity<>(new InternalServerError(
-                "An unknown exception occurred"
-        ), HttpStatus.INTERNAL_SERVER_ERROR);
+        ResponseStatus annotation = AnnotationUtils.findAnnotation(e.getClass(), ResponseStatus.class);
+        if (annotation != null) {
+            LOG.error("Annotated exception occurred", e);
+            
+            return new ResponseEntity<>(
+                    new ErrorResponse(annotation.reason(), null),
+                    annotation.code()
+            );
+        } else {
+            LOG.error("An unknown exception occurred", e);
+    
+            return new ResponseEntity<>(new InternalServerError(
+                    "An unknown exception occurred"
+            ), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
