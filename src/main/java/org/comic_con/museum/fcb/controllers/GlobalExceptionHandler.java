@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     private static class MissingParamErrorResponse extends ErrorResponse {
         public MissingParamErrorResponse(String paramName, String paramType) {
             super(
-                    String.format("Expected %s parameter %s", paramName, paramType),
+                    String.format("Expected %s parameter %s", paramType, paramName),
                     String.format("Pass request parameter %s; see documentation for more information", paramName)
             );
         }
@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> missingParameter(HttpServletRequest req, MissingServletRequestParameterException e) {
-        LOG.info("Required parameter %s not given", e.getParameterName());
+        LOG.info("Required parameter {} not given", e.getParameterName());
         
         return new ResponseEntity<>(
                 new MissingParamErrorResponse(e.getParameterName(), e.getParameterType()),

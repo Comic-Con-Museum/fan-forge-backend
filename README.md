@@ -52,11 +52,11 @@ Once the JAR is correctly set up, three more things are needed:
         invalidate all of the passwords in the database, and the application
         intentionally does **not** attempt to detect changes to this property.
 
-*   A SQL database.
+*   A PostgreSQL database.
 
-    [PostgreSQL][postgres] is open-source and available for every major
-    platform, and can be run locally, and is what the default properties are
-    set up to expect. 
+    [PostgreSQL][postgres] is open-source, fast, secure, available for every
+    major platform, and can be run locally. There are plans to support other
+    SQL dialects in the future, but for now, it's just PostgreSQL.
     
     You need to specify the SQL server to connect to, so set the following
     properties in `application.properties`:
@@ -66,10 +66,9 @@ Once the JAR is correctly set up, three more things are needed:
         database.
     *    `spring.datasource.password`: The password for that username.
     
-    There's also `spring.datasource.driver-class-name`. This should *not* need
-    to be set, but if you want to use a custom driver or encounter issues
-    about an appropriate driver class not being found, it may need to be
-    specified.
+    There's also `spring.datasource.driver-class-name`. This **should not**
+    need to be set unless you want to use a custom driver or encounter issues
+    with Spring being unable to detect the 
 
 *   An S3-API-compatible object store.
 
@@ -80,7 +79,7 @@ Once the JAR is correctly set up, three more things are needed:
     *   `s3.url`: The URL to the S3 server. If no protocol is included, it will
         default to HTTPS.
     *   `s3.region`: The region name that S3 is running in. If you're using a
-        separate service, the value to put here will depend on that.
+        separate service, this value will be determined by the service.
     *   `s3.access-key`: The access key. Sometimes called a username.
     *   `s3.secret-key`: The secret key. Sometimes called a password.
 
@@ -103,10 +102,8 @@ debugging easier.
 
 *   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
     S3 will be completely cleared when the server starts.
-*   `security.pwd.hash-strength`: How strong the password protection should
-    be. The higher the number, the safer the passwords, but the more time
-    authentication will take. If set to 0, no hashing will be used.
-*   
+*   `fcb.add-test-data`: `true` or `false`; if `true`, adds a few dozen rows
+    of test data to the database on startup.
 
 ### Building a fat JAR from source
 
@@ -130,11 +127,58 @@ errors early. If you do get an error while running unit tests, please report
 it as a bug!
 
 The unit tests don't require the other setup described in **Running the
-server**. They only require 
+server**. They only require the fat jar.
+
+### Local debug setup
+
+If you're interested in getting this up and running as quickly as possible on
+your local machine, follow these steps.
+
+>   #### WARNING
+>   **This setup is *bad*** for anything more than local deployment. Please
+    properly set up and deploy into any remote environments. If you don't know
+    how, speak to your local sysadmin. This setup is for developers to have a
+    quick, dirty, functional backend running as fast as possible.
+
+1.  Download and install [PostgreSQL][postgres-dl] for your platform. Find
+    your platform in the list, click on its name, and follow the instructions
+    there.
+2.  Start Postgres. Depending on what you chose -- the EDB installer,
+    Postgress.app, etc. -- the exact process will be different, but each has
+    good tutorials to guide you through the process. Keep track of **the
+    JDBC url**, **the database username**, and **the database password**.
+3.  Once you've finished installed PostgreSQL, download [Minio][minio-dl]. Do
+    the same thing (find your platform, follow the instructions).
+4.  Start Minio with the command for your platform on the downloads page. Note
+    down **the access key**, **the secret key**, and **the object store URL**,
+    each of which is printed to the console on startup by Minio.
+5.  [Download the fat JAR][fat-jar] or create it from source as described
+    above.
+    >   **NOTE**: If you don't see any releases, it means that Nic forgot to
+        put one up. You should yell at him to fix it. (And if you do see a
+        release but this note is still there, please
+        [report a bug][gh-br-tmpl])
+6.  Create a file called `application.properties` in the same directory as the
+    fat jar. Replace anything in brackets with the value you recorded in
+    previous steps.
+    ```properties
+    spring.datasource.url=[the JDBC url]
+    spring.datasource.username=[the database username]
+    spring.datasource.password=[the database password]
+    
+    s3.url=[the object store URL]
+    s3.region=us-east-1
+    s3.access-key=[the access key]
+    s3.secret-key=[the secret key]
+    
+    security.pwd.secret=asd123!@#lop
+    ```
+7.  Start the fat jar like any other Java jarfile.
+8.  Congratulations! You now have a development backend running.
 
 ## API documentation
 
-API documentation is available in API_DOCS.md.
+API documentation is available in [API_DOCS.md](API_DOCS).
 
 ## Contributing
 
@@ -144,16 +188,16 @@ If you're interested in helping with this project, there are three main ways.
 
 Did you find an issue somewhere in the site? Are things behaving wrong, or
 looking strange, or just not doing what you expect them to? You can submit a
-[bug report][gh-br-template], letting us know what's going wrong.  **Please
+[bug report][gh-br-tmpl], letting us know what's going wrong.  **Please
 "subscribe" to the bug report**, with the button on the right. We may need
 more information from you; if you disappear, it'll be impossible to fix the
-issue, and we'll close the issue. Please also let us know if the issue fixes
+issue, and we'll close the ticket. Please also let us know if the issue fixes
 itself -- we can look at what changed and try to track it down.
 
 ### Feature requests
 
 Do you have an idea for something that should be added to the site? You should
-make a [feature request][gh-fr-template] and tell us what it is! We can't
+make a [feature request][gh-fr-tmpl] and tell us what it is! We can't
 guarantee that the idea will get in -- even if it fits perfectly with the
 Comic-Con Museum's vision for the site, we might not have the developers or
 other resources to implement it.
@@ -167,10 +211,13 @@ them. The contribution process isn't very complicated, but it helps us make
 sure no one does work that's already being done and keep everything up to the
 standards we expect. See CONTRIBUTING.md for more information.
 
- [gh-br-template]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?template=bug-report.md
- [gh-fr-template]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?template=feature_request.md
+ [gh-br-tmpl]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?template=bug-report.md
+ [gh-fr-tmpl]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?template=feature_request.md
  [gh-gfi-search]: https://github.com/Comic-ConMuseum/fan-curation-spring/labels/good%20first%20issue
  [gh-hw-search]: https://github.com/Comic-ConMuseum/fan-curation-spring/labels/help%20wanted
  [gh-hw-gfi-search]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues?q=is%3Aopen+label%3A%22good+first+issue%22+label%3A%22help+wanted%22
  [minio]: https://minio.io/
- [postgres]: https://www.postgresql.org/download/
+ [minio-dl]: https://www.minio.io/downloads.html
+ [postgres]: https://www.postgresql.org/
+ [postgres-dl]: https://www.postgresql.org/download
+ [fat-jar]: https://github.com/Comic-ConMuseum/fan-curation-spring/releases/latest
