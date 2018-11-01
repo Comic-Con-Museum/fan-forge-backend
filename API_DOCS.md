@@ -1,6 +1,6 @@
 # API documentation
 
-A few universal notes:
+A few universal notes, for completeness:
 
 *   A `datetime` is a string containing an ISO 8601-formatted date and time.
     These will normally be in UTC, but this **is not** guaranteed, only that
@@ -15,6 +15,19 @@ A few universal notes:
 *   If it's not mentioned, it doesn't exist or is ignored. For example, the
     request body to `DELETE /exhibit/:id` is ignored, and therefore it's not
     mentioned in the documentation.
+
+## Response codes
+
+All response codes returned by this server mean what the HTTP standard says
+they do. In particular:
+
+Code | Meaning
+--- | ---
+400 | The request is wrong somehow; the response body describes how.
+401 | The endpoint requires authentication, but none was provided.
+403 | The authentication is not allowed to access the endpoint.
+418 | You triggered an easter egg! Good job. Keep it a secret.
+500 | Something went wrong while processing the request. File a bug report.
 
 ## Authentication
 
@@ -35,6 +48,8 @@ attempts to login over HTTP will be rejected.
 
 To log out, `DELETE /login` with an authenticated request.
 
+For more details on the operation of the endpoints' operation, see their docs.
+
 ## `POST /login`
 
 Get a login token to authenticate as a user.
@@ -48,9 +63,22 @@ Get a login token to authenticate as a user.
 }
 ```
 
+### Response
+
+```
+{
+  token: string // The new authentication token
+  expires: integer // The Unix timestamp at which the token expires.
+}
+```
+
+Note: The token may expire up to two seconds before or after the indicated
+time.
+
 ### Authentication
 
-This request must not be authenticated.
+If the request is authenticated, no new token will be generated and the same
+information about the 
 
 ## `DELETE /login`
 
@@ -155,13 +183,11 @@ aren't specified here, they're ignored. Invalid values will return a 400.
 }
 ```
 
-### Response body
+### Response
 
 ```
-integer
+integer // The ID of the newly-created exhibit idea.
 ```
-
-Returns the ID of the newly-created exhibit idea.
 
 ## `DELETE /exhibit/{id}`
 
