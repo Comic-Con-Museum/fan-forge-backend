@@ -12,17 +12,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 public class UserAuthEndpoints {
     private final Logger LOG = LoggerFactory.getLogger("endpoints.auth");
     @Value("${security.pwd.secret}")
     private String secret;
 
+    private class TokenData {
+        final String token;
+        final int expires;
+
+        TokenData(String token, int expires) {
+            this.token = token;
+            this.expires = expires;
+        }
+    }
+
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public ResponseEntity<String> login(@RequestBody LoginParams info) {
+    public ResponseEntity<TokenData> login(@RequestBody LoginParams info, HttpServletRequest req) {
         LOG.info("Logging in as user {} with password length {}", info.getUsername(), info.getPassword().length);
         info.zeroPassword(); // don't let the sensitive data linger in memory
-        return ResponseEntity.ok(info.getUsername());
+
+        return ResponseEntity.ok(new TokenData(info.getUsername(), Integer.MAX_VALUE));
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.DELETE)

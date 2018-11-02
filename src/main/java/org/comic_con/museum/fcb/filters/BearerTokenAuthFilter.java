@@ -33,8 +33,8 @@ public class BearerTokenAuthFilter extends AbstractAuthenticationProcessingFilte
         String header = req.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             LOG.info("No Authorization header or not Bearer authentication; can't log in");
-            // "anonymous" login -- AnonymousAuthenticationToken doesn't work because it doesn't allow null principals
-            //  or authorities, even though an anonymous user has no authentication principle and no authority.
+            // "anonymous login" -- AnonymousAuthenticationToken doesn't work because it doesn't allow null principals
+            //  or authorities, even though an anonymous user has no authentication principal and no authority.
             return new UsernamePasswordAuthenticationToken(null, null, null);
         }
         String token = header.substring("Bearer ".length()).trim();

@@ -8,19 +8,29 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 public class User implements UserDetails {
+    /**
+     * The unique ID of the User in the database
+     */
     private long uid;
+    /**
+     * The username of the User
+     */
     private String username;
-    // we don't worry about zeroing this out because it only ever contains the password hash
-    private byte[] password;
+    /**
+     * The token used to log in as this User for this request
+     */
+    private String token;
+    /**
+     * Whether or not this user is an administrator
+     */
     private boolean admin;
 
-    public User(int uid, String username, byte[] password, boolean admin) {
+    public User(int uid, String username, String token, boolean admin) {
         this.uid = uid;
         this.username = username;
-        this.password = password;
+        this.token = token;
         this.admin = admin;
     }
 
@@ -41,15 +51,21 @@ public class User implements UserDetails {
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (admin) {
-            return Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
+            return Arrays.asList(
+                    new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER")
+            );
         } else {
             return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
         }
     }
 
+    /**
+     * Get the token used in this request to login as this user.
+     * @return The authentication token.
+     */
     @Override
     public String getPassword() {
-        return new String(password, StandardCharsets.ISO_8859_1);
+        return token;
     }
 
     @Override

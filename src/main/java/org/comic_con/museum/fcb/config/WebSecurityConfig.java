@@ -39,9 +39,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final RequestMatcher AUTH_REQ_URLS = new NegatedRequestMatcher(PUBLIC_URLS);
 
-    private final TokenAuthProvider authProvider;
+    private final BearerTokenAuthenticationProvider authProvider;
 
-    public WebSecurityConfig(@Autowired TokenAuthProvider authProvider) {
+    @Autowired
+    public WebSecurityConfig(BearerTokenAuthenticationProvider authProvider) {
         this.authProvider = authProvider;
     }
 
