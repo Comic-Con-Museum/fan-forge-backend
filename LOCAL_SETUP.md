@@ -76,8 +76,6 @@ take some time to get to you. The more relevant details you provide, the less
 time it'll take.
 
  [fat-jar]: https://github.com/Comic-ConMuseum/fan-curation-spring/releases/latest
- [minio]: https://minio.io/
  [minio-dl]: https://www.minio.io/downloads.html
- [postgres]: https://www.postgresql.org/
  [postgres-dl]: https://www.postgresql.org/download
  [ask-question]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?labels=question

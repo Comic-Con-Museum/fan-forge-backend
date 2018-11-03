@@ -147,6 +147,6 @@ If you're interested in helping with this project, see
  [postgres]: https://www.postgresql.org/
  [postgres-dl]: https://www.postgresql.org/download
  [fat-jar]: https://github.com/Comic-ConMuseum/fan-curation-spring/releases/latest
- [local-setup]: LOCAL_SETUP
- [api-docs]: API_DOCS
- [contributing]: CONTRIBUTING
+ [local-setup]: LOCAL_SETUP.md
+ [api-docs]: API_DOCS.md
+ [contributing]: CONTRIBUTING.md
