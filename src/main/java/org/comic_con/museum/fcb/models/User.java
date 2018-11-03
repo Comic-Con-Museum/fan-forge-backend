@@ -5,7 +5,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -13,19 +12,19 @@ public class User implements UserDetails {
     /**
      * The unique ID of the User in the database
      */
-    private long uid;
+    private final long uid;
     /**
      * The username of the User
      */
-    private String username;
+    private final String username;
     /**
      * The token used to log in as this User for this request
      */
-    private String token;
+    private final String token;
     /**
      * Whether or not this user is an administrator
      */
-    private boolean admin;
+    private final boolean admin;
 
     public User(int uid, String username, String token, boolean admin) {
         this.uid = uid;
