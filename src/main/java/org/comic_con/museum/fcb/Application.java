@@ -81,14 +81,14 @@ public class Application implements CommandLineRunner {
         );
         Collections.shuffle(exhibitTitles);
         
-        User original = new User("nic".hashCode(), "nic", null, false);
+        User original = new User("nic", "nic", null, false);
         User[] supporters = IntStream.range(0, 5)
-                .mapToObj(i -> new User(("user" + i).hashCode(), "user" + i, null, false))
+                .mapToObj(i -> new User(("user" + i), "user" + i, null, false))
                 .toArray(User[]::new);
         for (int exIdx = 0; exIdx < exhibitTitles.size(); ++exIdx) {
             String title = exhibitTitles.get(exIdx);
             long newId = exhibits.create(new Exhibit(
-                    0, title, "Description for " + title, 0,
+                    0, title, "Description for " + title, original.getId(),
                     Instant.now().minus(exIdx, ChronoUnit.DAYS),
                     new String[] { "post", "exhibit", "index:" + exIdx }
             ), original);

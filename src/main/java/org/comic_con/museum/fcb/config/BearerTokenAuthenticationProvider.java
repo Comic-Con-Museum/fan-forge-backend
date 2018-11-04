@@ -28,6 +28,6 @@ public class BearerTokenAuthenticationProvider extends AbstractUserDetailsAuthen
     protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         // TODO replace with SQL call
         LOG.info("Getting user {}", username);
-        return new User(username.hashCode(), username, authentication.getCredentials().toString(), username.equals("admin"));
+        return new User(username, username, authentication.getCredentials().toString(), username.equals("admin"));
     }
 }

@@ -40,7 +40,7 @@ public class SupportQueryBean {
                 "CREATE TABLE IF NOT EXISTS supports ( " +
                 "    sid SERIAL PRIMARY KEY, " +
                 "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
-                "    supporter SERIAL ,"+//TODO REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
+                "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 // TODO Get actual survey data fields to use and use them
                 "    survey_data TEXT, " +
                 // we shouldn't have the same person supporting the same exhibit more than once

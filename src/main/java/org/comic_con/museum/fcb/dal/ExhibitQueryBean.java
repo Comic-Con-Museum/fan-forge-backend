@@ -53,7 +53,7 @@ public class ExhibitQueryBean {
                     rs.getInt("eid"),
                     rs.getString("title"),
                     rs.getString("description"),
-                    rs.getInt("author"),
+                    rs.getString("author"),
                     // TODO: getting a java.sql.Timestamp and converting to Instant may have issues
                     rs.getTimestamp("created").toInstant(),
                     (String[]) rs.getArray("tags").getArray()
@@ -71,7 +71,7 @@ public class ExhibitQueryBean {
                 "    eid SERIAL PRIMARY KEY, " +
                 "    title VARCHAR(255) NOT NULL, " +
                 "    description TEXT NOT NULL, " +
-                "    author SERIAL ,"+//TODO REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
+                "    author TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
                 "    created TIMESTAMP WITH TIME ZONE NOT NULL, " +
                 // TODO Once we figure out how we want tags to work, we can make this better
                 "    tags TEXT ARRAY " +

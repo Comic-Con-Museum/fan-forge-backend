@@ -12,7 +12,7 @@ public class User implements UserDetails {
     /**
      * The unique ID of the User in the database
      */
-    private final long uid;
+    private final String uid;
     /**
      * The username of the User
      */
@@ -26,14 +26,14 @@ public class User implements UserDetails {
      */
     private final boolean admin;
 
-    public User(int uid, String username, String token, boolean admin) {
+    public User(String uid, String username, String token, boolean admin) {
         this.uid = uid;
         this.username = username;
         this.token = token;
         this.admin = admin;
     }
 
-    public long getId() {
+    public String getId() {
         return this.uid;
     }
 
