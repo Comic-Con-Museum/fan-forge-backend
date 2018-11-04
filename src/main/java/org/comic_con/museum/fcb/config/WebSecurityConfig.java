@@ -22,6 +22,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
+            // CORS uses OPTIONS to check what's allowed, so we always allow those with no auth
+            new AntPathRequestMatcher("/**", "OPTIONS"),
             // Everyone needs access to POST /login to get bearer tokens
             new AntPathRequestMatcher("/login", "POST"),
             // Getting exhibit details and the feeds is available to everyone
