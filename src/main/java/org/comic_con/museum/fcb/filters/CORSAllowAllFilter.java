@@ -31,19 +31,19 @@ public class CORSAllowAllFilter implements Filter {
         }
         HttpServletRequest req = (HttpServletRequest) rreq;
         HttpServletResponse res = (HttpServletResponse) rres;
-        if (!req.getMethod().equals("OPTIONS")) {
-            LOG.info("Not a preflight request, doing the rest of the handling");
-            next.doFilter(req, res);
-        } else {
-            LOG.info("Preflight request, skipping rest of the handling");
-        }
         LOG.info("Adding CORS info to {} {}", req.getMethod(), req.getRequestURI());
-        res.setStatus(200); // must be 200, not 204, even though we don't give any content
         res.addHeader("Access-Control-Allow-Origin", "*");
         res.addHeader("Access-Control-Allow-Methods", req.getHeader("Access-Control-Request-Method"));
         res.addHeader("Access-Control-Allow-Headers", req.getHeader("Access-Control-Request-Headers"));
         res.addHeader("Access-Control-Max-Age", "-1"); // 86,400 seconds = 1 day
         res.addHeader("Access-Control-Allow-Credentials", "true");
+        if (!req.getMethod().equals("OPTIONS")) {
+            LOG.info("Not a preflight request, doing the rest of the handling");
+            next.doFilter(req, res);
+        } else {
+            LOG.info("Preflight request, skipping rest of the handling");
+            res.setStatus(HttpServletResponse.SC_OK); // must be 200, not 204, even though we don't give any content
+        }
     }
     
     @Override

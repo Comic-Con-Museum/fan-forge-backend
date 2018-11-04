@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
 public class Application implements CommandLineRunner {
     private final Logger LOG = LoggerFactory.getLogger("application");
 
