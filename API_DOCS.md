@@ -139,7 +139,7 @@ details about any given exhibit, use `GET /exhibit/{id}`.
       id: integer // The exhibit's unique ID
       title: string // The title or headline of the exhibit
       description: string // A much longer explanation, with details
-      supporterCount: integer // How many people have supported the exhibit
+      supporters: integer // How many people have supported the exhibit
       // requires login:
       isSupported: boolean // Whether or not the current user supports it
     }
