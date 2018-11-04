@@ -83,6 +83,9 @@ public class ExhibitEndpoints {
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
     public ResponseEntity<Long> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) throws SQLException {
+        if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
+            return ResponseEntity.badRequest().build();
+        }
         long id = exhibits.create(data.build(user), user);
         return ResponseEntity.ok(id);
     }

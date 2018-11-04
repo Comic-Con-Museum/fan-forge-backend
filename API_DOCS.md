@@ -190,6 +190,7 @@ aren't specified here, they're ignored. Invalid values will return a 400.
 {
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
+  tags: [ string ] // The tags to associate this exhibit with
 }
 ```
 
