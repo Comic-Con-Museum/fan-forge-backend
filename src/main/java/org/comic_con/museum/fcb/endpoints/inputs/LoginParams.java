@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers.inputs;
+package org.comic_con.museum.fcb.endpoints.inputs;
 
 public class LoginParams {
     private String username;

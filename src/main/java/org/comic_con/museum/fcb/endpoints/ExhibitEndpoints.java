@@ -1,8 +1,10 @@
-package org.comic_con.museum.fcb.controllers;
+package org.comic_con.museum.fcb.endpoints;
 
-import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
-import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
-import org.comic_con.museum.fcb.controllers.responses.Feed;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import org.comic_con.museum.fcb.endpoints.inputs.ExhibitCreation;
+import org.comic_con.museum.fcb.endpoints.responses.ExhibitFull;
+import org.comic_con.museum.fcb.endpoints.responses.Feed;
 import org.comic_con.museum.fcb.dal.SupportQueryBean;
 import org.comic_con.museum.fcb.dal.TransactionWrapper;
 import org.comic_con.museum.fcb.models.Exhibit;
@@ -14,14 +16,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.servlet.http.Part;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 public class ExhibitEndpoints {
-    private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
+    private static final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
+    private static final ObjectReader CREATE_PARAMS_READER = new ObjectMapper().readerFor(ExhibitCreation.class);
 
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
@@ -82,7 +89,14 @@ public class ExhibitEndpoints {
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
-    public ResponseEntity<Long> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) throws SQLException {
+    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) throws SQLException, IOException {
+        String dataString = req.getParameter("data");
+        if (dataString == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
+
         if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
             return ResponseEntity.badRequest().build();
         }

@@ -1,6 +1,6 @@
-package org.comic_con.museum.fcb.controllers;
+package org.comic_con.museum.fcb.endpoints;
 
-import org.comic_con.museum.fcb.controllers.inputs.LoginParams;
+import org.comic_con.museum.fcb.endpoints.inputs.LoginParams;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

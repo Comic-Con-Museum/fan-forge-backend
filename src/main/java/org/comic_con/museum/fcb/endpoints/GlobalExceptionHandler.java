@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers;
+package org.comic_con.museum.fcb.endpoints;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * The controllers all handle normal errors -- no such exhibit, auth
+ * The endpoints all handle normal errors -- no such exhibit, auth
  * required, etc. -- but some errors may still occur, and we want to
  * make sure the caller still gets a (sanitized) response, not a
  * stacktrace or no response at all.
