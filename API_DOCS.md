@@ -183,15 +183,47 @@ You must be authorized to hit this URL.
 
 ### Request body
 
-The request body is formatted as JSON. If any properties are passed that
-aren't specified here, they're ignored. Invalid values will return a 400.
+The request body is `multipart/form-data`. It should have a property, `data`,
+with this structure:
 
 ```
 {
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
   tags: [ string ] // The tags to associate this exhibit with
+  images: [ string ] // The images to add to this exhibit on creation
 }
+```
+
+`data` contains all of the data about the exhibit, including several `images`.
+Each element in the `images` array must be the name of a file attached to the
+same request -- **not** a parameter. So a full request body with the boundary
+separator `||FormBoundary||` might look like this:
+
+```
+--||FormBoundary||
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+{
+  "title": "This is an example exhibit.",
+  "description": "Examples can help make something easier to understand.",
+  "tags": [ "demo", "example", "patronizing" ],
+  "images": [ "img1.png", "img2.jpg" ]
+}
+
+--||FormBoundary||
+Content-Disposition: form-data; name="img1"; filename="img1.png"
+Content-Type: image/png
+
+<file contents omitted for brevity>
+
+--||FormBoundary||
+Content-Disposition: form-data; name="img2"; filename="img2.png"
+Content-Type: image/jpeg
+
+<file contents omitted for brevity>
+
+--||FormBoundary||--
 ```
 
 ### Response
@@ -199,6 +231,11 @@ aren't specified here, they're ignored. Invalid values will return a 400.
 ```
 integer // The ID of the newly-created exhibit idea.
 ```
+
+## `PUT /exhibit/{id}`
+
+Basically the same as POST, but edits an exhibit in place. Raises a 404 if
+there's no exhibit with that ID.
 
 ## `DELETE /exhibit/{id}`
 

@@ -16,10 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.servlet.http.Part;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -88,13 +87,12 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e)));
     }
 
-    @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
+    @RequestMapping(value = "/exhibit", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) throws SQLException, IOException {
         String dataString = req.getParameter("data");
         if (dataString == null) {
             return ResponseEntity.badRequest().build();
         }
-
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
 
         if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
@@ -104,9 +102,15 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(id);
     }
     
-    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, @RequestBody ExhibitCreation data,
-                                                   @AuthenticationPrincipal User user) {
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT, consumes = "multipart/form-data")
+    public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, HttpServletRequest req,
+                                                   @AuthenticationPrincipal User user) throws IOException {
+        String dataString = req.getParameter("data");
+        if (dataString == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         Exhibit ex = data.build(user);
         ex.setId(id);
         ExhibitFull resp;

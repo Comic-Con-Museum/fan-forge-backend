@@ -103,10 +103,14 @@ these **must** be left unspecified, as changing them could cause catastrophic
 data loss or severely compromise security. They're available only to make
 debugging easier.
 
-*   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
-    S3 will be completely cleared when the server starts.
-*   `fcb.add-test-data`: `true` or `false`; if `true`, adds a few dozen rows
-    of test data to the database on startup.
+*   `fcb.reset-on-start`: whether or not the database and S3 will be
+    completely cleared when the server starts.
+*   `fcb.add-test-data`: whether or not to add a few dozen rows of test data
+    to the database on startup.
+*   `spring.servlet.multipart.max-file-size`: The maximum size of an indivual
+    image in an upload. Defaults to 64 kilobytes.
+*   `spring.servlet.multipart.max-request-size`: The maximum total size of a
+    request that's uploading files. Defaults to 512 kilobytes.
 
 ### Building a fat JAR from source
 
