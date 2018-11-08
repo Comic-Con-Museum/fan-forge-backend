@@ -191,14 +191,14 @@ with this structure:
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
   tags: [ string ] // The tags to associate this exhibit with
-  images: [ string ] // The images to add to this exhibit on creation
 }
 ```
 
-`data` contains all of the data about the exhibit, including several `images`.
-Each element in the `images` array must be the name of a file attached to the
-same request -- **not** a parameter. So a full request body with the boundary
-separator `||FormBoundary||` might look like this:
+`data` contains all of the data about the exhibit, except for the images to be
+attached to it. The images are attached as other parts of the multipart
+request. The `name` marks the purpose of the image -- the intended cover image
+is `name`d `cover`, and all other images are `name`d `thumbnail`. A full
+request body with the boundary `||FormBoundary||` might look like this:
 
 ```
 --||FormBoundary||
@@ -207,24 +207,39 @@ Content-Type: application/json
 {
   "title": "This is an example exhibit.",
   "description": "Examples can help make something easier to understand.",
-  "tags": [ "demo", "example", "patronizing" ],
-  "images": [ "img1.png", "img2.jpg" ]
+  "tags": [ "demo", "example", "patronizing" ]
 }
 
 --||FormBoundary||
-Content-Disposition: form-data; name="img1"; filename="img1.png"
+Content-Disposition: form-data; name="cover"; filename="batman.png"
 Content-Type: image/png
 
 <file contents omitted for brevity>
 
 --||FormBoundary||
-Content-Disposition: form-data; name="img2"; filename="img2.png"
+Content-Disposition: form-data; name="thumbnail"; filename="manbat.jpg"
 Content-Type: image/jpeg
+
+<file contents omitted for brevity>
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="a man dressed like a bat.gif"
+Content-Type: image/gif
 
 <file contents omitted for brevity>
 
 --||FormBoundary||--
 ```
+
+The following image types are supported:
+
+* PNG (`image/png`)
+* JPG/JPEG (`image/jpeg`)
+* GIF (`image/gif`)
+
+The payload is validated on submit -- for example, if the payload is marked as
+`image/png` but the payload isn't a valid PNG file, the request is rejected
+with a `400 Bad Request`.
 
 ### Response
 
@@ -236,6 +251,10 @@ integer // The ID of the newly-created exhibit idea.
 
 Basically the same as POST, but edits an exhibit in place. Raises a 404 if
 there's no exhibit with that ID.
+
+### Authorization
+
+You must be authorized as the creator of the exhibit.
 
 ## `DELETE /exhibit/{id}`
 
