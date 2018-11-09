@@ -223,7 +223,7 @@ Content-Type: image/jpeg
 <file contents omitted for brevity>
 
 --||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="a man dressed like a bat.gif"
+Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
 Content-Type: image/gif
 
 <file contents omitted for brevity>
@@ -237,9 +237,9 @@ The following image types are supported:
 * JPG/JPEG (`image/jpeg`)
 * GIF (`image/gif`)
 
-The payload is validated on submit -- for example, if the payload is marked as
-`image/png` but the payload isn't a valid PNG file, the request is rejected
-with a `400 Bad Request`.
+Each image is validated on submit -- for example, if the image is marked as
+`image/png` but it's not a valid PNG file, the request is rejected with a
+`400 Bad Request`.
 
 ### Response
 
@@ -249,12 +249,54 @@ integer // The ID of the newly-created exhibit idea.
 
 ## `PUT /exhibit/{id}`
 
-Basically the same as POST, but edits an exhibit in place. Raises a 404 if
-there's no exhibit with that ID.
+Edit the exhibit with the given ID. There must be an exhibit at that ID
+already; this does not create one.
 
 ### Authorization
 
 You must be authorized as the creator of the exhibit.
+
+### Request body
+
+The request body format is identical to the format of `POST /exhibit`. The body
+is interpreted in the exact same way, and all previous data is overwritten.
+However, to save bandwidth, you can "reference" an already-uploaded image by
+uploading an empty `text/plain` part with a `filename` of that ID. So for
+example, to modify an exhibit that already has an image with the ID `1542`,
+the request body with boundary `||FormBoundary||` could look like:
+
+```
+--||FormBoundary||
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+{
+  "title": "This is an edited example exhibit.",
+  "description": "Notice the second image!",
+  "tags": [ "ooh", "demo", "cool" ]
+}
+
+--||FormBoundary||
+Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Type: image/png
+
+<file contents omitted for brevity>
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="1542"
+Content-Type: text/plain
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
+Content-Type: image/gif
+
+<file contents omitted for brevity>
+
+--||FormBoundary||--
+```
+
+The exhibit after the `PUT` will have one image, ID `1542`, stay the same. All
+other preexisting images will be discarded, and two new images (`batman.png`
+and `capefwoosh.gif`) will be uploaded. 
 
 ## `DELETE /exhibit/{id}`
 
