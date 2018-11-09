@@ -16,8 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -94,27 +96,50 @@ public class ExhibitEndpoints {
             return ResponseEntity.badRequest().build();
         }
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
-
         if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
             return ResponseEntity.badRequest().build();
         }
+
+        // TODO Upload images instead of just listing them
+        for (MultipartFile file : req.getFiles("thumbnail")) {
+            LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
+                    ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
+                    file.getContentType());
+        }
+        for (MultipartFile file : req.getFiles("cover")) {
+            LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
+                    ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
+                    file.getContentType());
+        }
+
+        // TODO wrap in transaction
         long id = exhibits.create(data.build(user), user);
         return ResponseEntity.ok(id);
     }
     
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT, consumes = "multipart/form-data")
-    public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, HttpServletRequest req,
+    public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
                                                    @AuthenticationPrincipal User user) throws IOException {
         String dataString = req.getParameter("data");
         if (dataString == null) {
             return ResponseEntity.badRequest().build();
         }
-        
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         Exhibit ex = data.build(user);
         ex.setId(id);
         ExhibitFull resp;
         try (TransactionWrapper.Transaction t = transactions.start()) {
+            // TODO Upload images instead of just listing them
+            for (MultipartFile file : req.getFiles("thumbnail")) {
+                LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
+                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
+                        file.getContentType());
+            }
+            for (MultipartFile file : req.getFiles("cover")) {
+                LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
+                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
+                        file.getContentType());
+            }
             exhibits.update(ex, user);
             resp = new ExhibitFull(
                     exhibits.getById(ex.getId()),
