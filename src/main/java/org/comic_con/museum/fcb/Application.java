@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 
 @SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
 public class Application implements CommandLineRunner {
-    private final Logger LOG = LoggerFactory.getLogger("application");
+    private static final Logger LOG = LoggerFactory.getLogger("application");
 
     @Value("${s3.access-key}")
     private String accessKey;

@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @RestController
 public class UserAuthEndpoints {
-    private final Logger LOG = LoggerFactory.getLogger("endpoints.auth");
+    private static final Logger LOG = LoggerFactory.getLogger("endpoints.auth");
     @Value("${security.pwd.secret}")
     private String secret;
 
