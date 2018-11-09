@@ -1,6 +1,6 @@
 # API documentation
 
-A few universal notes:
+A few universal notes, for completeness:
 
 *   A `datetime` is a string containing an ISO 8601-formatted date and time.
     These will normally be in UTC, but this **is not** guaranteed, only that
@@ -16,28 +16,53 @@ A few universal notes:
     request body to `DELETE /exhibit/:id` is ignored, and therefore it's not
     mentioned in the documentation.
 
-## Authentication
+## Response codes
 
-Some endpoints require authentication. The FCB backend uses bearer token
-authentication. To get a token, `POST /login` with the login credentials of
-the user. To authenticate other requests, add the `Authenticate` header to
-the request, in this format:
+All response codes returned by this server mean what the HTTP standard says
+they do. In particular:
+
+Code | Meaning
+--- | ---
+400 | The request is wrong somehow; the response body gives more details.
+401 | The endpoint requires authorization, but the request had none.
+403 | You're authorized, but still not allowed to hit that endpoint.
+418 | You triggered an easter egg! Good job. Keep it a secret.
+500 | Something went wrong while processing the request. File a bug report.
+
+## Authorization
+
+Some endpoints require authorization. The FCB backend uses bearer tokens to
+authorize requests.
+
+To get an authorization token, `POST /login` with the login credentials of the
+user whose authorization is being used.
+
+To authenticate other requests, add the `Authorization` header to the request,
+in this format:
 
 ```
-Authentication: Bearer WW91ciB0b2tlbiBoZXJlIQ==
+Authorization: Bearer WW91ciB0b2tlbiBoZXJlIQ==
 ```
 
-Note that the token is an arbitrary string, not necessarily base 64; simply
-pass whatever you get from `POST /login`.
+Under some circumstances, the `Authorization` header may be ignored:
 
-Any request over HTTP (as opposed to HTTPS) is treated as unauthenticated, and
-attempts to login over HTTP will be rejected.
+* If the request is made over HTTP, instead of HTTPS.
+* If the header is malformed (i.e. anything but bearer authorization)
+* If the token is expired, nonexistent, or otherwise invalid
 
-To log out, `DELETE /login` with an authenticated request.
+To invalidate a token, `DELETE /login`, authorized with the token to
+invalidate.
+
+For more details on the the endpoints' operation, see their documentation.
 
 ## `POST /login`
 
-Get a login token to authenticate as a user.
+Get a login token to authenticate as a user. If there is no user with the
+provided username, a `404 Not Found` is returned. If there is a user with
+the username, but the password is invalid, a `401 Unauthorized` is returned.
+
+If the request is made over HTTP, a `400 Bad Request` is returned immediately,
+before any other processing is done.
 
 ### Request body
 
@@ -48,17 +73,30 @@ Get a login token to authenticate as a user.
 }
 ```
 
-### Authentication
+### Response
 
-This request must not be authenticated.
+```
+{
+  token: string // The new authorization token
+  expires: integer // The number of seconds until the token expires.
+}
+```
+
+>   **Note**: `expires` makes no attempt to account for latency. As a result,
+    it may be off by a few seconds, depending on your network connection.
+
+### Authorization
+
+If the request is authorized, no new token will be generated. Instead,
+information about the token used will be returned.
 
 ## `DELETE /login`
 
 Invalidate the current token.
 
-### Authentication
+### Authorization
 
-This request must be authenticated; the authentication token used is what
+This request must be authorized; the authorization token used is what
 will be invalidated.
 
 ## `GET /feed/{type}`
@@ -101,7 +139,7 @@ details about any given exhibit, use `GET /exhibit/{id}`.
       id: integer // The exhibit's unique ID
       title: string // The title or headline of the exhibit
       description: string // A much longer explanation, with details
-      supporterCount: integer // How many people have supported the exhibit
+      supporters: integer // How many people have supported the exhibit
       // requires login:
       isSupported: boolean // Whether or not the current user supports it
     }
@@ -139,9 +177,9 @@ returns a 404.
 
 Create an exhibit with the given details.
 
-### Authentication
+### Authorization
 
-You must be authenticated to hit this URL.
+You must be authorized to hit this URL.
 
 ### Request body
 
@@ -152,32 +190,31 @@ aren't specified here, they're ignored. Invalid values will return a 400.
 {
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
+  tags: [ string ] // The tags to associate this exhibit with
 }
 ```
 
-### Response body
+### Response
 
 ```
-integer
+integer // The ID of the newly-created exhibit idea.
 ```
-
-Returns the ID of the newly-created exhibit idea.
 
 ## `DELETE /exhibit/{id}`
 
 Delete an exhibit by ID.
 
-### Authentication
+### Authorization
 
-You must be authenticated as the creator of the exhibit.
+You must be authorized as the creator of the exhibit.
 
 ## `POST /support/exhibit/{id}`
 
 Mark this exhibit as supported by the current user.
 
-### Authentication
+### Authorization
 
-You must be authenticated to hit this endpoint. The user you're authenticated
+You must be authorized to hit this endpoint. The user you're authorized
 as is the one which will be recorded as supporting this endpoint.
 
 ### Request body
@@ -190,7 +227,7 @@ decided yet, this is taken as a raw string and saved as-is.
 
 Remove the current user's support for this exhibit
 
-### Authentication
+### Authorization
 
-You must be authenticated to hit this endpint. The user you're authenticated
+You must be authorized to hit this endpint. The user you're authorized
 as is the one whose support will be removed.

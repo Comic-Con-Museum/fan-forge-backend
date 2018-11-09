@@ -5,36 +5,35 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
-@Entity
 public class User implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false, updatable = false)
-    private final int uid;
-
-    @Column(unique = true, nullable = false)
+    /**
+     * The unique ID of the User in the database
+     */
+    private final String uid;
+    /**
+     * The username of the User
+     */
     private final String username;
-
-    // BCrypt hash
-    @Column(length = 60, nullable = false)
-    private final byte[] password;
-
-    @Column(name = "admin")
+    /**
+     * The token used to log in as this User for this request
+     */
+    private final String token;
+    /**
+     * Whether or not this user is an administrator
+     */
     private final boolean admin;
 
-    public User(int uid, String username, byte[] password, boolean admin) {
+    public User(String uid, String username, String token, boolean admin) {
         this.uid = uid;
         this.username = username;
-        this.password = password;
+        this.token = token;
         this.admin = admin;
     }
 
-    public int getId() {
+    public String getId() {
         return this.uid;
     }
 
@@ -51,15 +50,21 @@ public class User implements UserDetails {
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (admin) {
-            return Collections.emptyList();
+            return Arrays.asList(
+                    new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER")
+            );
         } else {
-            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
         }
     }
 
+    /**
+     * Get the token used in this request to login as this user.
+     * @return The authentication token.
+     */
     @Override
     public String getPassword() {
-        return new String(password, StandardCharsets.ISO_8859_1);
+        return token;
     }
 
     @Override

@@ -1,105 +1,116 @@
 package org.comic_con.museum.fcb.controllers;
 
 import org.comic_con.museum.fcb.controllers.inputs.ExhibitCreation;
-import org.comic_con.museum.fcb.controllers.responses.ExhibitAbbreviated;
 import org.comic_con.museum.fcb.controllers.responses.ExhibitFull;
 import org.comic_con.museum.fcb.controllers.responses.Feed;
+import org.comic_con.museum.fcb.dal.SupportQueryBean;
+import org.comic_con.museum.fcb.dal.TransactionWrapper;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.models.dal.ExhibitDAL;
+import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class ExhibitEndpoints {
-    private final Logger LOG = LoggerFactory.getLogger(ExhibitEndpoints.class);
+    private final Logger LOG = LoggerFactory.getLogger("endpoints.exhibit");
 
-    {
-        final List<String> titles = Arrays.asList(
-                "Hello, World!",
-                "smook",
-                "Batman in the 1960s",
-                "Jason Voorhees",
-                "Yahtzee Croshaw",
-                "A banana",
-                "Why Sonic sucks",
-                "Why Sonic rules",
-                "Help, I've fallen and I can't get up!",
-                "HI, BILLY MAYS HERE!",
-                "Have you ever CCIDENTALLY HIT CAPSLOCK ISNTEAD OF a",
-                "How post-2008 retro-terminal-colored ASCII art affected mid-2010s Batman linework",
-                "~none of those are good exhibit titles, I'm sorry"
-        );
-        Collections.shuffle(titles);
-
-        User original = new User("nic".hashCode(), "nic", null, false);
-        for (String title : titles) {
-            Integer id = createExhibit(new ExhibitCreation(title, "Description for " + title), original).getBody();
-            if (null != id) {
-                ExhibitDAL.getById(id).setCreated(Instant.now().minus(id, ChronoUnit.DAYS));
-            }
-        }
+    private final ExhibitQueryBean exhibits;
+    private final SupportQueryBean supports;
+    private final TransactionWrapper transactions;
+    
+    @Autowired
+    public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
+                            TransactionWrapper transactionWrapperBean) {
+        this.exhibits = exhibitQueryBean;
+        this.supports = supportQueryBean;
+        this.transactions = transactionWrapperBean;
     }
 
+    // TODO separate out into its own class?
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx, @AuthenticationPrincipal User user) {
-        ExhibitDAL.FeedType feedType;
+    public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
+                                        @AuthenticationPrincipal User user) {
+        ExhibitQueryBean.FeedType feed;
         switch (feedName) {
             case "new":
-                feedType = ExhibitDAL.FeedType.NEW;
+                LOG.info("NEW feed");
+                feed = ExhibitQueryBean.FeedType.NEW;
                 break;
             case "alphabetical":
-                feedType = ExhibitDAL.FeedType.ALPHABETICAL;
+                LOG.info("ALPHABETICAL feed");
+                feed = ExhibitQueryBean.FeedType.ALPHABETICAL;
                 break;
             default:
+                LOG.info("Unknown feed: {}", feedName);
+                // 404 instead of 400 because they're trying to hit a nonexistent endpoint (/feed/whatever), not passing
+                // bad data to a real endpoint
                 return ResponseEntity.notFound().build();
         }
-        List<Exhibit> feed = ExhibitDAL.getFeed(startIdx, feedType);
-        if (feed == null) {
-            return ResponseEntity.notFound().build();
-        }
-        Feed respData = new Feed();
-        respData.exhibits = feed.stream().map(e -> new ExhibitAbbreviated(e, user)).collect(Collectors.toList());
-        respData.startIdx = startIdx;
-        respData.count = ExhibitDAL.getTotalCount();
-        respData.pageSize = ExhibitDAL.FEED_PAGE_SIZE;
-        return ResponseEntity.ok(respData);
+        
+        long count;
+        List<Feed.Entry> entries;
+        try (TransactionWrapper.Transaction tr = transactions.start()) {
+            count = exhibits.getCount();
+            // This can definitely be combined into one query if necessary
+            // or even just two (instead of PAGE_SIZE+1)
+            List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
+            entries = new ArrayList<>(feedRaw.size());
+            for (Exhibit exhibit : feedRaw) {
+                entries.add(new Feed.Entry(
+                        exhibit, supports.supporterCount(exhibit),
+                        supports.isSupporting(user, exhibit)
+                ));
+            }
+            tr.commit();
+        } // no catch because we're just closing the transaction, we want errors to fall through
+        return ResponseEntity.ok(new Feed(startIdx, count, entries));
     }
 
     @RequestMapping(value = "/exhibit/{id}")
-    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
-        Exhibit ex = ExhibitDAL.getById(id);
-        if (ex == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new ExhibitFull(ex, user));
+    public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
+        Exhibit e = exhibits.getById(id);
+        return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e)));
     }
 
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST)
-    public ResponseEntity<Integer> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) {
-        LOG.info("Creating exhibit from user {}", user);
-        Exhibit built = data.build(user);
-        if (built == null) {
+    public ResponseEntity<Long> createExhibit(@RequestBody ExhibitCreation data, @AuthenticationPrincipal User user) throws SQLException {
+        if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(ExhibitDAL.create(built));
+        long id = exhibits.create(data.build(user), user);
+        return ResponseEntity.ok(id);
+    }
+    
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT)
+    public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, @RequestBody ExhibitCreation data,
+                                                   @AuthenticationPrincipal User user) {
+        Exhibit ex = data.build(user);
+        ex.setId(id);
+        ExhibitFull resp;
+        try (TransactionWrapper.Transaction t = transactions.start()) {
+            exhibits.update(ex, user);
+            resp = new ExhibitFull(
+                    exhibits.getById(ex.getId()),
+                    supports.supporterCount(ex),
+                    supports.isSupporting(user, ex)
+            );
+            t.commit();
+        }
+        return ResponseEntity.ok(resp);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity deleteExhibit(@PathVariable int id) {
-        String user = "nic";
-        if (ExhibitDAL.delete(id, user)) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity deleteExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
+        exhibits.delete(id, user);
+        return ResponseEntity.noContent().build();
     }
 }

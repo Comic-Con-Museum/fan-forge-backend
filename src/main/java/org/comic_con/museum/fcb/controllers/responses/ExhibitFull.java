@@ -1,24 +1,18 @@
 package org.comic_con.museum.fcb.controllers.responses;
 
 import org.comic_con.museum.fcb.models.Exhibit;
-import org.comic_con.museum.fcb.models.User;
 
 import java.time.Instant;
 
-public class ExhibitFull {
-    private final Exhibit exhibit;
-    private final User user;
-
-    public ExhibitFull(Exhibit showing, User toUser) {
-        this.exhibit = showing;
-        this.user = toUser;
+public class ExhibitFull extends Feed.Entry {
+    public final String author;
+    public final Instant created;
+    public final String[] tags;
+    
+    public ExhibitFull(Exhibit of, long supporters, Boolean supported) {
+        super(of, supporters, supported);
+        this.author = of.getAuthor();
+        this.created = of.getCreated();
+        this.tags = of.getTags();
     }
-
-    public int getId() { return this.exhibit.getId(); }
-    public String getTitle() { return this.exhibit.getTitle(); }
-    public String getDescription() { return this.exhibit.getDescription(); }
-    public int getSupporterCount() { return this.exhibit.getSupporters().size(); }
-    public boolean isSupported() { return this.user != null && this.exhibit.getSupporters().contains(this.user.getId()); }
-    public String getAuthor() { return this.exhibit.getAuthor(); }
-    public Instant getCreated() { return this.exhibit.getCreated(); }
 }
