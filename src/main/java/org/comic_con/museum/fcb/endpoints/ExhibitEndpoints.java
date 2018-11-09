@@ -100,20 +100,23 @@ public class ExhibitEndpoints {
             return ResponseEntity.badRequest().build();
         }
 
-        // TODO Upload images instead of just listing them
-        for (MultipartFile file : req.getFiles("thumbnail")) {
-            LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
-                    ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                    file.getContentType());
-        }
-        for (MultipartFile file : req.getFiles("cover")) {
-            LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
-                    ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                    file.getContentType());
-        }
-
         // TODO wrap in transaction
-        long id = exhibits.create(data.build(user), user);
+        long id;
+        try (TransactionWrapper.Transaction t = transactions.start()) {
+            id = exhibits.create(data.build(user), user);
+
+            // TODO Upload images instead of just listing them
+            for (MultipartFile file : req.getFiles("thumbnail")) {
+                LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
+                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
+                        file.getContentType());
+            }
+            for (MultipartFile file : req.getFiles("cover")) {
+                LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
+                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
+                        file.getContentType());
+            }
+        }
         return ResponseEntity.ok(id);
     }
     
