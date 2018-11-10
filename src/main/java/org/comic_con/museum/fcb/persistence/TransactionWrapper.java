@@ -1,17 +1,17 @@
-package org.comic_con.museum.fcb.dal;
+package org.comic_con.museum.fcb.persistence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.io.Closeable;
 
 // TODO Add support for S3 "transactions" (rollback on failure)
-@Component
+@Service
 public class TransactionWrapper {
     private static final Logger LOG = LoggerFactory.getLogger("transaction");
     
@@ -58,5 +58,9 @@ public class TransactionWrapper {
     public Transaction start() {
         LOG.info("Starting transaction");
         return new Transaction(transactionManager.getTransaction(new DefaultTransactionDefinition()));
+    }
+    
+    public DataSourceTransactionManager getTransactionManager() {
+        return this.transactionManager;
     }
 }

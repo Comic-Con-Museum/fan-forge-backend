@@ -6,17 +6,20 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import org.comic_con.museum.fcb.dal.SupportQueryBean;
+import org.comic_con.museum.fcb.persistence.SupportQueryBean;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
+import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -50,12 +53,18 @@ public class Application implements CommandLineRunner {
     @Value("${fcb.add-test-data}")
     private boolean addTestData;
     
+    @Value("${fcb.close-on-init-fail}")
+    private boolean closeOnInitFail;
+    
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
+    private final ConfigurableApplicationContext ctx;
     
-    public Application(ExhibitQueryBean exhibits, SupportQueryBean supports) {
+    @Autowired
+    public Application(ExhibitQueryBean exhibits, SupportQueryBean supports, ConfigurableApplicationContext ctx) {
         this.exhibits = exhibits;
         this.supports = supports;
+        this.ctx = ctx;
     }
 
     public static void main(String[] args) {
@@ -130,7 +139,9 @@ public class Application implements CommandLineRunner {
             LOG.info("Done initializing DB");
         } catch (Exception e) {
             LOG.error("Failed while initializing DB", e);
-            throw e; // crash on error, but log it first
+            if (closeOnInitFail) {
+                ctx.close();
+            }
         }
         
         try {
@@ -147,7 +158,10 @@ public class Application implements CommandLineRunner {
             s3.listBuckets().forEach(b -> LOG.info(b.getName()));
             LOG.info("Done with S3 stuff");
         } catch (Exception e) {
-            LOG.error("Non-fatal error during S3 demo: {}", e.getMessage());
+            LOG.error("Failed while demoing S3", e.getMessage());
+            if (closeOnInitFail) {
+                ctx.close();
+            }
         }
     }
 }

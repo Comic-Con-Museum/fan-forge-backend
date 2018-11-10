@@ -1,7 +1,7 @@
 package org.comic_con.museum.fcb.endpoints.responses;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
+import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.comic_con.museum.fcb.models.Exhibit;
 
 import java.util.List;
