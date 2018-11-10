@@ -68,6 +68,10 @@ To run the server, you need, in order:
         database.
     *    `spring.datasource.password`: The password for that username.
     
+    You might not need to supply the URL and the username/password. Some JDBC
+    URLs already have that information provided. If you're not sure, try
+    leaving it off -- if everything works as expected, it's unnecessary.
+    
     If you want to use a custom driver, you'll need to specify
     `spring.datasource.driver-class-name` as well. This **is not** necessary
     in most cases, though. If you get an error about being unable to detect
