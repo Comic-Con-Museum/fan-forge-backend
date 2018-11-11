@@ -21,6 +21,6 @@ public class ExhibitCreation {
     public Exhibit build(User author) {
         // We don't do any validation in here because different endpoints have
         // different requirements, so each one implements its own.
-        return new Exhibit(-1, this.title, this.description, author.getId(), Instant.now(), this.tags);
+        return new Exhibit(-1, this.title, this.description, author.getId(), Instant.now(), this.tags, null);
     }
 }

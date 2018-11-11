@@ -56,7 +56,8 @@ public class ExhibitQueryBean {
                     rs.getString("author"),
                     // TODO: getting a java.sql.Timestamp and converting to Instant may have issues
                     rs.getTimestamp("created").toInstant(),
-                    (String[]) rs.getArray("tags").getArray()
+                    (String[]) rs.getArray("tags").getArray(),
+                    null
             );
         }
     }

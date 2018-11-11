@@ -1,6 +1,7 @@
 package org.comic_con.museum.fcb.endpoints.responses;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.comic_con.museum.fcb.models.Artifact;
 import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.comic_con.museum.fcb.models.Exhibit;
 
@@ -8,10 +9,10 @@ import java.util.List;
 
 public class Feed {
     public static class Entry {
-        // TODO Add cover
         public final long id;
         public final String title;
         public final String description;
+        public final Artifact cover;
         public final long supporters;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         public final Boolean supported;
@@ -20,6 +21,7 @@ public class Feed {
             this.id = of.getId();
             this.title = of.getTitle();
             this.description = of.getDescription();
+            this.cover = of.getCover();
             this.supporters = supporters;
             this.supported = supported;
         }

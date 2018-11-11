@@ -88,7 +88,7 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/exhibit/{id}")
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
-        return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e)));
+        return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e), null));
     }
 
     // TODO Return created exhibit, not just ID
@@ -147,7 +147,8 @@ public class ExhibitEndpoints {
             resp = new ExhibitFull(
                     exhibits.getById(ex.getId()),
                     supports.supporterCount(ex),
-                    supports.isSupporting(user, ex)
+                    supports.isSupporting(user, ex),
+                    null
             );
             t.commit();
         }
