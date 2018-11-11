@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import org.comic_con.museum.fcb.endpoints.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.endpoints.responses.ExhibitFull;
 import org.comic_con.museum.fcb.endpoints.responses.Feed;
+import org.comic_con.museum.fcb.persistence.S3Bean;
 import org.comic_con.museum.fcb.persistence.SupportQueryBean;
 import org.comic_con.museum.fcb.persistence.TransactionWrapper;
 import org.comic_con.museum.fcb.models.Exhibit;
@@ -32,13 +33,15 @@ public class ExhibitEndpoints {
 
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
+    private final S3Bean s3;
     private final TransactionWrapper transactions;
     
     @Autowired
     public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
-                            TransactionWrapper transactionWrapperBean) {
+                            S3Bean s3, TransactionWrapper transactionWrapperBean) {
         this.exhibits = exhibitQueryBean;
         this.supports = supportQueryBean;
+        this.s3 = s3;
         this.transactions = transactionWrapperBean;
     }
 
@@ -88,33 +91,35 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e)));
     }
 
+    // TODO Return created exhibit, not just ID
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) throws SQLException, IOException {
         String dataString = req.getParameter("data");
         if (dataString == null) {
+            LOG.info("No data part in body");
             return ResponseEntity.badRequest().build();
         }
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
+            LOG.info("Required field not provided");
             return ResponseEntity.badRequest().build();
         }
 
-        // TODO wrap in transaction
+        List<MultipartFile> covers = req.getFiles("cover");
+        if (covers.size() > 1) {
+            throw new IllegalArgumentException("Only one cover can be specified");
+        }
+        MultipartFile cover = covers.size() == 0 ? null : covers.get(0);
+
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
 
-            // TODO Upload images instead of just listing them
-            for (MultipartFile file : req.getFiles("thumbnail")) {
-                LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
+            if (cover != null) {
+                s3.storeExhibitCover(id, cover);
             }
-            for (MultipartFile file : req.getFiles("cover")) {
-                LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
-            }
+            
+            t.commit();
         }
         return ResponseEntity.ok(id);
     }
@@ -124,19 +129,15 @@ public class ExhibitEndpoints {
                                                    @AuthenticationPrincipal User user) throws IOException {
         String dataString = req.getParameter("data");
         if (dataString == null) {
+            LOG.info("No data part in body");
             return ResponseEntity.badRequest().build();
         }
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         Exhibit ex = data.build(user);
         ex.setId(id);
         ExhibitFull resp;
+        // TODO Update to match POST
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            // TODO Upload images instead of just listing them
-            for (MultipartFile file : req.getFiles("thumbnail")) {
-                LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
-            }
             for (MultipartFile file : req.getFiles("cover")) {
                 LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
                         ImageIO.read(file.getInputStream()) != null ? "is" : "is not",

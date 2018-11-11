@@ -3,6 +3,7 @@ package org.comic_con.museum.fcb.models;
 import java.time.Instant;
 
 public class Exhibit {
+    // TODO Add cover to model and table
     private long id;
     private String title;
     private String description;

@@ -20,7 +20,7 @@ import java.util.Map;
 
 @Repository
 public class ExhibitQueryBean {
-    private static final Logger LOG = LoggerFactory.getLogger("query.exhibits");
+    private static final Logger LOG = LoggerFactory.getLogger("persist.exhibits");
     
     public static final int PAGE_SIZE = 10;
     

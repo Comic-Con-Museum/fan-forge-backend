@@ -8,6 +8,7 @@ import java.util.List;
 
 public class Feed {
     public static class Entry {
+        // TODO Add cover
         public final long id;
         public final String title;
         public final String description;

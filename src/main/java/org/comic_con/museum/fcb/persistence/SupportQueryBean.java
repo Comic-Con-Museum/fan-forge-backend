@@ -15,7 +15,7 @@ import java.util.*;
 
 @Repository
 public class SupportQueryBean {
-    private static final Logger LOG = LoggerFactory.getLogger("query.support");
+    private static final Logger LOG = LoggerFactory.getLogger("persist.support");
     
     private final NamedParameterJdbcTemplate sql;
     
