@@ -113,8 +113,8 @@ There are a few more optional configuration options available.
 
 There are also some debug options. In production, these **must** be left
 unspecified, as changing them could cause catastrophic data loss, massive
-instability, or severely compromise security. They're available only to make
-debugging easier.
+instability, or severely compromise security. They're available **only** to
+make debugging easier.
 
 *   `fcb.reset-on-start`: Whether or not the database and S3 will be
     completely cleared when the server starts. This ensures that the database

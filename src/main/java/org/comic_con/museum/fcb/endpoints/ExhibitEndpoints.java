@@ -5,12 +5,9 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import org.comic_con.museum.fcb.endpoints.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.endpoints.responses.ExhibitFull;
 import org.comic_con.museum.fcb.endpoints.responses.Feed;
-import org.comic_con.museum.fcb.persistence.S3Bean;
-import org.comic_con.museum.fcb.persistence.SupportQueryBean;
-import org.comic_con.museum.fcb.persistence.TransactionWrapper;
+import org.comic_con.museum.fcb.persistence.*;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +30,16 @@ public class ExhibitEndpoints {
 
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
+    private final ArtifactQueryBean artifacts;
     private final S3Bean s3;
     private final TransactionWrapper transactions;
     
     @Autowired
     public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
-                            S3Bean s3, TransactionWrapper transactionWrapperBean) {
+                            ArtifactQueryBean artifacts, S3Bean s3, TransactionWrapper transactionWrapperBean) {
         this.exhibits = exhibitQueryBean;
         this.supports = supportQueryBean;
+        this.artifacts = artifacts;
         this.s3 = s3;
         this.transactions = transactionWrapperBean;
     }
@@ -88,7 +87,12 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/exhibit/{id}")
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
-        return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e), null));
+        return ResponseEntity.ok(new ExhibitFull(
+                e,
+                supports.supporterCount(e),
+                supports.isSupporting(user, e),
+                artifacts.artifactsOfExhibit(id)
+        ));
     }
 
     // TODO Return created exhibit, not just ID
@@ -115,6 +119,7 @@ public class ExhibitEndpoints {
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
 
+            // TODO Exhibits
             if (cover != null) {
                 s3.storeExhibitCover(id, cover);
             }
@@ -148,7 +153,7 @@ public class ExhibitEndpoints {
                     exhibits.getById(ex.getId()),
                     supports.supporterCount(ex),
                     supports.isSupporting(user, ex),
-                    null
+                    artifacts.artifactsOfExhibit(id)
             );
             t.commit();
         }

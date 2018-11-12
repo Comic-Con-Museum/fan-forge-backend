@@ -1,5 +1,6 @@
 package org.comic_con.museum.fcb.persistence;
 
+import org.comic_con.museum.fcb.models.Artifact;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ import java.util.Map;
 public class ExhibitQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.exhibits");
     
-    public static final int PAGE_SIZE = 10;
+    public static int PAGE_SIZE = 10;
     
     public enum FeedType {
         NEW("created DESC"),
@@ -32,7 +33,7 @@ public class ExhibitQueryBean {
         
         FeedType(String orderBy) { this.orderBy = orderBy; }
         
-        private String getOrderBy() { return this.orderBy; }
+        private String getSql() { return this.orderBy; }
     }
     
     private final JdbcTemplate sql;
@@ -46,9 +47,23 @@ public class ExhibitQueryBean {
                 .usingGeneratedKeyColumns("eid");
     }
 
-    private static class ExhibitMapper implements RowMapper<Exhibit> {
+    private static class Mapper implements RowMapper<Exhibit> {
         @Override
         public Exhibit mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Artifact cover;
+            if (rs.getString("aTitle") == null) {
+                cover = null;
+            } else {
+                cover = new Artifact(
+                        rs.getLong("aid"),
+                        rs.getString("atitle"),
+                        rs.getString("adesc"),
+                        true, // always true; we only get covers in this bean
+                        rs.getLong("aimg"),
+                        rs.getTimestamp("acreated").toInstant()
+                );
+            }
+            
             return new Exhibit(
                     rs.getInt("eid"),
                     rs.getString("title"),
@@ -57,7 +72,7 @@ public class ExhibitQueryBean {
                     // TODO: getting a java.sql.Timestamp and converting to Instant may have issues
                     rs.getTimestamp("created").toInstant(),
                     (String[]) rs.getArray("tags").getArray(),
-                    null
+                    cover
             );
         }
     }
@@ -69,13 +84,13 @@ public class ExhibitQueryBean {
         }
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS exhibits ( " +
-                "    eid SERIAL PRIMARY KEY, " +
-                "    title VARCHAR(255) NOT NULL, " +
-                "    description TEXT NOT NULL, " +
-                "    author TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
-                "    created TIMESTAMP WITH TIME ZONE NOT NULL, " +
+                "   eid SERIAL PRIMARY KEY, " +
+                "   title VARCHAR(255) NOT NULL, " +
+                "   description TEXT NOT NULL, " +
+                "   author TEXT ,"+//TODO INTEGER REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
+                "   tags TEXT ARRAY, " +
+                "   created TIMESTAMP WITH TIME ZONE NOT NULL " +
                 // TODO Once we figure out how we want tags to work, we can make this better
-                "    tags TEXT ARRAY " +
                 ")"
         );
     }
@@ -83,9 +98,15 @@ public class ExhibitQueryBean {
     public Exhibit getById(long id) {
         LOG.info("Getting exhibit with ID {}", id);
         return sql.queryForObject(
-                "SELECT * FROM exhibits WHERE eid = ?",
+                "SELECT e.*, a.aid aid, a.title atitle, a.description adesc, " +
+                "       a.image_id aimg, a.created acreated " +
+                "FROM exhibits e " +
+                "LEFT JOIN artifacts a " +
+                "       ON a.exhibit = e.eid " +
+                "      AND a.cover " +
+                "WHERE eid = ?",
                 new Object[] { id },
-                new ExhibitMapper()
+                new Mapper()
         );
     }
 
@@ -154,14 +175,13 @@ public class ExhibitQueryBean {
         LOG.info("Getting {} feed", type);
         
         return sql.query(
-                "SELECT * FROM exhibits " +
-                // this concatenation isn't a SQL injection vulnerability because it's
-                // not user input; the value is hard-coded into the FeedType enum.
-                "ORDER BY " + type.getOrderBy() + " " +
-                "LIMIT " + PAGE_SIZE + " " +
+                "SELECT e.* FROM exhibits e " +
+                "ORDER BY " + type.getSql() + " " +
+                "LIMIT ? " +
                 "OFFSET ?",
-                new ExhibitMapper(),
-                startIdx
+                new Mapper(),
+                startIdx,
+                PAGE_SIZE
         );
     }
     

@@ -1,15 +1,36 @@
 package org.comic_con.museum.fcb.models;
 
+import java.time.Instant;
+
 public class Artifact {
-    public final long aid;
-    public final String title;
-    public final String description;
-    public final long image;
+    private long id;
+    private String title;
+    private String description;
+    private boolean cover;
+    private long image;
+    private Instant created;
     
-    public Artifact(long aid, String title, String description, long image) {
-        this.aid = aid;
+    public Artifact(long id, String title, String description, boolean cover,
+                    long image, Instant created) {
+        this.id = id;
         this.title = title;
         this.description = description;
+        this.cover = cover;
         this.image = image;
+        this.created = created;
     }
+    
+    public long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public boolean isCover() { return cover; }
+    public long getImage() { return image; }
+    public Instant getCreated() { return created; }
+    
+    public void setId(long id) { this.id = id; }
+    public void setTitle(String title) { this.title = title; }
+    public void setDescription(String description) { this.description = description; }
+    public void setCover(boolean cover) { this.cover = cover; }
+    public void setImage(long image) { this.image = image; }
+    public void setCreated(Instant created) { this.created = created; }
 }
