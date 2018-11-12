@@ -27,6 +27,7 @@ public class S3Bean {
     @Value("${s3.bucket}") private String bucketName;
     
     private final AmazonS3 client;
+    // TODO Probably also connect to DB to make sure we don't duplicate IDs?
     
     public S3Bean(
             @Value("${s3.access-key}") String accessKey,
@@ -69,6 +70,17 @@ public class S3Bean {
     public S3Object getImage(long id) {
         LOG.info("Getting image of ID {}", id);
         return client.getObject(bucketName, String.valueOf(id));
+    }
+    
+    private long nextId = 0;
+    public long putImage(MultipartFile image) throws IOException {
+        LOG.info("Storing image to ID {}", nextId);
+        client.putObject(
+                bucketName,
+                String.valueOf(nextId),
+                image.getInputStream(),
+                getMetadata(image));
+        return nextId++;
     }
     
     private static void validateImage(MultipartFile image) throws IOException {
