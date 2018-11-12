@@ -8,15 +8,17 @@ public class Artifact {
     private String description;
     private boolean cover;
     private long image;
+    private String creator;
     private Instant created;
     
     public Artifact(long id, String title, String description, boolean cover,
-                    long image, Instant created) {
+                    long image, String creator, Instant created) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.cover = cover;
         this.image = image;
+        this.creator = creator;
         this.created = created;
     }
     
@@ -25,6 +27,7 @@ public class Artifact {
     public String getDescription() { return description; }
     public boolean isCover() { return cover; }
     public long getImage() { return image; }
+    public String getCreator() { return creator; }
     public Instant getCreated() { return created; }
     
     public void setId(long id) { this.id = id; }
@@ -32,5 +35,6 @@ public class Artifact {
     public void setDescription(String description) { this.description = description; }
     public void setCover(boolean cover) { this.cover = cover; }
     public void setImage(long image) { this.image = image; }
+    public void setCreator(String creator) { this.creator = creator; }
     public void setCreated(Instant created) { this.created = created; }
 }

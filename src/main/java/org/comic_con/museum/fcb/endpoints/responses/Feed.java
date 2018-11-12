@@ -8,11 +8,25 @@ import org.comic_con.museum.fcb.models.Exhibit;
 import java.util.List;
 
 public class Feed {
+    public static class Cover {
+        public final String title;
+        public final String description;
+        public final long image;
+        public final String creator;
+        
+        public Cover(Artifact ar) {
+            this.title = ar.getTitle();
+            this.description = ar.getDescription();
+            this.image = ar.getImage();
+            this.creator = ar.getCreator();
+        }
+    }
+    
     public static class Entry {
         public final long id;
         public final String title;
         public final String description;
-        public final Artifact cover;
+        public final Cover cover;
         public final long supporters;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         public final Boolean supported;
@@ -21,7 +35,7 @@ public class Feed {
             this.id = of.getId();
             this.title = of.getTitle();
             this.description = of.getDescription();
-            this.cover = of.getCover();
+            this.cover = of.getCover() == null ? null : new Cover(of.getCover());
             this.supporters = supporters;
             this.supported = supported;
         }

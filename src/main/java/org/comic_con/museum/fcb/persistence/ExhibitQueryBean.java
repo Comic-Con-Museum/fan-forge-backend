@@ -23,7 +23,7 @@ import java.util.Map;
 public class ExhibitQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.exhibits");
     
-    public static int PAGE_SIZE = 10;
+    public static final int PAGE_SIZE = 10;
     
     public enum FeedType {
         NEW("created DESC"),
@@ -61,6 +61,7 @@ public class ExhibitQueryBean {
                         rs.getString("adesc"),
                         true, // always true; we only get covers in this bean
                         rs.getLong("aimg"),
+                        rs.getString("acreator"),
                         rs.getTimestamp("acreated").toInstant()
                 );
             }
@@ -101,7 +102,7 @@ public class ExhibitQueryBean {
         return sql.queryForObject(
                 "SELECT e.*, " +
                 "       a.aid aid, a.title atitle, a.description adesc, " +
-                "       a.image_id aimg, a.created acreated " +
+                "       a.image_id aimg, a.creator acreator, a.created acreated " +
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +
@@ -178,7 +179,7 @@ public class ExhibitQueryBean {
         
         return sql.query(
                 "SELECT e.*, a.aid aid, a.title atitle, a.description adesc, " +
-                "       a.image_id aimg, a.created acreated " +
+                "       a.image_id aimg, a.creator acreator, a.created acreated " +
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +

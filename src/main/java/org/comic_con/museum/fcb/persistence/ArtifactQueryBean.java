@@ -1,7 +1,6 @@
 package org.comic_con.museum.fcb.persistence;
 
 import org.comic_con.museum.fcb.models.Artifact;
-import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +33,7 @@ public class ArtifactQueryBean {
                     rs.getString("description"),
                     rs.getBoolean("cover"),
                     rs.getLong("image_id"),
+                    rs.getString("creator"),
                     rs.getTimestamp("created").toInstant()
             );
         }

@@ -1,11 +1,5 @@
 package org.comic_con.museum.fcb;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.comic_con.museum.fcb.models.Artifact;
 import org.comic_con.museum.fcb.persistence.ArtifactQueryBean;
 import org.comic_con.museum.fcb.persistence.S3Bean;
@@ -29,7 +23,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 
 @SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
@@ -129,6 +122,7 @@ public class Application implements CommandLineRunner {
                         0, "artifact " + aIdx + " of " + eIdx,
                         "description of artifact",
                         aIdx == 0, imageId++,
+                        null,
                         Instant.now()
                 ), newId, supporters[aIdx]);
             }
@@ -155,7 +149,8 @@ public class Application implements CommandLineRunner {
         
         try {
             LOG.info("Initializing S3");
-            
+            // s3.confirmBucket
+            LOG.info("Done initializing S3");
         } catch (Exception e) {
             LOG.error("Failed while demoing S3", e);
             if (closeOnInitFail) {
