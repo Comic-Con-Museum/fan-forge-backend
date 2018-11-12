@@ -47,11 +47,12 @@ public class ExhibitQueryBean {
                 .usingGeneratedKeyColumns("eid");
     }
 
+    // TODO Switch mappers to lambdas/method references?
     private static class Mapper implements RowMapper<Exhibit> {
         @Override
         public Exhibit mapRow(ResultSet rs, int rowNum) throws SQLException {
             Artifact cover;
-            if (rs.getString("aTitle") == null) {
+            if (rs.getString("atitle") == null) {
                 cover = null;
             } else {
                 cover = new Artifact(
@@ -98,7 +99,8 @@ public class ExhibitQueryBean {
     public Exhibit getById(long id) {
         LOG.info("Getting exhibit with ID {}", id);
         return sql.queryForObject(
-                "SELECT e.*, a.aid aid, a.title atitle, a.description adesc, " +
+                "SELECT e.*, " +
+                "       a.aid aid, a.title atitle, a.description adesc, " +
                 "       a.image_id aimg, a.created acreated " +
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
@@ -175,13 +177,18 @@ public class ExhibitQueryBean {
         LOG.info("Getting {} feed", type);
         
         return sql.query(
-                "SELECT e.* FROM exhibits e " +
+                "SELECT e.*, a.aid aid, a.title atitle, a.description adesc, " +
+                "       a.image_id aimg, a.created acreated " +
+                "FROM exhibits e " +
+                "LEFT JOIN artifacts a " +
+                "       ON a.exhibit = e.eid " +
+                "      AND a.cover " +
                 "ORDER BY " + type.getSql() + " " +
                 "LIMIT ? " +
                 "OFFSET ?",
                 new Mapper(),
-                startIdx,
-                PAGE_SIZE
+                PAGE_SIZE,
+                startIdx
         );
     }
     
