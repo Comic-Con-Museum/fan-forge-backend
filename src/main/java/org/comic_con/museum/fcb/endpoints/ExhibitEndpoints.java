@@ -110,19 +110,16 @@ public class ExhibitEndpoints {
         }
 
         List<MultipartFile> covers = req.getFiles("cover");
+        for (MultipartFile cover : covers) {
+            LOG.info("Cover filename: {}", cover.getOriginalFilename());
+        }
         if (covers.size() > 1) {
             throw new IllegalArgumentException("Only one cover can be specified");
         }
-        MultipartFile cover = covers.size() == 0 ? null : covers.get(0);
 
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
-
-            // TODO Exhibits
-            if (cover != null) {
-                s3.storeExhibitCover(id, cover);
-            }
             
             t.commit();
         }
