@@ -28,6 +28,7 @@ public class S3Bean {
     
     private final AmazonS3 client;
     // TODO Probably also connect to DB to make sure we don't duplicate IDs?
+    // TODO Figure out how to make transactional (maybe request-scoped transaction manager?)
     
     public S3Bean(
             @Value("${s3.access-key}") String accessKey,
@@ -46,27 +47,7 @@ public class S3Bean {
                 )).build();
     }
     
-    // TODO Switch to storing by ID (UUID?)
-    public void storeExhibitCover(long exhibitId, MultipartFile image) throws IOException {
-        LOG.info("Storing cover of exhibit {}", exhibitId);
-        validateImage(image);
-        client.putObject(
-                bucketName, exhibitId + "/cover",
-                image.getInputStream(),
-                getMetadata(image)
-        );
-    }
-    
-    public void storeArtifactImage(long exhibitId, long artifactId, MultipartFile image) throws IOException {
-        LOG.info("Storing image of artifact {} in exhibit {}", artifactId, exhibitId);
-        validateImage(image);
-        client.putObject(
-                bucketName, exhibitId + "/artifacts/" + artifactId,
-                image.getInputStream(),
-                getMetadata(image)
-        );
-    }
-    
+    // TODO Switch to storing by UUID?
     public S3Object getImage(long id) {
         LOG.info("Getting image of ID {}", id);
         return client.getObject(bucketName, String.valueOf(id));
@@ -75,6 +56,7 @@ public class S3Bean {
     private long nextId = 0;
     public long putImage(MultipartFile image) throws IOException {
         LOG.info("Storing image to ID {}", nextId);
+        validateImage(image);
         client.putObject(
                 bucketName,
                 String.valueOf(nextId),
@@ -103,6 +85,7 @@ public class S3Bean {
         while (readers.hasNext()) {
             ImageReader reader = readers.next();
             if (reader.getFormatName().equalsIgnoreCase(expectedType)) {
+                // TODO possible jpg/jpeg conflicts?
                 matchingReader = reader;
                 break;
             }
