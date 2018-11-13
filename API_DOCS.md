@@ -139,6 +139,11 @@ details about any given exhibit, use `GET /exhibit/{id}`.
       id: integer // The exhibit's unique ID
       title: string // The title or headline of the exhibit
       description: string // A much longer explanation, with details
+      cover: { // information about the cover image, or `null` if there is none
+        title: string // the title of the cover image
+        description: string // its description
+        image: integer // the ID of the actual image
+      }
       supporters: integer // How many people have supported the exhibit
       // requires login:
       isSupported: boolean // Whether or not the current user supports it
@@ -165,9 +170,20 @@ returns a 404.
   id: integer // The exhibit's unique ID
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
-  supporterCount: integer // How many people have supported the exhibit
+  supporters: integer // How many people have supported the exhibit
   author: string // The username of the creator of the exhibit
   created: datetime // When the exhibit was created
+  tags: [ string ] // The tags of the exhibit
+  artifacts: [ // The artifacts associated with this exhibit
+    {
+      title: string // A short title for the artifact
+      description: string // A detailed description of what the artifact is
+      image: integer // The ID of this artifact's image
+      creator: string // The username of the artifact's creator
+      cover: boolean // Whether or not this artifact is the cover
+      created: datetime // When this artifact was created
+    }
+  ]
   // requires login:
   isSupported: boolean // Whether or not the current user supports it
 }
@@ -191,39 +207,55 @@ with this structure:
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
   tags: [ string ] // The tags to associate this exhibit with
+  artifacts: [ // Information about the artifacts being uploaded
+    {
+      // All fields from request body of POST /artifact, plus:
+      image: string // the filename of that artifact's image.
+    }
+  ]
 }
 ```
 
-`data` contains all of the data about the exhibit, except for the images to be
-attached to it. The images are attached as other parts of the multipart
-request. The `name` marks the purpose of the image -- the intended cover image
-is `name`d `cover`, and all other images are `name`d `thumbnail`. A full
-request body with the boundary `||FormBoundary||` might look like this:
+The `data` parameter contains all of the metadata about the exhibit to be made.
+The `image` field in each artifact is the parameter name of the image file to
+associate with that artifact. There must be at most a single artifact with
+`cover: true`. If there are multiple files with one parameter name, the most
+embarrassing one is used. A full HTTP request might look like:
 
 ```
+POST http://localhost:8080/exhibit HTTP/1.1
+Authorization: Bearer U3RvcCBkZWNvZGluZyA6KA==
+Content-Type: multipart/form-data; boundary=||FormBoundary||
+
 --||FormBoundary||
 Content-Disposition: form-data; name="data"
 Content-Type: application/json
 {
   "title": "This is an example exhibit.",
   "description": "Examples can help make something easier to understand.",
-  "tags": [ "demo", "example", "patronizing" ]
+  "tags": [ "demo", "example", "patronizing" ],
+  "artifacts": [
+    {
+      <metadata elided to avoid duplication>,
+      "image": "(na){16} batman",
+      cover: true
+    },
+    {
+      <metadata elided again for same reason>,
+      "image": "awoo",
+      cover: false
+    }
+  ]
 }
 
 --||FormBoundary||
-Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Disposition: form-data; name="(na){16} batman"; filename="batman.png"
 Content-Type: image/png
 
 <file contents omitted for brevity>
 
 --||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="manbat.jpg"
-Content-Type: image/jpeg
-
-<file contents omitted for brevity>
-
---||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
+Content-Disposition: form-data; name="awoo"; filename="saddog.gif"
 Content-Type: image/gif
 
 <file contents omitted for brevity>
@@ -231,15 +263,19 @@ Content-Type: image/gif
 --||FormBoundary||--
 ```
 
-The following image types are supported:
+The following image types are explicitly supported:
 
 * PNG (`image/png`)
 * JPG/JPEG (`image/jpeg`)
 * GIF (`image/gif`)
+* BMP (`image/bmp`)
+
+More may or may not be supported, but the above are known to work.
 
 Each image is validated on submit -- for example, if the image is marked as
 `image/png` but it's not a valid PNG file, the request is rejected with a
-`400 Bad Request`.
+`400 Bad Request`. Each individual image can be a maximum of 64kb by default,
+with a maximum overall request size of 128kb.
 
 ### Response
 
@@ -329,3 +365,20 @@ Remove the current user's support for this exhibit
 
 You must be authorized to hit this endpint. The user you're authorized
 as is the one whose support will be removed.
+
+## `GET /image/{id}`
+
+Get an image.
+
+Each image is associated with a unique ID. Use this endpoint to get the image
+at a URL. 
+
+Getting an image is separated out from getting the rest of the object because
+the images can be significantly larger than the rest of the response, and
+should be loaded separately.
+
+### Response body
+
+The response body is the binary content of the image. You should be able to
+hotlink directly to it from an `image` tag in HTML. The `Content-Type` header
+shows the image type.

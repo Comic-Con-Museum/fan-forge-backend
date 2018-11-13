@@ -1,5 +1,6 @@
 package org.comic_con.museum.fcb.endpoints.responses;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.comic_con.museum.fcb.models.Artifact;
 import org.comic_con.museum.fcb.models.Exhibit;
 
@@ -20,11 +21,13 @@ public class ExhibitFull extends Feed.Entry {
             this.created = ar.getCreated();
         }
     }
-    
     public final String author;
     public final Instant created;
     public final String[] tags;
     public final List<Image> artifacts;
+    
+    // hide the parent's cover
+    @JsonIgnore public final Object cover = null;
     
     public ExhibitFull(Exhibit of, long supporters, Boolean supported, List<Artifact> artifacts) {
         super(of, supporters, supported);

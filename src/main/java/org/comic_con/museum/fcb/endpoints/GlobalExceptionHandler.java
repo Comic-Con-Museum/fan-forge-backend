@@ -133,7 +133,10 @@ public class GlobalExceptionHandler {
             LOG.error("Annotated exception occurred", e);
             
             return new ResponseEntity<>(
-                    new ErrorResponse(annotation.reason(), null),
+                    new ErrorResponse(
+                            annotation.reason().isEmpty() ? e.getMessage() : annotation.reason(),
+                            null
+                    ),
                     annotation.code()
             );
         } else {
