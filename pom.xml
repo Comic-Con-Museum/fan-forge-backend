@@ -6,7 +6,7 @@
 
     <groupId>org.comic-con.museum</groupId>
     <artifactId>fan-curation-backend</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
