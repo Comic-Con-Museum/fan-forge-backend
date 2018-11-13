@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers.responses;
+package org.comic_con.museum.fcb.endpoints.responses;
 
 import org.comic_con.museum.fcb.models.Exhibit;
 

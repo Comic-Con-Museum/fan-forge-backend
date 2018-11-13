@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers.inputs;
+package org.comic_con.museum.fcb.endpoints.inputs;
 
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;

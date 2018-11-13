@@ -183,8 +183,8 @@ You must be authorized to hit this URL.
 
 ### Request body
 
-The request body is formatted as JSON. If any properties are passed that
-aren't specified here, they're ignored. Invalid values will return a 400.
+The request body is `multipart/form-data`. It should have a property, `data`,
+with this structure:
 
 ```
 {
@@ -194,11 +194,109 @@ aren't specified here, they're ignored. Invalid values will return a 400.
 }
 ```
 
+`data` contains all of the data about the exhibit, except for the images to be
+attached to it. The images are attached as other parts of the multipart
+request. The `name` marks the purpose of the image -- the intended cover image
+is `name`d `cover`, and all other images are `name`d `thumbnail`. A full
+request body with the boundary `||FormBoundary||` might look like this:
+
+```
+--||FormBoundary||
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+{
+  "title": "This is an example exhibit.",
+  "description": "Examples can help make something easier to understand.",
+  "tags": [ "demo", "example", "patronizing" ]
+}
+
+--||FormBoundary||
+Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Type: image/png
+
+<file contents omitted for brevity>
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="manbat.jpg"
+Content-Type: image/jpeg
+
+<file contents omitted for brevity>
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
+Content-Type: image/gif
+
+<file contents omitted for brevity>
+
+--||FormBoundary||--
+```
+
+The following image types are supported:
+
+* PNG (`image/png`)
+* JPG/JPEG (`image/jpeg`)
+* GIF (`image/gif`)
+
+Each image is validated on submit -- for example, if the image is marked as
+`image/png` but it's not a valid PNG file, the request is rejected with a
+`400 Bad Request`.
+
 ### Response
 
 ```
 integer // The ID of the newly-created exhibit idea.
 ```
+
+## `PUT /exhibit/{id}`
+
+Edit the exhibit with the given ID. There must be an exhibit at that ID
+already; this does not create one.
+
+### Authorization
+
+You must be authorized as the creator of the exhibit.
+
+### Request body
+
+The request body format is identical to the format of `POST /exhibit`. The body
+is interpreted in the exact same way, and all previous data is overwritten.
+However, to save bandwidth, you can "reference" an already-uploaded image by
+uploading an empty `text/plain` part with a `filename` of that ID. So for
+example, to modify an exhibit that already has an image with the ID `1542`,
+the request body with boundary `||FormBoundary||` could look like:
+
+```
+--||FormBoundary||
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+{
+  "title": "This is an edited example exhibit.",
+  "description": "Notice the second image!",
+  "tags": [ "ooh", "demo", "cool" ]
+}
+
+--||FormBoundary||
+Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Type: image/png
+
+<file contents omitted for brevity>
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="1542"
+Content-Type: text/plain
+
+--||FormBoundary||
+Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
+Content-Type: image/gif
+
+<file contents omitted for brevity>
+
+--||FormBoundary||--
+```
+
+The exhibit after the `PUT` will have one image, ID `1542`, stay the same. All
+other preexisting images will be discarded, and two new images (`batman.png`
+and `capefwoosh.gif`) will be uploaded. 
 
 ## `DELETE /exhibit/{id}`
 

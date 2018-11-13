@@ -10,6 +10,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.io.Closeable;
 
+// TODO Add support for S3 "transactions" (rollback on failure)
 @Component
 public class TransactionWrapper {
     private static final Logger LOG = LoggerFactory.getLogger("transaction");

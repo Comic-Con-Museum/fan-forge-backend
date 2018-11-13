@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers;
+package org.comic_con.museum.fcb.endpoints;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,12 +14,14 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * The controllers all handle normal errors -- no such exhibit, auth
+ * The endpoints all handle normal errors -- no such exhibit, auth
  * required, etc. -- but some errors may still occur, and we want to
  * make sure the caller still gets a (sanitized) response, not a
  * stacktrace or no response at all.
@@ -109,7 +111,16 @@ public class GlobalExceptionHandler {
         ), HttpStatus.METHOD_NOT_ALLOWED);
     }
     
-    // "unwrap" InvocationTargetException since that contains exceptions a lot of the time
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> oversizedUpload(HttpServletRequest req, MaxUploadSizeExceededException e) {
+        LOG.info("Upload to {} was too large: {} bytes", req.getRequestURI(), req.getContentLengthLong());
+        return new ResponseEntity<>(new ErrorResponse(
+                "Upload was too large",
+                "Limit the upload size; see the docs for the maximum per file and overall"
+        ), HttpStatus.PAYLOAD_TOO_LARGE);
+    }
+    
+    // "unwrap" InvocationTargetException since that's what errors in reflected methods are wrapped in
     @ExceptionHandler(InvocationTargetException.class)
     public ResponseEntity<ErrorResponse> unwrapReflectionError(HttpServletRequest req, InvocationTargetException e) throws Throwable {
         LOG.info("Unwrapping exception {}", e);
@@ -117,7 +128,7 @@ public class GlobalExceptionHandler {
     }
     
     @ExceptionHandler(Throwable.class)
-    public ResponseEntity<ErrorResponse> defaultErrorHandler(HttpServletRequest req, Exception e) {
+    public ResponseEntity<ErrorResponse> defaultErrorHandler(HttpServletRequest req, Throwable e) {
         ResponseStatus annotation = AnnotationUtils.findAnnotation(e.getClass(), ResponseStatus.class);
         if (annotation != null) {
             LOG.error("Annotated exception occurred", e);

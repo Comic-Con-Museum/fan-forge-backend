@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers;
+package org.comic_con.museum.fcb.endpoints;
 
 import org.comic_con.museum.fcb.dal.SupportQueryBean;
 import org.comic_con.museum.fcb.models.User;

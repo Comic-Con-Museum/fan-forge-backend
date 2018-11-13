@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.controllers;
+package org.comic_con.museum.fcb.endpoints;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

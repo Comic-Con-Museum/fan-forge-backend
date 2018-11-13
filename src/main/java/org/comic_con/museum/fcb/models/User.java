@@ -43,7 +43,7 @@ public class User implements UserDetails {
 
     @Override
     public String toString() {
-        return String.format("User(%d, %s, *, %b)", this.uid, this.username, this.admin);
+        return String.format("User(%s, %s, *, %b)", this.uid, this.username, this.admin);
     }
 
     @Override

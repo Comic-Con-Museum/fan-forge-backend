@@ -68,6 +68,10 @@ To run the server, you need, in order:
         database.
     *    `spring.datasource.password`: The password for that username.
     
+    You might not need to supply the URL and the username/password. Some JDBC
+    URLs already have that information provided. If you're not sure, try
+    leaving it off -- if everything works as expected, it's unnecessary.
+    
     If you want to use a custom driver, you'll need to specify
     `spring.datasource.driver-class-name` as well. This **is not** necessary
     in most cases, though. If you get an error about being unable to detect
@@ -103,10 +107,14 @@ these **must** be left unspecified, as changing them could cause catastrophic
 data loss or severely compromise security. They're available only to make
 debugging easier.
 
-*   `fcb.reset-on-start`: `true` or `false`; if `true`, the database and
-    S3 will be completely cleared when the server starts.
-*   `fcb.add-test-data`: `true` or `false`; if `true`, adds a few dozen rows
-    of test data to the database on startup.
+*   `fcb.reset-on-start`: whether or not the database and S3 will be
+    completely cleared when the server starts.
+*   `fcb.add-test-data`: whether or not to add a few dozen rows of test data
+    to the database on startup.
+*   `spring.servlet.multipart.max-file-size`: The maximum size of an indivual
+    image in an upload. Defaults to 64 kilobytes.
+*   `spring.servlet.multipart.max-request-size`: The maximum total size of a
+    request that's uploading files. Defaults to 512 kilobytes.
 
 ### Building a fat JAR from source
 

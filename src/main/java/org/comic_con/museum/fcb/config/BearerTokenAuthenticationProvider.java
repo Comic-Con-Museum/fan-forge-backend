@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class BearerTokenAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
-    private final Logger LOG = LoggerFactory.getLogger("auth.provider");
+    private static final Logger LOG = LoggerFactory.getLogger("auth.provider");
 
     public BearerTokenAuthenticationProvider() {
         super();
