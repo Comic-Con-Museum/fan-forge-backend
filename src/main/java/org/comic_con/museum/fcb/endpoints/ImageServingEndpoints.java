@@ -18,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,10 +46,13 @@ public class ImageServingEndpoints {
     public ResponseEntity<Map<String, Long>> putImages(MultipartHttpServletRequest req) {
         Map<String, Long> successes = new HashMap<>();
         for (MultipartFile f : req.getFiles("img")) {
+            LOG.info("Uploading file {}", f.getOriginalFilename());
             try {
                 successes.put(f.getOriginalFilename(), s3.putImage(f));
+                LOG.info("Upload succeeded.");
             } catch (IOException e) {
                 successes.put(f.getOriginalFilename(), -1L);
+                LOG.error("Upload failed!", e);
             }
         }
         return ResponseEntity.ok(successes);
