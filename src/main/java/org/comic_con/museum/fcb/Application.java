@@ -149,7 +149,7 @@ public class Application implements CommandLineRunner {
         
         try {
             LOG.info("Initializing S3");
-            // s3.confirmBucket
+            s3.setupBucket(resetOnStart);
             LOG.info("Done initializing S3");
         } catch (Exception e) {
             LOG.error("Failed while demoing S3", e);

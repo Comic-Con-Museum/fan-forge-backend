@@ -46,7 +46,25 @@ public class S3Bean {
                         url, region
                 )).build();
     }
-    
+
+    public void setupBucket(boolean resetOnStart) {
+        if (resetOnStart) {
+            if (client.doesBucketExist(bucketName)) {
+                LOG.info("{} exists; deleting", bucketName);
+                this.client.deleteBucket(bucketName);
+            }
+            LOG.info("Creating {}", bucketName);
+            this.client.createBucket(bucketName);
+        } else {
+            if (!client.doesBucketExist(bucketName)) {
+                LOG.info("Creating {}", bucketName);
+                this.client.createBucket(bucketName);
+            } else {
+                LOG.info("{} already existed", bucketName);
+            }
+        }
+    }
+
     // TODO Switch to storing by UUID?
     public S3Object getImage(long id) {
         LOG.info("Getting image of ID {}", id);
