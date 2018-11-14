@@ -176,12 +176,7 @@ returns a 404.
   tags: [ string ] // The tags of the exhibit
   artifacts: [ // The artifacts associated with this exhibit
     {
-      title: string // A short title for the artifact
-      description: string // A detailed description of what the artifact is
-      image: integer // The ID of this artifact's image
-      creator: string // The username of the artifact's creator
-      cover: boolean // Whether or not this artifact is the cover
-      created: datetime // When this artifact was created
+      // All fields from response body of POST /artifact, except `parent`
     }
   ]
   // requires login:
@@ -230,6 +225,7 @@ Content-Type: multipart/form-data; boundary=||FormBoundary||
 --||FormBoundary||
 Content-Disposition: form-data; name="data"
 Content-Type: application/json
+
 {
   "title": "This is an example exhibit.",
   "description": "Examples can help make something easier to understand.",
@@ -238,12 +234,12 @@ Content-Type: application/json
     {
       <metadata elided to avoid duplication>,
       "image": "(na){16} batman",
-      cover: true
+      "cover": true
     },
     {
       <metadata elided again for same reason>,
       "image": "awoo",
-      cover: false
+      "cover": false
     }
   ]
 }
@@ -263,19 +259,8 @@ Content-Type: image/gif
 --||FormBoundary||--
 ```
 
-The following image types are explicitly supported:
-
-* PNG (`image/png`)
-* JPG/JPEG (`image/jpeg`)
-* GIF (`image/gif`)
-* BMP (`image/bmp`)
-
-More may or may not be supported, but the above are known to work.
-
-Each image is validated on submit -- for example, if the image is marked as
-`image/png` but it's not a valid PNG file, the request is rejected with a
-`400 Bad Request`. Each individual image can be a maximum of 64kb by default,
-with a maximum overall request size of 128kb.
+All the same restrictions apply on the images submitted through this endpoint
+as through `POST /artifact`.
 
 ### Response
 
@@ -296,43 +281,56 @@ You must be authorized as the creator of the exhibit.
 
 The request body format is identical to the format of `POST /exhibit`. The body
 is interpreted in the exact same way, and all previous data is overwritten.
-However, to save bandwidth, you can "reference" an already-uploaded image by
-uploading an empty `text/plain` part with a `filename` of that ID. So for
-example, to modify an exhibit that already has an image with the ID `1542`,
-the request body with boundary `||FormBoundary||` could look like:
+However, any elements that aren't specified are left unchanged. For example,
+given this request:
 
 ```
+POST http://localhost:8080/exhibit HTTP/1.1
+Authorization: Bearer U3RvcCBkZWNvZGluZyA6KA==
+Content-Type: multipart/form-data; boundary=||FormBoundary||
+
 --||FormBoundary||
 Content-Disposition: form-data; name="data"
 Content-Type: application/json
+
 {
-  "title": "This is an edited example exhibit.",
-  "description": "Notice the second image!",
-  "tags": [ "ooh", "demo", "cool" ]
+  "title": "This is an example exhibit.",
+  "tags": [ "demo", "stop" ],
+  "artifacts": [
+    {
+      "id": 4,
+      "image": "(na){16} batman",
+      "cover": false
+    },
+    {
+      <content elided to avoid duplication>,
+      "image": "magicflash"
+  ]
 }
 
 --||FormBoundary||
-Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Disposition: form-data; name="(na){16} batman"; filename="man in bat outfit.png"
 Content-Type: image/png
 
 <file contents omitted for brevity>
 
 --||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="1542"
-Content-Type: text/plain
-
---||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
-Content-Type: image/gif
+Content-Disposition: form-data; name="magicflash"; filename="aagh my eyes.gif"
 
 <file contents omitted for brevity>
 
 --||FormBoundary||--
 ```
 
-The exhibit after the `PUT` will have one image, ID `1542`, stay the same. All
-other preexisting images will be discarded, and two new images (`batman.png`
-and `capefwoosh.gif`) will be uploaded. 
+*   The title will be changed to *This is an example exhibit*.
+*   The tags will be changed to `demo` and `stop`
+*   All the artifacts associated with the exhibit except the one with ID 4 will
+    be deleted.
+*   Artifact 4 will:
+    *   Have a new image (the file in parameter `(na){16} batman`)
+    *   No longer be the cover of the exhibit
+*   A new artifact will be created with the passed title, description etc. and
+    `aagh my eyes.gif` attached to it.
 
 ## `DELETE /exhibit/{id}`
 
@@ -341,6 +339,76 @@ Delete an exhibit by ID.
 ### Authorization
 
 You must be authorized as the creator of the exhibit.
+
+## `GET /artifact/{aid}`
+
+Get information about a specific artifact.
+
+### Response body
+
+```
+{
+  id: integer // The artifact itself's ID
+  title: string // A short title for the artifact
+  description: string // A detailed description of what the artifact is
+  image: integer // The ID of this artifact's image
+  creator: string // The username of the artifact's creator
+  cover: boolean // Whether or not this artifact is the cover
+  created: datetime // When this artifact was created
+}
+```
+
+## `POST /artifact`
+
+Create an artifact.
+
+### Request body
+
+This format is similar to `POST /exhibit`, in `multipart/form-data` format with
+a `data` parameter containing JSON-encoded metadata and the image for this
+artifact as another parameter, `image`. The `data` section must look like:
+
+```
+{
+  title: string // A short title for the artifact
+  description: string // A longer description of what the artifact is
+  parent: integer // The ID of the exhibit to attach this to
+  // requires author of the parent:
+  cover: boolean // Whether or not this artifact is the cover of the exhibit
+}
+```
+
+The following image types are explicitly supported:
+
+* PNG (`image/png`)
+* JPG/JPEG (`image/jpeg`)
+* GIF (`image/gif`)
+* BMP (`image/bmp`)
+
+More may or may not be supported, but the above are known to work.
+
+Each image is validated on submit -- for example, if the image is marked as
+`image/png` but it's not a valid PNG file, the request is rejected with a
+`400 Bad Request`. Each individual image can be a maximum of 64kb by default,
+with a maximum overall request size of 128kb.
+
+If any other artifact attached to the same exhibit is already marked as a cover
+and `cover` is `true`, this will override that and become the new cover.
+
+### Authorization
+
+You must be authorized to hit this endpoint. Anyone can hit it, but only the
+author of the exhibit can set the cover.
+
+## `PUT /artifact/{aid}`
+
+Edit an artifact
+
+Blend `POST /artifact` and `PUT /exhibit/{id}` and you get this
+
+## `DELETE /artifact/{aid}`
+
+Delete an artifact
 
 ## `POST /support/exhibit/{id}`
 
