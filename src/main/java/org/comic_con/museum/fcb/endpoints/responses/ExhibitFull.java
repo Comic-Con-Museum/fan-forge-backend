@@ -10,12 +10,14 @@ import java.util.List;
 
 public class ExhibitFull extends Feed.Entry {
     public static class Image extends Feed.Cover {
+        public final long id;
         public final boolean cover;
         public final String creator;
         public final Instant created;
         
         public Image(Artifact ar) {
             super(ar);
+            this.id = ar.getId();
             this.cover = ar.isCover();
             this.creator = ar.getCreator();
             this.created = ar.getCreated();

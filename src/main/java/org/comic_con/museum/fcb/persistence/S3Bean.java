@@ -5,8 +5,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,11 +49,27 @@ public class S3Bean {
     public void setupBucket(boolean resetOnStart) {
         if (resetOnStart) {
             if (client.doesBucketExist(bucketName)) {
-                LOG.info("{} exists; deleting", bucketName);
-                this.client.deleteBucket(bucketName);
+                LOG.info("Clearing {}", bucketName);
+                ObjectListing objectListing = client.listObjects(bucketName);
+                while (true) {
+                    for (S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
+                        client.deleteObject(bucketName, s3ObjectSummary.getKey());
+                    }
+                    
+                    // If the bucket contains many objects, the listObjects() call
+                    // might not return all of the objects in the first listing. Check to
+                    // see whether the listing was truncated. If so, retrieve the next page of objects 
+                    // and delete them.
+                    if (objectListing.isTruncated()) {
+                        objectListing = client.listNextBatchOfObjects(objectListing);
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                LOG.info("Creating {}", bucketName);
+                this.client.createBucket(bucketName);
             }
-            LOG.info("Creating {}", bucketName);
-            this.client.createBucket(bucketName);
         } else {
             if (!client.doesBucketExist(bucketName)) {
                 LOG.info("Creating {}", bucketName);
