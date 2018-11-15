@@ -58,6 +58,7 @@ public class ArtifactQueryBean {
                 "   title VARCHAR(255) NOT NULL, " +
                 "   description TEXT NOT NULL, " +
                 "   cover BOOLEAN NOT NULL, " +
+                // TODO If each artifact has its own unique ID, why not just use aid?
                 "   image_id INTEGER /*UNIQUE*/ NOT NULL, " +
                 "   creator TEXT ,"+//TODO INTEGER REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
                 "   exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +

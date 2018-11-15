@@ -2,6 +2,7 @@ package org.comic_con.museum.fcb.endpoints;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import org.comic_con.museum.fcb.endpoints.inputs.ArtifactCreation;
 import org.comic_con.museum.fcb.endpoints.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.endpoints.responses.ExhibitFull;
 import org.comic_con.museum.fcb.endpoints.responses.Feed;
@@ -115,8 +116,12 @@ public class ExhibitEndpoints {
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
-            for (Artifact a : data.buildArtifacts(user)) {
-                artifacts.create(a, id, user);
+            for (ArtifactCreation a : data.getArtifacts()) {
+                MultipartFile file = req.getFile(a.getImageName());
+                long imageId = s3.putImage(file);
+                Artifact full = a.build(user);
+                full.setImage(imageId);
+                artifacts.create(full, id, user);
             }
             
             t.commit();

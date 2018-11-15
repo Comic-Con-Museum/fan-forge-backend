@@ -80,12 +80,12 @@ public class S3Bean {
         }
     }
 
-    // TODO Switch to storing by UUID?
     public S3Object getImage(long id) {
         LOG.info("Getting image of ID {}", id);
         return client.getObject(bucketName, String.valueOf(id));
     }
     
+    // TODO Hit database for IDs OR use artifact ID as image ID (decide)
     private long nextId = 0;
     public long putImage(MultipartFile image) throws IOException {
         LOG.info("Storing image to ID {}", nextId);
@@ -117,6 +117,7 @@ public class S3Bean {
         ImageReader matchingReader = null;
         while (readers.hasNext()) {
             ImageReader reader = readers.next();
+            LOG.info("Possible match: {}", reader.getFormatName());
             if (reader.getFormatName().equalsIgnoreCase(expectedType)) {
                 // TODO possible jpg/jpeg conflicts?
                 matchingReader = reader;
