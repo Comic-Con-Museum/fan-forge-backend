@@ -176,7 +176,7 @@ returns a 404.
   tags: [ string ] // The tags of the exhibit
   artifacts: [ // The artifacts associated with this exhibit
     {
-      // All fields from response body of POST /artifact, except `parent`
+      // All fields from response body of GET /artifact/{id}, except `parent`
     }
   ]
   // requires login:
@@ -204,7 +204,7 @@ with this structure:
   tags: [ string ] // The tags to associate this exhibit with
   artifacts: [ // Information about the artifacts being uploaded
     {
-      // All fields from request body of POST /artifact, plus:
+      // All fields from request body of POST /artifact except parent, plus:
       image: string // the filename of that artifact's image.
     }
   ]

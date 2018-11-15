@@ -26,7 +26,6 @@ public class Feed {
         public final long id;
         public final String title;
         public final String description;
-        // TODO Not just the cover, but all exhibits
         public final Cover cover;
         public final long supporters;
         @JsonInclude(JsonInclude.Include.NON_NULL)

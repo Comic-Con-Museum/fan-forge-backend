@@ -58,11 +58,15 @@ public class ArtifactQueryBean {
                 "   title VARCHAR(255) NOT NULL, " +
                 "   description TEXT NOT NULL, " +
                 "   cover BOOLEAN NOT NULL, " +
-                "   image_id INTEGER NOT NULL, " +
+                "   image_id INTEGER /*UNIQUE*/ NOT NULL, " +
                 "   creator TEXT ,"+//TODO INTEGER REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
                 "   exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "   created TIMESTAMP WITH TIME ZONE NOT NULL " +
-                ")"
+                ");" +
+                // Partial index to ensure no exhibits have more than one cover
+                "CREATE UNIQUE INDEX one_cover_per_exhibit " +
+                "ON artifacts(exhibit) " +
+                "WHERE cover;"
         );
     }
     

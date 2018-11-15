@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -80,6 +81,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({EmptyResultDataAccessException.class, DataIntegrityViolationException.class})
     public ResponseEntity<ErrorResponse> noResult(HttpServletRequest req, Exception e) {
         return ResponseEntity.notFound().build();
+    }
+    
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ErrorResponse> integrityViolation(HttpServletRequest req, DuplicateKeyException e) {
+        LOG.info("Tegridy violation: {}", e.getMessage());
+        return ResponseEntity.badRequest().build();
     }
     
     @ExceptionHandler(JsonProcessingException.class)

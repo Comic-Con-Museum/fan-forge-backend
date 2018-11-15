@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import org.comic_con.museum.fcb.endpoints.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.endpoints.responses.ExhibitFull;
 import org.comic_con.museum.fcb.endpoints.responses.Feed;
+import org.comic_con.museum.fcb.models.Artifact;
 import org.comic_con.museum.fcb.persistence.*;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
@@ -60,8 +61,9 @@ public class ExhibitEndpoints {
                 break;
             default:
                 LOG.info("Unknown feed: {}", feedName);
-                // 404 instead of 400 because they're trying to hit a nonexistent endpoint (/feed/whatever), not passing
-                // bad data to a real endpoint
+                // 404 instead of 400 because they're trying to hit a
+                // nonexistent endpoint (/feed/whatever), not passing bad data
+                // to a real endpoint
                 return ResponseEntity.notFound().build();
         }
         
@@ -97,29 +99,25 @@ public class ExhibitEndpoints {
 
     // TODO Return created exhibit, not just ID
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST, consumes = "multipart/form-data")
-    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) throws SQLException, IOException {
+    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user)
+            throws SQLException, IOException {
         String dataString = req.getParameter("data");
         if (dataString == null) {
             LOG.info("No data part in body");
             return ResponseEntity.badRequest().build();
         }
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
-        if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
+        if (null == data.getTitle() || null == data.getDescription() || null == data.getTags() || null == data.getArtifacts()) {
             LOG.info("Required field not provided");
             return ResponseEntity.badRequest().build();
-        }
-
-        List<MultipartFile> covers = req.getFiles("cover");
-        for (MultipartFile cover : covers) {
-            LOG.info("Cover filename: {}", cover.getOriginalFilename());
-        }
-        if (covers.size() > 1) {
-            throw new IllegalArgumentException("Only one cover can be specified");
         }
 
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
+            for (Artifact a : data.buildArtifacts(user)) {
+                artifacts.create(a, id, user);
+            }
             
             t.commit();
         }

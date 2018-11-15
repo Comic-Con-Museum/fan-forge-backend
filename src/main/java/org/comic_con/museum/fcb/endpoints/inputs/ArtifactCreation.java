@@ -10,20 +10,20 @@ import java.time.Instant;
 public class ArtifactCreation {
     private String title;
     private String description;
-    private String filename;
+    private String imageName;
     private boolean cover;
     @JsonIgnore
     private MultipartFile file;
     
     public String getTitle() { return title; }
     public String getDescription() { return description; }
-    public String getFilename() { return filename; }
+    public String getImageName() { return imageName; }
     public boolean isCover() { return cover; }
     public MultipartFile getFile() { return file; }
     
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
-    public void setFilename(String filename) { this.filename = filename; }
+    public void setImageName(String imageName) { this.imageName = imageName; }
     public void setCover(boolean cover) { this.cover = cover; }
     public void setFile(MultipartFile file) { this.file = file; }
     
