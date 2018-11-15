@@ -23,22 +23,19 @@ public class ArtifactQueryBean {
     
     private final JdbcTemplate sql;
     private final SimpleJdbcInsert insert;
-    
-    private static class Mapper implements RowMapper<Artifact> {
-        @Override
-        public Artifact mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Artifact(
-                    rs.getLong("aid"),
-                    rs.getString("title"),
-                    rs.getString("description"),
-                    rs.getBoolean("cover"),
-                    rs.getLong("image_id"),
-                    rs.getString("creator"),
-                    rs.getTimestamp("created").toInstant()
-            );
-        }
+
+    private static Artifact mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new Artifact(
+                rs.getLong("aid"),
+                rs.getString("title"),
+                rs.getString("description"),
+                rs.getBoolean("cover"),
+                rs.getLong("image_id"),
+                rs.getString("creator"),
+                rs.getTimestamp("created").toInstant()
+        );
     }
-    
+
     @Autowired
     public ArtifactQueryBean(JdbcTemplate jdbcTemplate) {
         this.sql = jdbcTemplate;
@@ -77,7 +74,7 @@ public class ArtifactQueryBean {
                 "SELECT * FROM artifacts " +
                 "WHERE exhibit = ?",
                 new Object[] { id },
-                new Mapper()
+                ArtifactQueryBean::mapRow
         );
     }
     
@@ -100,5 +97,14 @@ public class ArtifactQueryBean {
         ar.setId(id);
         ar.setCreated(now);
         return id;
+    }
+
+    public Artifact byId(long id) throws SQLException {
+        LOG.info("Getting artifact {}", id);
+        return sql.queryForObject(
+                "SELECT * FROM artifacts WHERE aid = ?",
+                new Object[] { id },
+                ArtifactQueryBean::mapRow
+        );
     }
 }

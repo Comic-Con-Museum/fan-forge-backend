@@ -100,13 +100,8 @@ public class ExhibitEndpoints {
 
     // TODO Return created exhibit, not just ID
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST, consumes = "multipart/form-data")
-    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user)
-            throws SQLException, IOException {
-        String dataString = req.getParameter("data");
-        if (dataString == null) {
-            LOG.info("No data part in body");
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @RequestParam("data") String dataString,
+                                              @AuthenticationPrincipal User user) throws SQLException, IOException {
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         if (null == data.getTitle() || null == data.getDescription() || null == data.getTags() || null == data.getArtifacts()) {
             LOG.info("Required field not provided");
@@ -131,12 +126,8 @@ public class ExhibitEndpoints {
     
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT, consumes = "multipart/form-data")
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
+                                                   @RequestParam("data") String dataString,
                                                    @AuthenticationPrincipal User user) throws IOException {
-        String dataString = req.getParameter("data");
-        if (dataString == null) {
-            LOG.info("No data part in body");
-            return ResponseEntity.badRequest().build();
-        }
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         Exhibit ex = data.build(user);
         ex.setId(id);
