@@ -85,17 +85,14 @@ public class S3Bean {
         return client.getObject(bucketName, String.valueOf(id));
     }
     
-    // TODO Hit database for IDs OR use artifact ID as image ID (decide)
-    private long nextId = 0;
-    public long putImage(MultipartFile image) throws IOException {
-        LOG.info("Storing image to ID {}", nextId);
+    public void putImage(long id, MultipartFile image) throws IOException {
+        LOG.info("Storing image to ID {}", id);
         validateImage(image);
         client.putObject(
                 bucketName,
-                String.valueOf(nextId),
+                String.valueOf(id),
                 image.getInputStream(),
                 getMetadata(image));
-        return nextId++;
     }
     
     private static void validateImage(MultipartFile image) throws IOException {

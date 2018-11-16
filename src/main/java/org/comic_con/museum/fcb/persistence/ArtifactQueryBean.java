@@ -5,6 +5,8 @@ import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -30,7 +32,7 @@ public class ArtifactQueryBean {
                 rs.getString("title"),
                 rs.getString("description"),
                 rs.getBoolean("cover"),
-                rs.getLong("image_id"),
+                rs.getLong("aid"), // TODO Remove image_id from the API entirely
                 rs.getString("creator"),
                 rs.getTimestamp("created").toInstant()
         );
@@ -55,8 +57,6 @@ public class ArtifactQueryBean {
                 "   title VARCHAR(255) NOT NULL, " +
                 "   description TEXT NOT NULL, " +
                 "   cover BOOLEAN NOT NULL, " +
-                // TODO If each artifact has its own unique ID, why not just use aid?
-                "   image_id INTEGER /*UNIQUE*/ NOT NULL, " +
                 "   creator TEXT ,"+//TODO INTEGER REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
                 "   exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "   created TIMESTAMP WITH TIME ZONE NOT NULL " +
@@ -99,6 +99,32 @@ public class ArtifactQueryBean {
         return id;
     }
 
+
+
+    public void update(Artifact ar, User by) {
+        LOG.info("{} updating artifact {}", by.getUsername(), ar.getId());
+
+        int count = sql.update(
+                "UPDATE artifacts " +
+                "SET title = COALESCE(?, title), " +
+                "    description = COALESCE(?, description)," +
+                "    cover = COALESCE(?, cover)" +
+                "WHERE aid = ? " +
+                "  AND creator = ?",
+                ar.getTitle(),
+                ar.getDescription(),
+                ar.isCover(),
+                ar.getId(),
+                by.getId()
+        );
+        if (count == 0) {
+            throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
+        }
+        if (count > 1) {
+            throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + ar.getId());
+        }
+    }
+
     public Artifact byId(long id) throws SQLException {
         LOG.info("Getting artifact {}", id);
         return sql.queryForObject(
@@ -106,5 +132,22 @@ public class ArtifactQueryBean {
                 new Object[] { id },
                 ArtifactQueryBean::mapRow
         );
+    }
+
+    public void delete(long eid, User by) {
+        LOG.info("Deleting artifact {} by {}", eid, by);
+        int count = sql.update(
+                "DELETE FROM exhibits " +
+                "WHERE eid = ? " +
+                "  AND author = ?",
+                eid,
+                by.getId()
+        );
+        if (count > 1) {
+            throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + eid);
+        }
+        if (count == 0) {
+            throw new EmptyResultDataAccessException("No exhibits with ID " + eid + " by " + by.getUsername(), 1);
+        }
     }
 }

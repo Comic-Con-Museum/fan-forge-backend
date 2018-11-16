@@ -60,7 +60,7 @@ public class ExhibitQueryBean {
                         rs.getString("atitle"),
                         rs.getString("adesc"),
                         true, // always true; we only get covers in this bean
-                        rs.getLong("aimg"),
+                        rs.getLong("aid"), // TODO Remove separate image IDs
                         rs.getString("acreator"),
                         rs.getTimestamp("acreated").toInstant()
                 );
@@ -102,7 +102,7 @@ public class ExhibitQueryBean {
         return sql.queryForObject(
                 "SELECT e.*, " +
                 "       a.aid aid, a.title atitle, a.description adesc, " +
-                "       a.image_id aimg, a.creator acreator, a.created acreated " +
+                "       a.creator acreator, a.created acreated " +
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +

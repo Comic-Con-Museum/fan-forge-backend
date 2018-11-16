@@ -112,34 +112,45 @@ public class ExhibitEndpoints {
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
             for (ArtifactCreation a : data.getArtifacts()) {
-                MultipartFile file = req.getFile(a.getImageName());
-                long imageId = s3.putImage(file);
                 Artifact full = a.build(user);
-                full.setImage(imageId);
-                artifacts.create(full, id, user);
+                long aid = artifacts.create(full, id, user);
+                MultipartFile file = req.getFile(a.getImageName());
+                if (file == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                s3.putImage(aid, file);
             }
             
             t.commit();
         }
         return ResponseEntity.ok(id);
     }
-    
-    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT, consumes = "multipart/form-data")
+
+    // TODO Fix Apache so we can use PUT instead of POST
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
                                                    @RequestParam("data") String dataString,
                                                    @AuthenticationPrincipal User user) throws IOException {
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
+        // we don't care if things aren't specified, so don't validate that
         Exhibit ex = data.build(user);
         ex.setId(id);
         ExhibitFull resp;
-        // TODO Update to match POST
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            for (MultipartFile file : req.getFiles("cover")) {
-                LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
-            }
             exhibits.update(ex, user);
+            for (ArtifactCreation a : data.getArtifacts()) {
+                // TODO If no ID specified, it's a new artifact
+                // TODO Delete all unmentioned artifacts
+                artifacts.update(a.build(user), user);
+                // this won't be hit if the user isn't the author, because `update` throws an exception
+                if (a.getImageName() != null) {
+                    MultipartFile file = req.getFile(a.getImageName());
+                    if (file == null) {
+                        return ResponseEntity.badRequest().build();
+                    }
+                    s3.putImage(a.getId(), file);
+                }
+            }
             resp = new ExhibitFull(
                     exhibits.getById(ex.getId()),
                     supports.supporterCount(ex),

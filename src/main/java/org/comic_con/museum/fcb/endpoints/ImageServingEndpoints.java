@@ -42,16 +42,18 @@ public class ImageServingEndpoints {
     }
     
     // TODO Delete this test endpoint
+    long nextId = 10000; // start, hopefully, after all the test data (there's a reason this is getting deleted)
     @RequestMapping(value = "/image", method = RequestMethod.POST, consumes = "multipart/form-data")
-    public ResponseEntity<Map<String, Long>> putImages(MultipartHttpServletRequest req) {
-        Map<String, Long> successes = new HashMap<>();
+    public ResponseEntity<Map<String, Boolean>> putImages(MultipartHttpServletRequest req) {
+        Map<String, Boolean> successes = new HashMap<>();
         for (MultipartFile f : req.getFiles("img")) {
             LOG.info("Uploading file {}", f.getOriginalFilename());
             try {
-                successes.put(f.getOriginalFilename(), s3.putImage(f));
+                s3.putImage(++nextId, f);
+                successes.put(f.getOriginalFilename(), true);
                 LOG.info("Upload succeeded.");
             } catch (IOException e) {
-                successes.put(f.getOriginalFilename(), -1L);
+                successes.put(f.getOriginalFilename(), false);
                 LOG.error("Upload failed!", e);
             }
         }
