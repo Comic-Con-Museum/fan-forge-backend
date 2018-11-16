@@ -268,7 +268,15 @@ as through `POST /artifact`.
 integer // The ID of the newly-created exhibit idea.
 ```
 
-## `PUT /exhibit/{id}`
+## `POST /exhibit/{id}`
+
+>   Do you think this should be `PUT` or `PATCH`? Us too! Unfortunately,
+    Apache has decided [it won't happen][apache-stop], and Pivotal has agreed
+    by using Apache Commons in Spring. File all complaints with them, and Roy
+    Thomas Fielding.
+>   
+>   Until that bug is fixed, this API literally cannot comply with the HTTP
+    standard, or be RESTful. Oh well.
 
 Edit the exhibit with the given ID. There must be an exhibit at that ID
 already; this does not create one.
@@ -398,13 +406,22 @@ and `cover` is `true`, this will override that and become the new cover.
 ### Authorization
 
 You must be authorized to hit this endpoint. Anyone can hit it, but only the
-author of the exhibit can set the cover.
+author of the exhibit can set the cover. If you're not authorized as the
+author, the value of `cover` is ignored like any other extraneous field.
 
-## `PUT /artifact/{aid}`
+## `POST /artifact/{aid}`
+
+>   Do you think this should be `PUT` or `PATCH`? Us too! Unfortunately,
+    Apache has decided [it won't happen][apache-stop], and Pivotal has agreed
+    by using Apache Commons in Spring. File all complaints with them, and Roy
+    Thomas Fielding.
+>   
+>   Until that bug is fixed, this API literally cannot comply with the HTTP
+    standard, or be RESTful. Oh well.
 
 Edit an artifact
 
-Blend `POST /artifact` and `PUT /exhibit/{id}` and you get this
+Blend `POST /artifact` and `POST /exhibit/{id}` and you get this
 
 ## `DELETE /artifact/{aid}`
 
@@ -450,3 +467,5 @@ should be loaded separately.
 The response body is the binary content of the image. You should be able to
 hotlink directly to it from an `image` tag in HTML. The `Content-Type` header
 shows the image type.
+
+ [apache-stop]: https://issues.apache.org/jira/browse/FILEUPLOAD-197
