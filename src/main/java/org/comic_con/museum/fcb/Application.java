@@ -106,7 +106,7 @@ public class Application implements CommandLineRunner {
             long newId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
                     Instant.now().minus(eIdx % 4, ChronoUnit.DAYS).minus(eIdx / 4, ChronoUnit.HOURS),
-                    new String[] { "post", "exhibit", "index:" + eIdx },
+                    new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
                     null
             ), original);
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {

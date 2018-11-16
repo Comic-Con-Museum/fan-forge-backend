@@ -34,7 +34,7 @@ public class SupportQueryBean {
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
-            this.sql.execute("DROP TABLE IF EXISTS supports CASCADE", new HashMap<>(), PreparedStatement::execute);
+            this.sql.execute("DROP TABLE IF EXISTS supports CASCADE", PreparedStatement::execute);
         }
         this.sql.execute(
                 "CREATE TABLE IF NOT EXISTS supports ( " +
@@ -45,7 +45,8 @@ public class SupportQueryBean {
                 "    survey_data TEXT, " +
                 // we shouldn't have the same person supporting the same exhibit more than once
                 "    UNIQUE (exhibit, supporter)" +
-                ")", new HashMap<>(), PreparedStatement::execute
+                ")",
+                PreparedStatement::execute
         );
     }
     

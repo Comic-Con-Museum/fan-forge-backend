@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class ExhibitEndpoints {
@@ -48,6 +49,8 @@ public class ExhibitEndpoints {
     // TODO separate out into its own class?
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
+                                        // `filters` also includes other stuff, but that'll be filtered out by getFeed
+                                        @RequestParam Map<String, String> filters,
                                         @AuthenticationPrincipal User user) {
         ExhibitQueryBean.FeedType feed = ExhibitQueryBean.FeedType.parse(feedName);
         if (feed == null) {
@@ -57,14 +60,14 @@ public class ExhibitEndpoints {
             // to a real endpoint
             return ResponseEntity.notFound().build();
         }
-        
+
         long count;
         List<Feed.Entry> entries;
         try (TransactionWrapper.Transaction tr = transactions.start()) {
             count = exhibits.getCount();
             // This can definitely be combined into one query if necessary
-            // or even just two (instead of PAGE_SIZE+1)
-            List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
+            // or even just two (instead of 2*PAGE_SIZE+1)
+            List<Exhibit> feedRaw = exhibits.getFeed(feed, startIdx, filters);
             entries = new ArrayList<>(feedRaw.size());
             for (Exhibit exhibit : feedRaw) {
                 entries.add(new Feed.Entry(

@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
-import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,53 +55,50 @@ public class ExhibitQueryBean {
             return this.orderBy + (defaultDesc ^ inverted ? "DESC" : "ASC");
         }
     }
-    
-    private final JdbcTemplate sql;
+
+    private final NamedParameterJdbcTemplate sql;
     private final SimpleJdbcInsert insert;
     
     @Autowired
-    public ExhibitQueryBean(JdbcTemplate jdbcTemplate) {
-        this.sql = jdbcTemplate;
-        this.insert = new SimpleJdbcInsert(sql)
+    public ExhibitQueryBean(NamedParameterJdbcTemplate sql) {
+        this.sql = sql;
+        this.insert = new SimpleJdbcInsert(sql.getJdbcTemplate())
                 .withTableName("exhibits")
                 .usingGeneratedKeyColumns("eid");
     }
 
     // TODO Switch mappers to lambdas/method references?
-    private static class Mapper implements RowMapper<Exhibit> {
-        @Override
-        public Exhibit mapRow(ResultSet rs, int rowNum) throws SQLException {
-            Artifact cover;
-            if (rs.getString("atitle") == null) {
-                cover = null;
-            } else {
-                cover = new Artifact(
-                        rs.getLong("aid"),
-                        rs.getString("atitle"),
-                        rs.getString("adesc"),
-                        true, // always true; we only get covers in this bean
-                        rs.getString("acreator"),
-                        rs.getTimestamp("acreated").toInstant()
-                );
-            }
-            
-            return new Exhibit(
-                    rs.getInt("eid"),
-                    rs.getString("title"),
-                    rs.getString("description"),
-                    rs.getString("author"),
-                    // TODO: getting a java.sql.Timestamp and converting to Instant may have issues
-                    rs.getTimestamp("created").toInstant(),
-                    (String[]) rs.getArray("tags").getArray(),
-                    cover
+    private static Exhibit mapRow(ResultSet rs, int rowNum) throws SQLException {
+        Artifact cover;
+        if (rs.getString("atitle") == null) {
+            cover = null;
+        } else {
+            cover = new Artifact(
+                    rs.getLong("aid"),
+                    rs.getString("atitle"),
+                    rs.getString("adesc"),
+                    true, // always true; we only get covers in this bean
+                    rs.getString("acreator"),
+                    rs.getTimestamp("acreated").toInstant()
             );
         }
+
+        return new Exhibit(
+                rs.getInt("eid"),
+                rs.getString("title"),
+                rs.getString("description"),
+                rs.getString("author"),
+                // TODO: getting a java.sql.Timestamp and converting to Instant may have issues
+                rs.getTimestamp("created").toInstant(),
+                (String[]) rs.getArray("tags").getArray(),
+                cover
+        );
     }
-    
+
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
-            sql.execute("DROP TABLE IF EXISTS exhibits CASCADE");
+            sql.execute("DROP TABLE IF EXISTS exhibits CASCADE", PreparedStatement::execute);
         }
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS exhibits ( " +
@@ -110,7 +109,7 @@ public class ExhibitQueryBean {
                 // TODO Once we figure out how we want tags to work, we can make this better
                 "   tags TEXT ARRAY, " +
                 "   created TIMESTAMP WITH TIME ZONE NOT NULL " +
-                ")"
+                ")", PreparedStatement::execute
         );
     }
     
@@ -124,9 +123,9 @@ public class ExhibitQueryBean {
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +
                 "      AND a.cover " +
-                "WHERE eid = ?",
-                new Object[] { id },
-                new Mapper()
+                "WHERE eid = :id",
+                new MapSqlParameterSource("id", id),
+                ExhibitQueryBean::mapRow
         );
     }
 
@@ -154,16 +153,18 @@ public class ExhibitQueryBean {
 
         final int count = sql.update(
                 "UPDATE exhibits " +
-                        "SET title = COALESCE(?, title), " +
-                        "    description = COALESCE(?, description), " +
-                        "    tags = COALESCE(?, tags) " +
-                        "WHERE eid = ? AND (author = ? OR ?)",
-                ex.getTitle(),
-                ex.getDescription(),
-                ex.getTags(),
-                ex.getId(),
-                by.getId(),
-                by.isAdmin());
+                "SET title = COALESCE(:title, title), " +
+                "    description = COALESCE(:description, description), " +
+                "    tags = COALESCE(:tags, tags) " +
+                "WHERE eid = :exhibit AND (author = :user OR :isAdmin)",
+                new MapSqlParameterSource()
+                        .addValue("title", ex.getTitle())
+                        .addValue("description", ex.getDescription())
+                        .addValue("tags", ex.getTags())
+                        .addValue("exhibit", ex.getId())
+                        .addValue("user", by.getId())
+                        .addValue("isAdmin", by.isAdmin())
+        );
 
         if (count == 0) {
             throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
@@ -177,11 +178,13 @@ public class ExhibitQueryBean {
         LOG.info("{} deleting exhibit {}", by.getUsername(), eid);
         
         final int count = sql.update(
-                "DELETE FROM exhibits WHERE" +
-                        " eid = ? AND (author = ? OR ?)",
-                eid,
-                by.getId(),
-                by.isAdmin()
+                "DELETE FROM exhibits " +
+                "WHERE eid = :exhibit " +
+                "  AND (author = :user OR :isAdmin)",
+                new MapSqlParameterSource()
+                        .addValue("exhibit", eid)
+                        .addValue("user", by.getId())
+                        .addValue("isAdmin", by.isAdmin())
         );
         
         if (count > 1) {
@@ -192,30 +195,43 @@ public class ExhibitQueryBean {
         }
     }
     
-    public List<Exhibit> getFeedBy(FeedType type, int startIdx) {
+    public List<Exhibit> getFeed(FeedType type, int startIdx, Map<String, String> filters) {
         LOG.info("Getting {} feed", type);
-        
-        return sql.query(
+
+        StringBuilder query = new StringBuilder(
                 "SELECT e.*, a.aid aid, a.title atitle, a.description adesc, " +
                 "       a.creator acreator, a.created acreated " +
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +
                 "      AND a.cover " +
-                // TODO Add support for reversing
-                "ORDER BY " + type.getSql(false) + " " +
-                "LIMIT ? " +
-                "OFFSET ?",
-                new Mapper(),
-                PAGE_SIZE,
-                startIdx
+                "WHERE 1=1 " // 1=1 so we can start with `AND` and forget about it
         );
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        if (filters.containsKey("tag")) {
+            query.append("AND :tag = ANY(e.tags) ");
+            params.addValue("tag", filters.get("tag"));
+        }
+
+        if (filters.containsKey("author")) {
+            query.append("AND author = :author ");
+            params.addValue("author", filters.get("author"));
+        }
+
+        // TODO Add support for reversing
+        query.append("ORDER BY ").append(type.getSql(false)).append(" LIMIT :limit OFFSET :offset");
+        params.addValue("limit", PAGE_SIZE);
+        params.addValue("offset", startIdx);
+        
+        return sql.query(query.toString(), params, ExhibitQueryBean::mapRow);
     }
-    
+
+    // TODO Implement filters here too
     public long getCount() throws DataAccessException {
         LOG.info("Getting total exhibit count");
         
-        Long count = sql.queryForObject("SELECT COUNT(*) FROM exhibits;", Long.class);
+        Long count = sql.queryForObject("SELECT COUNT(*) FROM exhibits", Collections.emptyMap(), Long.class);
         if (count == null) {
             throw new EmptyResultDataAccessException("Somehow no count returned", 1);
         }
