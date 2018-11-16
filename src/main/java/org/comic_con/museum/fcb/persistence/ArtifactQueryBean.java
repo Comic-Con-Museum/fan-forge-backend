@@ -32,7 +32,6 @@ public class ArtifactQueryBean {
                 rs.getString("title"),
                 rs.getString("description"),
                 rs.getBoolean("cover"),
-                rs.getLong("aid"), // TODO Remove image_id from the API entirely
                 rs.getString("creator"),
                 rs.getTimestamp("created").toInstant()
         );

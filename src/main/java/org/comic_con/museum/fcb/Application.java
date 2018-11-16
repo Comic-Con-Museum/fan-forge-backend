@@ -121,7 +121,7 @@ public class Application implements CommandLineRunner {
                 artifacts.create(new Artifact(
                         0, "artifact " + aIdx + " of " + eIdx,
                         "description of artifact",
-                        aIdx == 0, imageId++,
+                        aIdx == 0,
                         null,
                         Instant.now()
                 ), newId, supporters[aIdx]);

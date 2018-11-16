@@ -1,5 +1,6 @@
 package org.comic_con.museum.fcb.endpoints;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
@@ -124,6 +125,12 @@ public class GlobalExceptionHandler {
                 "Upload was too large",
                 "Limit the upload size; see the docs for the maximum per file and overall"
         ), HttpStatus.PAYLOAD_TOO_LARGE);
+    }
+    
+    @ExceptionHandler(AmazonS3Exception.class)
+    public ResponseEntity<ErrorResponse> s3Exception(HttpServletRequest req, AmazonS3Exception e) {
+        LOG.info("S3 exception: {}", e.getMessage());
+        return new ResponseEntity<>(HttpStatus.valueOf(e.getStatusCode()));
     }
     
     // "unwrap" InvocationTargetException since that's what errors in reflected methods are wrapped in

@@ -60,7 +60,6 @@ public class ExhibitQueryBean {
                         rs.getString("atitle"),
                         rs.getString("adesc"),
                         true, // always true; we only get covers in this bean
-                        rs.getLong("aid"), // TODO Remove separate image IDs
                         rs.getString("acreator"),
                         rs.getTimestamp("acreated").toInstant()
                 );

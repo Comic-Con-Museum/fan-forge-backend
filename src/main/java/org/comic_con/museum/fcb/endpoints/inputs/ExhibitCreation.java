@@ -32,12 +32,4 @@ public class ExhibitCreation {
         // different requirements, so each one implements its own.
         return new Exhibit(-1, this.title, this.description, author.getId(), Instant.now(), this.tags, null);
     }
-    
-    public Artifact[] buildArtifacts(User author) {
-        Artifact[] built = new Artifact[artifacts.length];
-        for (int i = 0; i < artifacts.length; ++i) {
-            built[i] = artifacts[i].build(author);
-        }
-        return built;
-    }
 }

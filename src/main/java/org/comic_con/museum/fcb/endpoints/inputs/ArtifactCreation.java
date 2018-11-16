@@ -31,6 +31,6 @@ public class ArtifactCreation {
     public void setFile(MultipartFile file) { this.file = file; }
     
     public Artifact build(User by) {
-        return new Artifact(id == null ? 0 : id, title, description, cover, 0, by.getId(), Instant.now());
+        return new Artifact(id == null ? 0 : id, title, description, cover, by.getId(), Instant.now());
     }
 }
