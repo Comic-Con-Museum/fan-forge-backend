@@ -102,8 +102,6 @@ public class ArtifactQueryBean {
         return id;
     }
 
-
-
     public void update(Artifact ar, User by) {
         LOG.info("{} updating artifact {}", by.getUsername(), ar.getId());
 
@@ -111,16 +109,16 @@ public class ArtifactQueryBean {
                 "UPDATE artifacts " +
                 "SET title = COALESCE(:title, title), " +
                 "    description = COALESCE(:description, description) " +
-                "WHERE aid = :aid " +
-                "  AND creator = :creator ",
+                "WHERE aid = :aid "/* +
+                "  AND creator = :creator "*/,
                 new MapSqlParameterSource()
                         .addValue("title", ar.getTitle())
                         .addValue("description", ar.getDescription())
                         .addValue("aid", ar.getId())
-                        .addValue("creator", by.getId())
+//                        .addValue("creator", by.getId())
         );
         if (count == 0) {
-            throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
+            throw new EmptyResultDataAccessException("No artifacts updated. Does the creator own the artifact?", 1);
         }
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + ar.getId());
@@ -140,29 +138,29 @@ public class ArtifactQueryBean {
         LOG.info("Deleting artifact {} by {}", aid, by);
         int count = sql.update(
                 "DELETE FROM artifacts " +
-                "WHERE aid = :aid " +
-                "  AND creator = :creator ",
+                "WHERE aid = :aid "/* +
+                "  AND creator = :creator "*/,
                 new MapSqlParameterSource()
                         .addValue("aid", aid)
-                        .addValue("creator", by.getId())
+//                        .addValue("creator", by.getId())
         );
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + aid);
         }
         if (count == 0) {
-            throw new EmptyResultDataAccessException("No exhibits with ID " + aid + " by " + by.getUsername(), 1);
+            throw new EmptyResultDataAccessException("No artifacts with ID " + aid + " by " + by.getUsername(), 1);
         }
     }
     
     public void deleteAllFromExcept(long exFrom, List<Long> except) {
         LOG.info("Deleting all artifacts of {} except {}", exFrom, except);
-        sql.update(
-                "DELETE FROM artifacts " +
-                "WHERE exhibit = :exhibit " +
-                "  AND aid NOT IN (:except) ",
-                new MapSqlParameterSource()
-                        .addValue("exhibit", exFrom)
-                        .addValue("except", except)
-        );
+        String query = "DELETE FROM artifacts " +
+                       "WHERE exhibit = :exhibit ";
+        MapSqlParameterSource source = new MapSqlParameterSource("exhibit", exFrom);
+        if (except != null && !except.isEmpty()) {
+            query += "  AND aid NOT IN (:except)";
+            source.addValue("except", except);
+        }
+        sql.update(query, source);
     }
 }
