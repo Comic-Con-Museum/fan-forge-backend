@@ -174,13 +174,22 @@ public class ExhibitQueryBean {
     public void delete(long eid, User by) {
         LOG.info("{} deleting exhibit {}", by.getUsername(), eid);
         
-        int count = sql.update(
-                "DELETE FROM exhibits " +
-                "WHERE eid = ? " +
-                "  AND author = ?",
-                eid,
-                by.getId()
-        );
+        final int count;
+        if (by.isAdmin()) {
+            count = sql.update(
+                    "DELETE FROM exhibits " +
+                            "WHERE eid = ? ",
+                    eid
+            );
+        } else {
+            count = sql.update(
+                    "DELETE FROM exhibits " +
+                            "WHERE eid = ? " +
+                            "  AND author = ?",
+                    eid,
+                    by.getId()
+            );
+        }
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + eid);
         }
