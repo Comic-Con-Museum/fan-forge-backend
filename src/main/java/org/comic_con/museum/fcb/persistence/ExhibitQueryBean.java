@@ -134,34 +134,18 @@ public class ExhibitQueryBean {
     public void update(Exhibit ex, User by) {
         LOG.info("{} updating exhibit {}", by.getUsername(), ex.getId());
 
-        final int count;
-
-        if (by.isAdmin()) {
-            // admins can edit anything
-            count = sql.update(
-                    "UPDATE exhibits " +
-                            "SET title = COALESCE(?, title), " +
-                            "    description = COALESCE(?, description), " +
-                            "    tags = COALESCE(?, tags) " +
-                            "WHERE eid = ? ",
-                    ex.getTitle(),
-                    ex.getDescription(),
-                    ex.getTags(),
-                    ex.getId());
-        } else {
-            // need the user to match
-            count = sql.update(
-                    "UPDATE exhibits " +
-                            "SET title = COALESCE(?, title), " +
-                            "    description = COALESCE(?, description), " +
-                            "    tags = COALESCE(?, tags) " +
-                            "WHERE eid = ? AND author = ?",
-                    ex.getTitle(),
-                    ex.getDescription(),
-                    ex.getTags(),
-                    ex.getId(),
-                    by.getId());
-        }
+        final int count = sql.update(
+                "UPDATE exhibits " +
+                        "SET title = COALESCE(?, title), " +
+                        "    description = COALESCE(?, description), " +
+                        "    tags = COALESCE(?, tags) " +
+                        "WHERE eid = ? AND (author = ? OR ?)",
+                ex.getTitle(),
+                ex.getDescription(),
+                ex.getTags(),
+                ex.getId(),
+                by.getId(),
+                by.isAdmin());
 
         if (count == 0) {
             throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
@@ -174,22 +158,14 @@ public class ExhibitQueryBean {
     public void delete(long eid, User by) {
         LOG.info("{} deleting exhibit {}", by.getUsername(), eid);
         
-        final int count;
-        if (by.isAdmin()) {
-            count = sql.update(
-                    "DELETE FROM exhibits " +
-                            "WHERE eid = ? ",
-                    eid
-            );
-        } else {
-            count = sql.update(
-                    "DELETE FROM exhibits " +
-                            "WHERE eid = ? " +
-                            "  AND author = ?",
-                    eid,
-                    by.getId()
-            );
-        }
+        final int count = sql.update(
+                "DELETE FROM exhibits WHERE" +
+                        " eid = ? AND (author = ? OR ?)",
+                eid,
+                by.getId(),
+                by.isAdmin()
+        );
+        
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + eid);
         }
