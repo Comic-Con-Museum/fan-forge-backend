@@ -26,14 +26,32 @@ public class ExhibitQueryBean {
     public static final int PAGE_SIZE = 10;
     
     public enum FeedType {
-        NEW("created DESC"),
-        ALPHABETICAL("title DESC");
+        recent("created", true),
+        popular("(SELECT COUNT(*) FROM supports WHERE exhibit = eid)", true);
+        // comments will be, roughly:
+        //comments("(SELECT COUNT(*) FROM comments WHERE exhibit = eid)", true)
         
         private final String orderBy;
+        private final boolean defaultDesc;
         
-        FeedType(String orderBy) { this.orderBy = orderBy; }
+        FeedType(String orderBy, boolean defaultDesc) {
+            this.orderBy = orderBy + " ";
+            this.defaultDesc = defaultDesc;
+        }
         
-        private String getSql() { return this.orderBy; }
+        public static FeedType parse(String name) {
+            for (FeedType feed : FeedType.values()) {
+                if (feed.name().equals(name)) {
+                    return feed;
+                }
+            }
+            return null;
+        }
+        
+        private String getSql(boolean inverted) {
+            // XOR is magic, don't question it
+            return this.orderBy + (defaultDesc ^ inverted ? "DESC" : "ASC");
+        }
     }
     
     private final JdbcTemplate sql;
@@ -89,9 +107,9 @@ public class ExhibitQueryBean {
                 "   title VARCHAR(255) NOT NULL, " +
                 "   description TEXT NOT NULL, " +
                 "   author TEXT ,"+//TODO INTEGER REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
+                // TODO Once we figure out how we want tags to work, we can make this better
                 "   tags TEXT ARRAY, " +
                 "   created TIMESTAMP WITH TIME ZONE NOT NULL " +
-                // TODO Once we figure out how we want tags to work, we can make this better
                 ")"
         );
     }
@@ -184,7 +202,8 @@ public class ExhibitQueryBean {
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +
                 "      AND a.cover " +
-                "ORDER BY " + type.getSql() + " " +
+                // TODO Add support for reversing
+                "ORDER BY " + type.getSql(false) + " " +
                 "LIMIT ? " +
                 "OFFSET ?",
                 new Mapper(),

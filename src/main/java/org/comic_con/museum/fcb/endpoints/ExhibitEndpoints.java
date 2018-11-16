@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -50,22 +49,13 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
                                         @AuthenticationPrincipal User user) {
-        ExhibitQueryBean.FeedType feed;
-        switch (feedName) {
-            case "new":
-                LOG.info("NEW feed");
-                feed = ExhibitQueryBean.FeedType.NEW;
-                break;
-            case "alphabetical":
-                LOG.info("ALPHABETICAL feed");
-                feed = ExhibitQueryBean.FeedType.ALPHABETICAL;
-                break;
-            default:
-                LOG.info("Unknown feed: {}", feedName);
-                // 404 instead of 400 because they're trying to hit a
-                // nonexistent endpoint (/feed/whatever), not passing bad data
-                // to a real endpoint
-                return ResponseEntity.notFound().build();
+        ExhibitQueryBean.FeedType feed = ExhibitQueryBean.FeedType.parse(feedName);
+        if (feed == null) {
+            LOG.info("Unknown feed: {}", feedName);
+            // 404 instead of 400 because they're trying to hit a
+            // nonexistent endpoint (/feed/whatever), not passing bad data
+            // to a real endpoint
+            return ResponseEntity.notFound().build();
         }
         
         long count;
