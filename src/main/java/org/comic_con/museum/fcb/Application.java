@@ -132,6 +132,7 @@ public class Application implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // TODO Should init stuff be moved into the beans' ctors/@PostConstruct?
         try {
             LOG.info("Initializing DB");
             // Order is important! Some tables depend on others.
@@ -152,7 +153,7 @@ public class Application implements CommandLineRunner {
             s3.setupBucket(resetOnStart);
             LOG.info("Done initializing S3");
         } catch (Exception e) {
-            LOG.error("Failed while demoing S3", e);
+            LOG.error("Failed while initializing S3", e);
             if (closeOnInitFail) {
                 ctx.close();
                 return;
