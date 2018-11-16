@@ -1,11 +1,13 @@
 package org.comic_con.museum.fcb.endpoints;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -83,6 +84,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.notFound().build();
     }
     
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ErrorResponse> integrityViolation(HttpServletRequest req, DuplicateKeyException e) {
+        LOG.info("Tegridy violation: {}", e.getMessage());
+        return ResponseEntity.badRequest().build();
+    }
+    
     @ExceptionHandler(JsonProcessingException.class)
     public ResponseEntity<ErrorResponse> invalidPOJO(HttpServletRequest req, JsonProcessingException e) {
         LOG.error("Conversion of POJO to JSON failed", e);
@@ -120,6 +127,12 @@ public class GlobalExceptionHandler {
         ), HttpStatus.PAYLOAD_TOO_LARGE);
     }
     
+    @ExceptionHandler(AmazonS3Exception.class)
+    public ResponseEntity<ErrorResponse> s3Exception(HttpServletRequest req, AmazonS3Exception e) {
+        LOG.info("S3 exception: {}", e.getMessage());
+        return new ResponseEntity<>(HttpStatus.valueOf(e.getStatusCode()));
+    }
+    
     // "unwrap" InvocationTargetException since that's what errors in reflected methods are wrapped in
     @ExceptionHandler(InvocationTargetException.class)
     public ResponseEntity<ErrorResponse> unwrapReflectionError(HttpServletRequest req, InvocationTargetException e) throws Throwable {
@@ -134,7 +147,10 @@ public class GlobalExceptionHandler {
             LOG.error("Annotated exception occurred", e);
             
             return new ResponseEntity<>(
-                    new ErrorResponse(annotation.reason(), null),
+                    new ErrorResponse(
+                            annotation.reason().isEmpty() ? e.getMessage() : annotation.reason(),
+                            null
+                    ),
                     annotation.code()
             );
         } else {

@@ -139,6 +139,11 @@ details about any given exhibit, use `GET /exhibit/{id}`.
       id: integer // The exhibit's unique ID
       title: string // The title or headline of the exhibit
       description: string // A much longer explanation, with details
+      cover: { // information about the cover image, or `null` if there is none
+        title: string // the title of the cover image
+        description: string // its description
+        image: integer // the ID of the actual image
+      }
       supporters: integer // How many people have supported the exhibit
       // requires login:
       isSupported: boolean // Whether or not the current user supports it
@@ -165,9 +170,15 @@ returns a 404.
   id: integer // The exhibit's unique ID
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
-  supporterCount: integer // How many people have supported the exhibit
+  supporters: integer // How many people have supported the exhibit
   author: string // The username of the creator of the exhibit
   created: datetime // When the exhibit was created
+  tags: [ string ] // The tags of the exhibit
+  artifacts: [ // The artifacts associated with this exhibit
+    {
+      // All fields from response body of GET /artifact/{id}, except `parent`
+    }
+  ]
   // requires login:
   isSupported: boolean // Whether or not the current user supports it
 }
@@ -191,39 +202,56 @@ with this structure:
   title: string // The title or headline of the exhibit
   description: string // A much longer explanation, with details
   tags: [ string ] // The tags to associate this exhibit with
+  artifacts: [ // Information about the artifacts being uploaded
+    {
+      // All fields from request body of POST /artifact except parent, plus:
+      image: string // the filename of that artifact's image.
+    }
+  ]
 }
 ```
 
-`data` contains all of the data about the exhibit, except for the images to be
-attached to it. The images are attached as other parts of the multipart
-request. The `name` marks the purpose of the image -- the intended cover image
-is `name`d `cover`, and all other images are `name`d `thumbnail`. A full
-request body with the boundary `||FormBoundary||` might look like this:
+The `data` parameter contains all of the metadata about the exhibit to be made.
+The `image` field in each artifact is the parameter name of the image file to
+associate with that artifact. There must be at most a single artifact with
+`cover: true`. If there are multiple files with one parameter name, the most
+embarrassing one is used. A full HTTP request might look like:
 
 ```
+POST http://localhost:8080/exhibit HTTP/1.1
+Authorization: Bearer U3RvcCBkZWNvZGluZyA6KA==
+Content-Type: multipart/form-data; boundary=||FormBoundary||
+
 --||FormBoundary||
 Content-Disposition: form-data; name="data"
 Content-Type: application/json
+
 {
   "title": "This is an example exhibit.",
   "description": "Examples can help make something easier to understand.",
-  "tags": [ "demo", "example", "patronizing" ]
+  "tags": [ "demo", "example", "patronizing" ],
+  "artifacts": [
+    {
+      <metadata elided to avoid duplication>,
+      "image": "(na){16} batman",
+      "cover": true
+    },
+    {
+      <metadata elided again for same reason>,
+      "image": "awoo",
+      "cover": false
+    }
+  ]
 }
 
 --||FormBoundary||
-Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Disposition: form-data; name="(na){16} batman"; filename="batman.png"
 Content-Type: image/png
 
 <file contents omitted for brevity>
 
 --||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="manbat.jpg"
-Content-Type: image/jpeg
-
-<file contents omitted for brevity>
-
---||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
+Content-Disposition: form-data; name="awoo"; filename="saddog.gif"
 Content-Type: image/gif
 
 <file contents omitted for brevity>
@@ -231,15 +259,8 @@ Content-Type: image/gif
 --||FormBoundary||--
 ```
 
-The following image types are supported:
-
-* PNG (`image/png`)
-* JPG/JPEG (`image/jpeg`)
-* GIF (`image/gif`)
-
-Each image is validated on submit -- for example, if the image is marked as
-`image/png` but it's not a valid PNG file, the request is rejected with a
-`400 Bad Request`.
+All the same restrictions apply on the images submitted through this endpoint
+as through `POST /artifact`.
 
 ### Response
 
@@ -247,7 +268,15 @@ Each image is validated on submit -- for example, if the image is marked as
 integer // The ID of the newly-created exhibit idea.
 ```
 
-## `PUT /exhibit/{id}`
+## `POST /exhibit/{id}`
+
+>   Do you think this should be `PUT` or `PATCH`? Us too! Unfortunately,
+    Apache has decided [it won't happen][apache-stop], and Pivotal has agreed
+    by using Apache Commons in Spring. File all complaints with them, and Roy
+    Thomas Fielding.
+>   
+>   Until that bug is fixed, this API literally cannot comply with the HTTP
+    standard, or be RESTful. Oh well.
 
 Edit the exhibit with the given ID. There must be an exhibit at that ID
 already; this does not create one.
@@ -260,43 +289,56 @@ You must be authorized as the creator of the exhibit.
 
 The request body format is identical to the format of `POST /exhibit`. The body
 is interpreted in the exact same way, and all previous data is overwritten.
-However, to save bandwidth, you can "reference" an already-uploaded image by
-uploading an empty `text/plain` part with a `filename` of that ID. So for
-example, to modify an exhibit that already has an image with the ID `1542`,
-the request body with boundary `||FormBoundary||` could look like:
+However, any elements that aren't specified are left unchanged. For example,
+given this request:
 
 ```
+POST http://localhost:8080/exhibit HTTP/1.1
+Authorization: Bearer U3RvcCBkZWNvZGluZyA6KA==
+Content-Type: multipart/form-data; boundary=||FormBoundary||
+
 --||FormBoundary||
 Content-Disposition: form-data; name="data"
 Content-Type: application/json
+
 {
-  "title": "This is an edited example exhibit.",
-  "description": "Notice the second image!",
-  "tags": [ "ooh", "demo", "cool" ]
+  "title": "This is an example exhibit.",
+  "tags": [ "demo", "stop" ],
+  "artifacts": [
+    {
+      "id": 4,
+      "image": "(na){16} batman",
+      "cover": false
+    },
+    {
+      <content elided to avoid duplication>,
+      "image": "magicflash"
+  ]
 }
 
 --||FormBoundary||
-Content-Disposition: form-data; name="cover"; filename="batman.png"
+Content-Disposition: form-data; name="(na){16} batman"; filename="man in bat outfit.png"
 Content-Type: image/png
 
 <file contents omitted for brevity>
 
 --||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="1542"
-Content-Type: text/plain
-
---||FormBoundary||
-Content-Disposition: form-data; name="thumbnail"; filename="capefwoosh.gif"
-Content-Type: image/gif
+Content-Disposition: form-data; name="magicflash"; filename="aagh my eyes.gif"
 
 <file contents omitted for brevity>
 
 --||FormBoundary||--
 ```
 
-The exhibit after the `PUT` will have one image, ID `1542`, stay the same. All
-other preexisting images will be discarded, and two new images (`batman.png`
-and `capefwoosh.gif`) will be uploaded. 
+*   The title will be changed to *This is an example exhibit*.
+*   The tags will be changed to `demo` and `stop`
+*   All the artifacts associated with the exhibit except the one with ID 4 will
+    be deleted.
+*   Artifact 4 will:
+    *   Have a new image (the file in parameter `(na){16} batman`)
+    *   No longer be the cover of the exhibit
+*   A new artifact will be created with the passed title, description etc. and
+    `aagh my eyes.gif` attached to it.
 
 ## `DELETE /exhibit/{id}`
 
@@ -305,6 +347,78 @@ Delete an exhibit by ID.
 ### Authorization
 
 You must be authorized as the creator of the exhibit.
+
+## `GET /artifact/{aid}`
+
+Get information about a specific artifact.
+
+### Response body
+
+```
+{
+  id: integer // The artifact itself's ID
+  title: string // A short title for the artifact
+  description: string // A detailed description of what the artifact is
+  image: integer // The ID of this artifact's image
+  creator: string // The username of the artifact's creator
+  cover: boolean // Whether or not this artifact is the cover
+  created: datetime // When this artifact was created
+}
+```
+
+## `POST /artifact`
+
+Create an artifact.
+
+### Request body
+
+This format is similar to `POST /exhibit`, in `multipart/form-data` format with
+a `data` parameter containing JSON-encoded metadata and the image for this
+artifact as another parameter, `image`. The `data` section must look like:
+
+```
+{
+  title: string // A short title for the artifact
+  description: string // A longer description of what the artifact is
+  parent: integer // The ID of the exhibit to attach this to
+}
+```
+
+The following image types are explicitly supported:
+
+* PNG (`image/png`)
+* JPG/JPEG (`image/jpeg`)
+* GIF (`image/gif`)
+* BMP (`image/bmp`)
+
+More may or may not be supported, but the above are known to work.
+
+Each image is validated on submit -- for example, if the image is marked as
+`image/png` but it's not a valid PNG file, the request is rejected with a
+`400 Bad Request`. Each individual image can be a maximum of 64kb by default,
+with a maximum overall request size of 128kb.
+
+### Authorization
+
+You must be authorized to hit this endpoint.
+
+## `POST /artifact/{aid}`
+
+>   Do you think this should be `PUT` or `PATCH`? Us too! Unfortunately,
+    Apache has decided [it won't happen][apache-stop], and Pivotal has agreed
+    by using Apache Commons in Spring. File all complaints with them, and Roy
+    Thomas Fielding.
+>   
+>   Until that bug is fixed, this API literally cannot comply with the HTTP
+    standard, or be RESTful. Oh well.
+
+Edit an artifact
+
+Blend `POST /artifact` and `POST /exhibit/{id}` and you get this
+
+## `DELETE /artifact/{aid}`
+
+Delete an artifact
 
 ## `POST /support/exhibit/{id}`
 
@@ -329,3 +443,22 @@ Remove the current user's support for this exhibit
 
 You must be authorized to hit this endpint. The user you're authorized
 as is the one whose support will be removed.
+
+## `GET /image/{id}`
+
+Get an image.
+
+Each image is associated with a unique ID. Use this endpoint to get the image
+at a URL. 
+
+Getting an image is separated out from getting the rest of the object because
+the images can be significantly larger than the rest of the response, and
+should be loaded separately.
+
+### Response body
+
+The response body is the binary content of the image. You should be able to
+hotlink directly to it from an `image` tag in HTML. The `Content-Type` header
+shows the image type.
+
+ [apache-stop]: https://issues.apache.org/jira/browse/FILEUPLOAD-197

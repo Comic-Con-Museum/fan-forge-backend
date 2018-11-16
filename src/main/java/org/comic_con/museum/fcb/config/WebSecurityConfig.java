@@ -22,7 +22,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final RequestMatcher PUBLIC_URLS = new OrRequestMatcher(
-            // CORS uses OPTIONS to check what's allowed, so we always allow those with no auth
+            // CORS uses OPTIONS to check what's allowed, so we always allow
+            // those with no auth
             new AntPathRequestMatcher("/**", "OPTIONS"),
             // Everyone needs access to POST /login to get bearer tokens
             new AntPathRequestMatcher("/login", "POST"),
@@ -32,6 +33,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             // Healthcheck is used for automatic deployment and monitoring, and
             //  shouldn't require auth
             new AntPathRequestMatcher("/healthcheck/**", "GET"),
+            // This endpoint is how images are loaded by the frontend
+            new AntPathRequestMatcher("/image/*", "GET"),
             // And /error is the default error page; it should never be shown,
             //  but in case it is, we don't want to give a 404.
             new AntPathRequestMatcher("/error", "GET")

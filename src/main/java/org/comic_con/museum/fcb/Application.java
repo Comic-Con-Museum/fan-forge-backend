@@ -1,22 +1,21 @@
 package org.comic_con.museum.fcb;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import org.comic_con.museum.fcb.dal.SupportQueryBean;
+import org.comic_con.museum.fcb.models.Artifact;
+import org.comic_con.museum.fcb.persistence.ArtifactQueryBean;
+import org.comic_con.museum.fcb.persistence.S3Bean;
+import org.comic_con.museum.fcb.persistence.SupportQueryBean;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
+import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -24,7 +23,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 
 @SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
@@ -50,18 +48,34 @@ public class Application implements CommandLineRunner {
     @Value("${fcb.add-test-data}")
     private boolean addTestData;
     
+    @Value("${fcb.close-on-init-fail}")
+    private boolean closeOnInitFail;
+    
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
+    private final ArtifactQueryBean artifacts;
+    private final S3Bean s3;
+    private final ConfigurableApplicationContext ctx;
     
-    public Application(ExhibitQueryBean exhibits, SupportQueryBean supports) {
+    @Autowired
+    public Application(ExhibitQueryBean exhibits, SupportQueryBean supports, ArtifactQueryBean artifacts,
+                       S3Bean s3, ConfigurableApplicationContext ctx) {
         this.exhibits = exhibits;
         this.supports = supports;
+        this.artifacts = artifacts;
+        this.s3 = s3;
+        this.ctx = ctx;
     }
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
     
+    /**
+     * A complex bunch of code that can all mostly be ignored. It just
+     * populates the database with some random-looking data, so that the code
+     * can be tested more easily.
+     */
     private void addTestData() throws SQLException {
         if (!addTestData) return;
         
@@ -86,68 +100,73 @@ public class Application implements CommandLineRunner {
         User[] supporters = IntStream.range(0, 5)
                 .mapToObj(i -> new User(("user" + i), "user" + i, null, false))
                 .toArray(User[]::new);
-        for (int exIdx = 0; exIdx < exhibitTitles.size(); ++exIdx) {
-            String title = exhibitTitles.get(exIdx);
+        int imageId = 0;
+        for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
+            String title = exhibitTitles.get(eIdx);
             long newId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
-                    Instant.now().minus(exIdx, ChronoUnit.DAYS),
-                    new String[] { "post", "exhibit", "index:" + exIdx }
+                    Instant.now().minus(eIdx % 4, ChronoUnit.DAYS).minus(eIdx / 4, ChronoUnit.HOURS),
+                    new String[] { "post", "exhibit", "index:" + eIdx },
+                    null
             ), original);
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
-                if ((exIdx & sIdx) == sIdx) {
+                if ((eIdx & sIdx) == sIdx) {
                     supports.support(
                             newId, supporters[sIdx],
                             String.format("Support for %d by %s", newId, supporters[sIdx].getUsername())
                     );
                 }
             }
+            for (int aIdx = 0; aIdx < eIdx % 4; ++aIdx) {
+                artifacts.create(new Artifact(
+                        0, "artifact " + aIdx + " of " + eIdx,
+                        "description of artifact",
+                        aIdx == 0,
+                        null,
+                        Instant.now()
+                ), newId, supporters[aIdx]);
+            }
         }
-        LOG.info("checking if exhibits supported by 1:");
-        Map<Long, Boolean> supportedBy1 = supports.isSupportingByIds(supporters[1],
-                Arrays.asList(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
-        );
-        for (Map.Entry<Long, Boolean> pair : supportedBy1.entrySet()) {
-            LOG.info("Supporting {}? {}", pair.getKey(), pair.getValue());
-        }
-        LOG.info("done");
-        LOG.info("Getting exhibit supporter counts");
-        Map<Long, Integer> counts = supports.supporterCountsByIds(
-                Arrays.asList(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L)
-        );
-        for (Map.Entry<Long, Integer> pair : counts.entrySet()) {
-            LOG.info("{} supporters: {}", pair.getKey(), pair.getValue());
-        }
-        LOG.info("done");
+        LOG.info("Done adding test data");
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
+        // TODO Should init stuff be moved into the beans' ctors/@PostConstruct?
         try {
             LOG.info("Initializing DB");
+            // Order is important! Some tables depend on others.
             exhibits.setupTable(resetOnStart);
             supports.setupTable(resetOnStart);
-            addTestData();
+            artifacts.setupTable(resetOnStart);
             LOG.info("Done initializing DB");
         } catch (Exception e) {
             LOG.error("Failed while initializing DB", e);
-            throw e; // crash on error, but log it first
+            if (closeOnInitFail) {
+                ctx.close();
+                return;
+            }
         }
         
         try {
-            LOG.info("Demoing S3 connection:");
-            AWSCredentials creds = new BasicAWSCredentials(accessKey, secretKey);
-            AmazonS3 s3 = AmazonS3ClientBuilder.standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(creds))
-                    .withEndpointConfiguration(
-                            new AwsClientBuilder.EndpointConfiguration(
-                                    url, region
-                            )
-                    )
-                    .build();
-            s3.listBuckets().forEach(b -> LOG.info(b.getName()));
-            LOG.info("Done with S3 stuff");
+            LOG.info("Initializing S3");
+            s3.setupBucket(resetOnStart);
+            LOG.info("Done initializing S3");
         } catch (Exception e) {
-            LOG.error("Non-fatal error during S3 demo: {}", e.getMessage());
+            LOG.error("Failed while initializing S3", e);
+            if (closeOnInitFail) {
+                ctx.close();
+                return;
+            }
+        }
+        
+        try {
+            addTestData();
+        } catch (SQLException e) {
+            LOG.error("Failed while adding test data", e);
+            if (closeOnInitFail) {
+                ctx.close();
+            }
         }
     }
 }

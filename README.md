@@ -89,6 +89,8 @@ To run the server, you need, in order:
         separate service, this value will be determined by the service.
     *   `s3.access-key`: The access key. Sometimes called a username.
     *   `s3.secret-key`: The secret key. Sometimes called a password.
+    *   `s3.bucket`: The name of the bucket to access. This defaults to the
+        first bucket in the list, whatever that happens to be.
 
 Once you have all three set up, just run the fat JAR like any other normal
 jarfile:
@@ -102,19 +104,26 @@ If it can't reach either, it'll fail fast and tell you what's missing.
 
 ### Additional configuration
 
-There are a few more optional configuration options available. In production,
-these **must** be left unspecified, as changing them could cause catastrophic
-data loss or severely compromise security. They're available only to make
-debugging easier.
+There are a few more optional configuration options available.
 
-*   `fcb.reset-on-start`: whether or not the database and S3 will be
-    completely cleared when the server starts.
-*   `fcb.add-test-data`: whether or not to add a few dozen rows of test data
-    to the database on startup.
 *   `spring.servlet.multipart.max-file-size`: The maximum size of an indivual
     image in an upload. Defaults to 64 kilobytes.
 *   `spring.servlet.multipart.max-request-size`: The maximum total size of a
     request that's uploading files. Defaults to 512 kilobytes.
+
+There are also some debug options. In production, these **must** be left
+unspecified, as changing them could cause catastrophic data loss, massive
+instability, or severely compromise security. They're available **only** to
+make debugging easier.
+
+*   `fcb.reset-on-start`: Whether or not the database and S3 will be
+    completely cleared when the server starts. This ensures that the database
+    schemae stay up-to-date through frequent code changes.
+*   `fcb.add-test-data`: Whether or not to add a few dozen rows of test data
+    to the database on startup. This ensures that there's always data to test
+    against, even if the persistence is being reset with every restart.
+*   `fcb.close-on-init-fail`: Whether or not to close the server if any of the
+    initialization and connection checking fails. 
 
 ### Building a fat JAR from source
 

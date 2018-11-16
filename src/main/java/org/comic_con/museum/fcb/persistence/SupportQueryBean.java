@@ -1,4 +1,4 @@
-package org.comic_con.museum.fcb.dal;
+package org.comic_con.museum.fcb.persistence;
 
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
@@ -8,14 +8,14 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.util.*;
 
-@Component
+@Repository
 public class SupportQueryBean {
-    private static final Logger LOG = LoggerFactory.getLogger("query.support");
+    private static final Logger LOG = LoggerFactory.getLogger("persist.support");
     
     private final NamedParameterJdbcTemplate sql;
     

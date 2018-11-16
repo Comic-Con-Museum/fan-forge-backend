@@ -1,6 +1,6 @@
 package org.comic_con.museum.fcb.endpoints;
 
-import org.comic_con.museum.fcb.dal.SupportQueryBean;
+import org.comic_con.museum.fcb.persistence.SupportQueryBean;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

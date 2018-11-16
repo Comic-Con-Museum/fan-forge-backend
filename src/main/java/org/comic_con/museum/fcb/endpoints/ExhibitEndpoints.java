@@ -2,14 +2,14 @@ package org.comic_con.museum.fcb.endpoints;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import org.comic_con.museum.fcb.endpoints.inputs.ArtifactCreation;
 import org.comic_con.museum.fcb.endpoints.inputs.ExhibitCreation;
 import org.comic_con.museum.fcb.endpoints.responses.ExhibitFull;
 import org.comic_con.museum.fcb.endpoints.responses.Feed;
-import org.comic_con.museum.fcb.dal.SupportQueryBean;
-import org.comic_con.museum.fcb.dal.TransactionWrapper;
+import org.comic_con.museum.fcb.models.Artifact;
+import org.comic_con.museum.fcb.persistence.*;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.dal.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,13 +32,17 @@ public class ExhibitEndpoints {
 
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
+    private final ArtifactQueryBean artifacts;
+    private final S3Bean s3;
     private final TransactionWrapper transactions;
     
     @Autowired
     public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
-                            TransactionWrapper transactionWrapperBean) {
+                            ArtifactQueryBean artifacts, S3Bean s3, TransactionWrapper transactionWrapperBean) {
         this.exhibits = exhibitQueryBean;
         this.supports = supportQueryBean;
+        this.artifacts = artifacts;
+        this.s3 = s3;
         this.transactions = transactionWrapperBean;
     }
 
@@ -59,8 +62,9 @@ public class ExhibitEndpoints {
                 break;
             default:
                 LOG.info("Unknown feed: {}", feedName);
-                // 404 instead of 400 because they're trying to hit a nonexistent endpoint (/feed/whatever), not passing
-                // bad data to a real endpoint
+                // 404 instead of 400 because they're trying to hit a
+                // nonexistent endpoint (/feed/whatever), not passing bad data
+                // to a real endpoint
                 return ResponseEntity.notFound().build();
         }
         
@@ -86,72 +90,91 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/exhibit/{id}")
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
-        return ResponseEntity.ok(new ExhibitFull(e, supports.supporterCount(e), supports.isSupporting(user, e)));
+        return ResponseEntity.ok(new ExhibitFull(
+                e,
+                supports.supporterCount(e),
+                supports.isSupporting(user, e),
+                artifacts.artifactsOfExhibit(id)
+        ));
     }
 
+    // TODO Return created exhibit, not just ID
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST, consumes = "multipart/form-data")
-    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) throws SQLException, IOException {
-        String dataString = req.getParameter("data");
-        if (dataString == null) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @RequestParam("data") String dataString,
+                                              @AuthenticationPrincipal User user) throws SQLException, IOException {
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
-        if (null == data.getTitle() || null == data.getDescription() || null == data.getTags()) {
+        if (null == data.getTitle() || null == data.getDescription() || null == data.getTags() || null == data.getArtifacts()) {
+            LOG.info("Required field not provided");
             return ResponseEntity.badRequest().build();
         }
 
-        // TODO wrap in transaction
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = exhibits.create(data.build(user), user);
-
-            // TODO Upload images instead of just listing them
-            for (MultipartFile file : req.getFiles("thumbnail")) {
-                LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
+            for (ArtifactCreation a : data.getArtifacts()) {
+                Artifact full = a.build(user);
+                long aid = artifacts.create(full, id, user);
+                if (a.getImageName() == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                MultipartFile file = req.getFile(a.getImageName());
+                if (file == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                s3.putImage(aid, file);
             }
-            for (MultipartFile file : req.getFiles("cover")) {
-                LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
-            }
+            
+            t.commit();
         }
         return ResponseEntity.ok(id);
     }
-    
-    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.PUT, consumes = "multipart/form-data")
+
+    // TODO Fix Apache so we can use PUT instead of POST
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
-                                                   @AuthenticationPrincipal User user) throws IOException {
-        String dataString = req.getParameter("data");
-        if (dataString == null) {
-            return ResponseEntity.badRequest().build();
-        }
+                                                   @RequestParam("data") String dataString,
+                                                   @AuthenticationPrincipal User user) throws IOException, SQLException {
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
+        // we don't care if things aren't specified, so don't validate that
         Exhibit ex = data.build(user);
         ex.setId(id);
         ExhibitFull resp;
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            // TODO Upload images instead of just listing them
-            for (MultipartFile file : req.getFiles("thumbnail")) {
-                LOG.info("Thumbnail {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
-            }
-            for (MultipartFile file : req.getFiles("cover")) {
-                LOG.info("Cover {} {} a valid image of type {}", file.getOriginalFilename(),
-                        ImageIO.read(file.getInputStream()) != null ? "is" : "is not",
-                        file.getContentType());
-            }
             exhibits.update(ex, user);
-            resp = new ExhibitFull(
-                    exhibits.getById(ex.getId()),
-                    supports.supporterCount(ex),
-                    supports.isSupporting(user, ex)
-            );
+            // the rest won't be hit if the user isn't the author, because `update` throws an exception
+            // TODO Delete all unmentioned artifacts
+            List<Long> mentioned = new ArrayList<>();
+            for (ArtifactCreation a : data.getArtifacts()) {
+                if (a.getId() != null) {
+                    // if ID is provided, update the existing one
+                    mentioned.add(a.getId());
+                    artifacts.update(a.build(user), user);
+                    // if no image provided, just don't update it!
+                    if (a.getImageName() != null) {
+                        MultipartFile file = req.getFile(a.getImageName());
+                        if (file == null) {
+                            return ResponseEntity.badRequest().build();
+                        }
+                        s3.putImage(a.getId(), file);
+                    }
+                } else {
+                    // if no ID provided, create a new one
+                    long aid = artifacts.create(a.build(user), id, user);
+                    mentioned.add(aid);
+                    if (a.getImageName() == null) {
+                        return ResponseEntity.badRequest().build();
+                    }
+                    MultipartFile file = req.getFile(a.getImageName());
+                    if (file == null) {
+                        return ResponseEntity.badRequest().build();
+                    }
+                    s3.putImage(a.getId(), file);
+                }
+            }
+            artifacts.deleteAllFromExcept(ex.getId(), mentioned);
             t.commit();
         }
-        return ResponseEntity.ok(resp);
+        return getExhibit(id, user);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)
