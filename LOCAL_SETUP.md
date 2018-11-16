@@ -42,6 +42,7 @@ your local machine, follow these steps.
     s3.region=us-east-1
     s3.access-key=[the access key]
     s3.secret-key=[the secret key]
+    s3.bucket=fan-forge-local-demo
     
     security.pwd.secret=asd123!@#lop
     ```
