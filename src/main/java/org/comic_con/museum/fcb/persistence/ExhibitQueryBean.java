@@ -133,20 +133,36 @@ public class ExhibitQueryBean {
     
     public void update(Exhibit ex, User by) {
         LOG.info("{} updating exhibit {}", by.getUsername(), ex.getId());
-        
-        int count = sql.update(
-                "UPDATE exhibits " +
-                "SET title = COALESCE(?, title), " +
-                "    description = COALESCE(?, description), " +
-                "    tags = COALESCE(?, tags) " +
-                "WHERE eid = ? " +
-                "  AND author = ?",
-                ex.getTitle(),
-                ex.getDescription(),
-                ex.getTags(),
-                ex.getId(),
-                by.getId()
-        );
+
+        final int count;
+
+        if (by.isAdmin()) {
+            // admins can edit anything
+            count = sql.update(
+                    "UPDATE exhibits " +
+                            "SET title = COALESCE(?, title), " +
+                            "    description = COALESCE(?, description), " +
+                            "    tags = COALESCE(?, tags) " +
+                            "WHERE eid = ? ",
+                    ex.getTitle(),
+                    ex.getDescription(),
+                    ex.getTags(),
+                    ex.getId());
+        } else {
+            // need the user to match
+            count = sql.update(
+                    "UPDATE exhibits " +
+                            "SET title = COALESCE(?, title), " +
+                            "    description = COALESCE(?, description), " +
+                            "    tags = COALESCE(?, tags) " +
+                            "WHERE eid = ? AND author = ?",
+                    ex.getTitle(),
+                    ex.getDescription(),
+                    ex.getTags(),
+                    ex.getId(),
+                    by.getId());
+        }
+
         if (count == 0) {
             throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
         }
