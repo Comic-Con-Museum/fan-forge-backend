@@ -42,6 +42,7 @@ public class ArtifactEndpoints {
 
     @RequestMapping(value = "/artifact", method = RequestMethod.POST)
     public ResponseEntity<Long> createArtifact(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) {
+        // TODO createArtifact (and also editArtifact and deleteArtifact)
         return ResponseEntity.ok(-1L);
     }
 }
