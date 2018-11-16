@@ -20,9 +20,9 @@ public class UserAuthEndpoints {
     @Value("${security.pwd.secret}")
     private String secret;
 
-    private class TokenData {
-        final String token;
-        final int expires;
+    private static class TokenData {
+        public final String token;
+        public final int expires;
 
         TokenData(String token, int expires) {
             this.token = token;
