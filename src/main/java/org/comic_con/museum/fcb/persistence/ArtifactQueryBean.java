@@ -85,7 +85,6 @@ public class ArtifactQueryBean {
         args.put("title", ar.getTitle());
         args.put("description", ar.getDescription());
         args.put("cover", ar.isCover());
-        args.put("image_id", ar.getImage());
         args.put("creator", by.getId());
         args.put("created", new java.sql.Date(ar.getCreated().toEpochMilli()));
         args.put("exhibit", ex);

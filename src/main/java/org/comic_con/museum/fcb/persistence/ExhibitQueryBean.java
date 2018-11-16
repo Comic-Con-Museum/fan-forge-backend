@@ -179,7 +179,7 @@ public class ExhibitQueryBean {
         
         return sql.query(
                 "SELECT e.*, a.aid aid, a.title atitle, a.description adesc, " +
-                "       a.image_id aimg, a.creator acreator, a.created acreated " +
+                "       a.creator acreator, a.created acreated " +
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +
