@@ -14,8 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 @RestController
@@ -41,8 +43,54 @@ public class ArtifactEndpoints {
     }
 
     @RequestMapping(value = "/artifact", method = RequestMethod.POST)
-    public ResponseEntity<Long> createArtifact(MultipartHttpServletRequest req, @AuthenticationPrincipal User user) {
-        // TODO createArtifact (and also editArtifact and deleteArtifact)
-        return ResponseEntity.ok(-1L);
+    public ResponseEntity<Long> createArtifact(MultipartHttpServletRequest req,
+                                               @RequestParam("data") String dataString,
+                                               @AuthenticationPrincipal User user) throws IOException, SQLException {
+        ArtifactCreation data = CREATE_PARAMS_READER.readValue(dataString);
+        if (null == data.getTitle() || null == data.getDescription() || null == data.getParent()) {
+            LOG.info("Required field not provided");
+            return ResponseEntity.badRequest().build();
+        }
+        Artifact full = data.build(user);
+        full.setCover(false);
+        
+        long id;
+        try (TransactionWrapper.Transaction t = transactions.start()) {
+            id = artifacts.create(full, data.getParent(), user);
+            MultipartFile file = req.getFile("image");
+            if (file == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            s3.putImage(id, file);
+        
+            t.commit();
+        }
+        return ResponseEntity.ok(id);
+    }
+    
+    @RequestMapping(value = "/artifact/{id}", method = RequestMethod.POST)
+    public ResponseEntity<Artifact> editArtifact(@PathVariable long id, MultipartHttpServletRequest req,
+                                                 @RequestParam("data") String dataString,
+                                                 @AuthenticationPrincipal User user) throws IOException, SQLException {
+        ArtifactCreation data = CREATE_PARAMS_READER.readValue(dataString);
+        Artifact full = data.build(user);
+        full.setCover(false);
+        full.setId(id);
+        
+        try (TransactionWrapper.Transaction t = transactions.start()) {
+            artifacts.update(full, user);
+            MultipartFile file = req.getFile("image");
+            if (file != null) {
+                s3.putImage(id, file);
+            }
+            t.commit();
+        }
+        return getArtifact(id);
+    }
+    
+    @RequestMapping(value = "/artifact/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity deleteArtifact(@PathVariable long id, @AuthenticationPrincipal User user) {
+        artifacts.delete(id, user);
+        return ResponseEntity.ok().build();
     }
 }

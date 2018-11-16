@@ -381,8 +381,6 @@ artifact as another parameter, `image`. The `data` section must look like:
   title: string // A short title for the artifact
   description: string // A longer description of what the artifact is
   parent: integer // The ID of the exhibit to attach this to
-  // requires author of the parent:
-  cover: boolean // Whether or not this artifact is the cover of the exhibit
 }
 ```
 
@@ -400,14 +398,9 @@ Each image is validated on submit -- for example, if the image is marked as
 `400 Bad Request`. Each individual image can be a maximum of 64kb by default,
 with a maximum overall request size of 128kb.
 
-If any other artifact attached to the same exhibit is already marked as a cover
-and `cover` is `true`, this will override that and become the new cover.
-
 ### Authorization
 
-You must be authorized to hit this endpoint. Anyone can hit it, but only the
-author of the exhibit can set the cover. If you're not authorized as the
-author, the value of `cover` is ignored like any other extraneous field.
+You must be authorized to hit this endpoint.
 
 ## `POST /artifact/{aid}`
 

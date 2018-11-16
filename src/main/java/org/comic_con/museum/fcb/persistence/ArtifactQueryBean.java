@@ -7,11 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class ArtifactQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.artifacts");
     
-    private final JdbcTemplate sql;
+    private final NamedParameterJdbcTemplate sql;
     private final SimpleJdbcInsert insert;
 
     private static Artifact mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -38,9 +39,9 @@ public class ArtifactQueryBean {
     }
 
     @Autowired
-    public ArtifactQueryBean(JdbcTemplate jdbcTemplate) {
+    public ArtifactQueryBean(NamedParameterJdbcTemplate jdbcTemplate) {
         this.sql = jdbcTemplate;
-        this.insert = new SimpleJdbcInsert(sql)
+        this.insert = new SimpleJdbcInsert(sql.getJdbcTemplate())
                 .withTableName("artifacts")
                 .usingGeneratedKeyColumns("aid");
     }
@@ -48,7 +49,10 @@ public class ArtifactQueryBean {
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
-            sql.execute("DROP TABLE IF EXISTS artifacts CASCADE");
+            sql.execute(
+                    "DROP TABLE IF EXISTS artifacts CASCADE",
+                    new HashMap<>(), PreparedStatement::execute
+            );
         }
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS artifacts ( " +
@@ -63,7 +67,8 @@ public class ArtifactQueryBean {
                 // Partial index to ensure no exhibits have more than one cover
                 "CREATE UNIQUE INDEX one_cover_per_exhibit " +
                 "ON artifacts(exhibit) " +
-                "WHERE cover;"
+                "WHERE cover;",
+                new HashMap<>(), PreparedStatement::execute
         );
     }
     
@@ -71,8 +76,8 @@ public class ArtifactQueryBean {
         LOG.info("Getting artifact with ID {}", id);
         return sql.query(
                 "SELECT * FROM artifacts " +
-                "WHERE exhibit = ?",
-                new Object[] { id },
+                "WHERE exhibit = :eid",
+                new MapSqlParameterSource("eid", id),
                 ArtifactQueryBean::mapRow
         );
     }
@@ -104,16 +109,15 @@ public class ArtifactQueryBean {
 
         int count = sql.update(
                 "UPDATE artifacts " +
-                "SET title = COALESCE(?, title), " +
-                "    description = COALESCE(?, description)," +
-                "    cover = COALESCE(?, cover)" +
-                "WHERE aid = ? " +
-                "  AND creator = ?",
-                ar.getTitle(),
-                ar.getDescription(),
-                ar.isCover(),
-                ar.getId(),
-                by.getId()
+                "SET title = COALESCE(:title, title), " +
+                "    description = COALESCE(:description, description) " +
+                "WHERE aid = :aid " +
+                "  AND creator = :creator ",
+                new MapSqlParameterSource()
+                        .addValue("title", ar.getTitle())
+                        .addValue("description", ar.getDescription())
+                        .addValue("aid", ar.getId())
+                        .addValue("creator", by.getId())
         );
         if (count == 0) {
             throw new EmptyResultDataAccessException("No exhibits updated. Does the author own the exhibit?", 1);
@@ -123,29 +127,42 @@ public class ArtifactQueryBean {
         }
     }
 
-    public Artifact byId(long id) throws SQLException {
+    public Artifact byId(long id) {
         LOG.info("Getting artifact {}", id);
         return sql.queryForObject(
-                "SELECT * FROM artifacts WHERE aid = ?",
-                new Object[] { id },
+                "SELECT * FROM artifacts WHERE aid = :id",
+                new MapSqlParameterSource("id", id),
                 ArtifactQueryBean::mapRow
         );
     }
 
-    public void delete(long eid, User by) {
-        LOG.info("Deleting artifact {} by {}", eid, by);
+    public void delete(long aid, User by) {
+        LOG.info("Deleting artifact {} by {}", aid, by);
         int count = sql.update(
-                "DELETE FROM exhibits " +
-                "WHERE eid = ? " +
-                "  AND author = ?",
-                eid,
-                by.getId()
+                "DELETE FROM artifacts " +
+                "WHERE aid = :aid " +
+                "  AND creator = :creator ",
+                new MapSqlParameterSource()
+                        .addValue("aid", aid)
+                        .addValue("creator", by.getId())
         );
         if (count > 1) {
-            throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + eid);
+            throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + aid);
         }
         if (count == 0) {
-            throw new EmptyResultDataAccessException("No exhibits with ID " + eid + " by " + by.getUsername(), 1);
+            throw new EmptyResultDataAccessException("No exhibits with ID " + aid + " by " + by.getUsername(), 1);
         }
+    }
+    
+    public void deleteAllFromExcept(long exFrom, List<Long> except) {
+        LOG.info("Deleting all artifacts of {} except {}", exFrom, except);
+        sql.update(
+                "DELETE FROM artifacts " +
+                "WHERE exhibit = :exhibit " +
+                "  AND aid NOT IN (:except) ",
+                new MapSqlParameterSource()
+                        .addValue("exhibit", exFrom)
+                        .addValue("except", except)
+        );
     }
 }

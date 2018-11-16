@@ -114,6 +114,9 @@ public class ExhibitEndpoints {
             for (ArtifactCreation a : data.getArtifacts()) {
                 Artifact full = a.build(user);
                 long aid = artifacts.create(full, id, user);
+                if (a.getImageName() == null) {
+                    return ResponseEntity.badRequest().build();
+                }
                 MultipartFile file = req.getFile(a.getImageName());
                 if (file == null) {
                     return ResponseEntity.badRequest().build();
@@ -130,7 +133,7 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
                                                    @RequestParam("data") String dataString,
-                                                   @AuthenticationPrincipal User user) throws IOException {
+                                                   @AuthenticationPrincipal User user) throws IOException, SQLException {
         ExhibitCreation data = CREATE_PARAMS_READER.readValue(dataString);
         // we don't care if things aren't specified, so don't validate that
         Exhibit ex = data.build(user);
@@ -138,12 +141,29 @@ public class ExhibitEndpoints {
         ExhibitFull resp;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             exhibits.update(ex, user);
+            // the rest won't be hit if the user isn't the author, because `update` throws an exception
+            // TODO Delete all unmentioned artifacts
+            List<Long> mentioned = new ArrayList<>();
             for (ArtifactCreation a : data.getArtifacts()) {
-                // TODO If no ID specified, it's a new artifact
-                // TODO Delete all unmentioned artifacts
-                artifacts.update(a.build(user), user);
-                // this won't be hit if the user isn't the author, because `update` throws an exception
-                if (a.getImageName() != null) {
+                if (a.getId() != null) {
+                    // if ID is provided, update the existing one
+                    mentioned.add(a.getId());
+                    artifacts.update(a.build(user), user);
+                    // if no image provided, just don't update it!
+                    if (a.getImageName() != null) {
+                        MultipartFile file = req.getFile(a.getImageName());
+                        if (file == null) {
+                            return ResponseEntity.badRequest().build();
+                        }
+                        s3.putImage(a.getId(), file);
+                    }
+                } else {
+                    // if no ID provided, create a new one
+                    long aid = artifacts.create(a.build(user), id, user);
+                    mentioned.add(aid);
+                    if (a.getImageName() == null) {
+                        return ResponseEntity.badRequest().build();
+                    }
                     MultipartFile file = req.getFile(a.getImageName());
                     if (file == null) {
                         return ResponseEntity.badRequest().build();
@@ -151,15 +171,10 @@ public class ExhibitEndpoints {
                     s3.putImage(a.getId(), file);
                 }
             }
-            resp = new ExhibitFull(
-                    exhibits.getById(ex.getId()),
-                    supports.supporterCount(ex),
-                    supports.isSupporting(user, ex),
-                    artifacts.artifactsOfExhibit(id)
-            );
+            artifacts.deleteAllFromExcept(ex.getId(), mentioned);
             t.commit();
         }
-        return ResponseEntity.ok(resp);
+        return getExhibit(id, user);
     }
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.DELETE)

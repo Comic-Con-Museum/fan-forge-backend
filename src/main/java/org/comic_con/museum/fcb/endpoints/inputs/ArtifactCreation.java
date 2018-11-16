@@ -12,6 +12,7 @@ public class ArtifactCreation {
     private String title;
     private String description;
     private String imageName;
+    private Long parent;
     private boolean cover;
     @JsonIgnore
     private MultipartFile file;
@@ -20,6 +21,7 @@ public class ArtifactCreation {
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getImageName() { return imageName; }
+    public Long getParent() { return parent; }
     public boolean isCover() { return cover; }
     public MultipartFile getFile() { return file; }
 
@@ -27,6 +29,7 @@ public class ArtifactCreation {
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
     public void setImageName(String imageName) { this.imageName = imageName; }
+    public void setParent(Long parent) { this.parent = parent; }
     public void setCover(boolean cover) { this.cover = cover; }
     public void setFile(MultipartFile file) { this.file = file; }
     
