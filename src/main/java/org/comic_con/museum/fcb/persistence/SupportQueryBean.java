@@ -12,19 +12,18 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 @Repository
 public class SupportQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.support");
     
     private final NamedParameterJdbcTemplate sql;
-    
+
     private List<Long> getIds(List<Exhibit> exhibits) {
-        List<Long> ids = new ArrayList<>(exhibits.size());
-        for (Exhibit ex : exhibits) {
-            ids.add(ex.getId());
-        }
-        return ids;
+        return exhibits.stream().map(Exhibit::getId).collect(Collectors.toList());
     }
     
     public SupportQueryBean(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -179,5 +178,34 @@ public class SupportQueryBean {
                         .addValue("uid", by.getId())
         );
         return removed == 1;
+    }
+
+    public String getSurveys(long eid) {
+        LOG.info("Getting surveys for exhibit, {}", eid);
+        /*
+          "CREATE TABLE IF NOT EXISTS supports ( " +
+                "    sid SERIAL PRIMARY KEY, " +
+                "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
+                "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
+                // TODO Get actual survey data fields to use and use them
+                "    survey_data TEXT, " +
+                // we shouldn't have the same person supporting the same exhibit more than once
+                "    UNIQUE (exhibit, supporter)" +
+         */
+        return sql.query(
+                "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
+                new MapSqlParameterSource()
+                        .addValue("eid", eid),
+                rs -> {
+                    List<String> responses = new LinkedList<>();
+                    while (rs.next()) {
+                        responses.add(format("{\"supporter\":\"%s\", \"survey\":\"%s\"}",
+                                rs.getString("supporter"),
+                                rs.getString("survey_data")));
+                    }
+                    return "[" + String.join(",", responses) + "]";
+                }
+        );
+
     }
 }
