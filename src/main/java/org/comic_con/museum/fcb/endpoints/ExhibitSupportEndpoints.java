@@ -42,4 +42,9 @@ public class ExhibitSupportEndpoints {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @RequestMapping(value = "/admin/supports/{eid}", method = RequestMethod.GET)
+    public ResponseEntity getSurveys(@PathVariable long eid) {
+        return ResponseEntity.ok(supports.getSurveys(eid));
+    }
 }
