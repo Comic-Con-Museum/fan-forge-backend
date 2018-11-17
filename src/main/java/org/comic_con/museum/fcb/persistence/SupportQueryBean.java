@@ -7,11 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -183,15 +186,8 @@ public class SupportQueryBean {
         LOG.info("Getting surveys for exhibit, {}", eid);
         return sql.query(
                 "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
-                new MapSqlParameterSource()
-                        .addValue("eid", eid),
-                rs -> {
-                    List<Survey> responses = new LinkedList<>();
-                    while (rs.next()) {
-                        responses.add(new Survey(rs));
-                    }
-                    return responses;
-                }
+                new MapSqlParameterSource().addValue("eid", eid),
+                (rs, rowNum) -> new Survey(rs)
         );
 
     }
