@@ -1,6 +1,7 @@
 package org.comic_con.museum.fcb.persistence;
 
 import org.comic_con.museum.fcb.models.Exhibit;
+import org.comic_con.museum.fcb.models.Survey;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +14,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.lang.String.format;
 
 @Repository
 public class SupportQueryBean {
@@ -180,30 +179,18 @@ public class SupportQueryBean {
         return removed == 1;
     }
 
-    public String getSurveys(long eid) {
+    public List<Survey> getSurveys(long eid) {
         LOG.info("Getting surveys for exhibit, {}", eid);
-        /*
-          "CREATE TABLE IF NOT EXISTS supports ( " +
-                "    sid SERIAL PRIMARY KEY, " +
-                "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
-                "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
-                // TODO Get actual survey data fields to use and use them
-                "    survey_data TEXT, " +
-                // we shouldn't have the same person supporting the same exhibit more than once
-                "    UNIQUE (exhibit, supporter)" +
-         */
         return sql.query(
                 "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
                 new MapSqlParameterSource()
                         .addValue("eid", eid),
                 rs -> {
-                    List<String> responses = new LinkedList<>();
+                    List<Survey> responses = new LinkedList<>();
                     while (rs.next()) {
-                        responses.add(format("{\"supporter\":\"%s\", \"survey\":\"%s\"}",
-                                rs.getString("supporter"),
-                                rs.getString("survey_data")));
+                        responses.add(new Survey(rs));
                     }
-                    return "[" + String.join(",", responses) + "]";
+                    return responses;
                 }
         );
 

@@ -8,8 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-
 @RestController
 public class ExhibitSupportEndpoints {
     private static final Logger LOG = LoggerFactory.getLogger("endpoints.support.exhibit");
@@ -46,13 +44,7 @@ public class ExhibitSupportEndpoints {
     }
 
     @RequestMapping(value = "/admin/supports/{eid}", method = RequestMethod.GET)
-    public ResponseEntity<String> getSurveys(@PathVariable long eid, @AuthenticationPrincipal User user) {
-        if (!user.isAdmin()) {
-            LOG.info("Non-admin user, {} tried to get surveys for an exhibit, {}", user, eid);
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok()
-                .contentType(APPLICATION_JSON)
-                .body(supports.getSurveys(eid));
+    public ResponseEntity getSurveys(@PathVariable long eid) {
+        return ResponseEntity.ok(supports.getSurveys(eid));
     }
 }
