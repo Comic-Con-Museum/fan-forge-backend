@@ -1,30 +1,31 @@
 package org.comic_con.museum.fcb.persistence;
 
 import org.comic_con.museum.fcb.models.Exhibit;
+import org.comic_con.museum.fcb.models.Survey;
 import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class SupportQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.support");
     
     private final NamedParameterJdbcTemplate sql;
-    
+
     private List<Long> getIds(List<Exhibit> exhibits) {
-        List<Long> ids = new ArrayList<>(exhibits.size());
-        for (Exhibit ex : exhibits) {
-            ids.add(ex.getId());
-        }
-        return ids;
+        return exhibits.stream().map(Exhibit::getId).collect(Collectors.toList());
     }
     
     public SupportQueryBean(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -180,5 +181,15 @@ public class SupportQueryBean {
                         .addValue("uid", by.getId())
         );
         return removed == 1;
+    }
+
+    public List<Survey> getSurveys(long eid) {
+        LOG.info("Getting surveys for exhibit, {}", eid);
+        return sql.query(
+                "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
+                new MapSqlParameterSource().addValue("eid", eid),
+                (rs, rowNum) -> new Survey(rs)
+        );
+
     }
 }
