@@ -195,6 +195,21 @@ public class ExhibitQueryBean {
         }
     }
     
+    private static void addFilters(Map<String, String> filters, StringBuilder query, MapSqlParameterSource params) {
+        // 1=1 so we can start with `AND` and forget about it)
+        query.append(" WHERE 1=1 ");
+        
+        if (filters.containsKey("tag")) {
+            query.append("AND :tag = ANY(e.tags) ");
+            params.addValue("tag", filters.get("tag"));
+        }
+    
+        if (filters.containsKey("author")) {
+            query.append("AND author = :author ");
+            params.addValue("author", filters.get("author"));
+        }
+    }
+    
     public List<Exhibit> getFeed(FeedType type, int startIdx, Map<String, String> filters) {
         LOG.info("Getting {} feed", type);
 
@@ -204,21 +219,12 @@ public class ExhibitQueryBean {
                 "FROM exhibits e " +
                 "LEFT JOIN artifacts a " +
                 "       ON a.exhibit = e.eid " +
-                "      AND a.cover " +
-                "WHERE 1=1 " // 1=1 so we can start with `AND` and forget about it
+                "      AND a.cover "
         );
-
         MapSqlParameterSource params = new MapSqlParameterSource();
-        if (filters.containsKey("tag")) {
-            query.append("AND :tag = ANY(e.tags) ");
-            params.addValue("tag", filters.get("tag"));
-        }
-
-        if (filters.containsKey("author")) {
-            query.append("AND author = :author ");
-            params.addValue("author", filters.get("author"));
-        }
-
+        
+        addFilters(filters, query, params);
+        
         // TODO Add support for reversing
         query.append("ORDER BY ").append(type.getSql(false)).append(" LIMIT :limit OFFSET :offset");
         params.addValue("limit", PAGE_SIZE);
@@ -228,10 +234,15 @@ public class ExhibitQueryBean {
     }
 
     // TODO Implement filters here too
-    public long getCount() throws DataAccessException {
+    public long getCount(Map<String, String> filters) throws DataAccessException {
         LOG.info("Getting total exhibit count");
         
-        Long count = sql.queryForObject("SELECT COUNT(*) FROM exhibits", Collections.emptyMap(), Long.class);
+        StringBuilder query = new StringBuilder("SELECT COUNT(*) FROM exhibits e ");
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        
+        addFilters(filters, query, params);
+        
+        Long count = sql.queryForObject(query.toString(), params, Long.class);
         if (count == null) {
             throw new EmptyResultDataAccessException("Somehow no count returned", 1);
         }

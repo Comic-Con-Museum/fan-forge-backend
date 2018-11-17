@@ -64,7 +64,7 @@ public class ExhibitEndpoints {
         long count;
         List<Feed.Entry> entries;
         try (TransactionWrapper.Transaction tr = transactions.start()) {
-            count = exhibits.getCount();
+            count = exhibits.getCount(filters);
             // This can definitely be combined into one query if necessary
             // or even just two (instead of 2*PAGE_SIZE+1)
             List<Exhibit> feedRaw = exhibits.getFeed(feed, startIdx, filters);
