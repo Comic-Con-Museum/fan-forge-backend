@@ -1,12 +1,9 @@
 package org.comic_con.museum.fcb;
 
 import org.comic_con.museum.fcb.models.Artifact;
-import org.comic_con.museum.fcb.persistence.ArtifactQueryBean;
-import org.comic_con.museum.fcb.persistence.S3Bean;
-import org.comic_con.museum.fcb.persistence.SupportQueryBean;
+import org.comic_con.museum.fcb.persistence.*;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,15 +51,17 @@ public class Application implements CommandLineRunner {
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
     private final ArtifactQueryBean artifacts;
+    private final CommentQueryBean comments;
     private final S3Bean s3;
     private final ConfigurableApplicationContext ctx;
     
     @Autowired
     public Application(ExhibitQueryBean exhibits, SupportQueryBean supports, ArtifactQueryBean artifacts,
-                       S3Bean s3, ConfigurableApplicationContext ctx) {
+                       CommentQueryBean comments, S3Bean s3, ConfigurableApplicationContext ctx) {
         this.exhibits = exhibits;
         this.supports = supports;
         this.artifacts = artifacts;
+        this.comments = comments;
         this.s3 = s3;
         this.ctx = ctx;
     }
@@ -100,7 +99,6 @@ public class Application implements CommandLineRunner {
         User[] supporters = IntStream.range(0, 5)
                 .mapToObj(i -> new User(("user" + i), "user" + i, null, false))
                 .toArray(User[]::new);
-        int imageId = 0;
         for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
             String title = exhibitTitles.get(eIdx);
             long newId = exhibits.create(new Exhibit(
@@ -139,6 +137,7 @@ public class Application implements CommandLineRunner {
             exhibits.setupTable(resetOnStart);
             supports.setupTable(resetOnStart);
             artifacts.setupTable(resetOnStart);
+            comments.setupTable(resetOnStart);
             LOG.info("Done initializing DB");
         } catch (Exception e) {
             LOG.error("Failed while initializing DB", e);
