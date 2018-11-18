@@ -112,7 +112,7 @@ public class ArtifactQueryBean {
         );
         if (count == 0) {
             throw new EmptyResultDataAccessException("No artifacts updated. Does the creator own the artifact?", 1);
-    }
+        }
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + ar.getId());
         }
@@ -132,10 +132,11 @@ public class ArtifactQueryBean {
         int count = sql.update(
                 "DELETE FROM artifacts " +
                 "WHERE aid = :aid "/* +
-                "  AND creator = :creator "*/,
+                "  AND (creator = :creator OR :isAdmin) "*/,
                 new MapSqlParameterSource()
                         .addValue("aid", aid)
 //                        .addValue("creator", by.getId())
+//                        .addValue("isAdmin", by.isAdmin())
         );
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + aid);

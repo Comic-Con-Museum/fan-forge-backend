@@ -37,9 +37,8 @@ public class ArtifactEndpoints {
     }
 
     @RequestMapping(value = "/artifact/{id}", method = RequestMethod.GET)
-    public ResponseEntity<Artifact> getArtifact(@PathVariable long id) throws SQLException {
-        Artifact val = artifacts.byId(id);
-        return ResponseEntity.ok(val);
+    public ResponseEntity<Artifact> getArtifact(@PathVariable long id) {
+        return ResponseEntity.ok(artifacts.byId(id));
     }
 
     @RequestMapping(value = "/artifact", method = RequestMethod.POST)
@@ -71,7 +70,7 @@ public class ArtifactEndpoints {
     @RequestMapping(value = "/artifact/{id}", method = RequestMethod.POST)
     public ResponseEntity<Artifact> editArtifact(@PathVariable long id, MultipartHttpServletRequest req,
                                                  @RequestParam("data") String dataString,
-                                                 @AuthenticationPrincipal User user) throws IOException, SQLException {
+                                                 @AuthenticationPrincipal User user) throws IOException {
         ArtifactCreation data = CREATE_PARAMS_READER.readValue(dataString);
         Artifact full = data.build(user);
         full.setCover(false);

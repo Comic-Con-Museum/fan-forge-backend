@@ -84,7 +84,7 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(new Feed(startIdx, count, entries));
     }
 
-    @RequestMapping(value = "/exhibit/{id}")
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.GET)
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
         return ResponseEntity.ok(new ExhibitFull(
@@ -127,7 +127,7 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(id);
     }
 
-    // TODO Fix Apache so we can use PUT instead of POST
+    // TODO Do we... need bulk edit of artifacts? This might be more painful than just a few individual requests
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
                                                    @RequestParam("data") String dataString,
@@ -136,11 +136,9 @@ public class ExhibitEndpoints {
         // we don't care if things aren't specified, so don't validate that
         Exhibit ex = data.build(user);
         ex.setId(id);
-        ExhibitFull resp;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             exhibits.update(ex, user);
             // the rest won't be hit if the user isn't the author, because `update` throws an exception
-            // TODO Delete all unmentioned artifacts
             List<Long> mentioned = new ArrayList<>();
             for (ArtifactCreation a : data.getArtifacts()) {
                 if (a.getId() != null) {
@@ -159,6 +157,7 @@ public class ExhibitEndpoints {
                     // if no ID provided, create a new one
                     long aid = artifacts.create(a.build(user), id, user);
                     mentioned.add(aid);
+                    // this time an image is required -- you can't have an artifact without one.
                     if (a.getImageName() == null) {
                         return ResponseEntity.badRequest().build();
                     }

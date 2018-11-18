@@ -32,38 +32,33 @@ import java.lang.reflect.InvocationTargetException;
 public class GlobalExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger("endpoints.exception");
     
-    // TODO: Custom error handler for 404 and 401
-    // TODO: Explicit mapping for /error
+    // TODO Custom error handler for 404 and 401
+    // TODO Make sure /error is not used
     
     private static class ErrorResponse {
         private String error;
-        @JsonInclude(JsonInclude.Include.NON_NULL)
         private String fix;
+        private String requestId;
         
         public ErrorResponse(String error, String fix) {
             this.error = error;
             this.fix = fix;
+            this.requestId = MDC.get("request");
         }
 
         public String getError() { return error; }
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         public String getFix() { return fix; }
-
-        public void setError(String error) { this.error = error; }
-        public void setFix(String fix) { this.fix = fix; }
+        public String getCode() { return requestId; }
     }
     
     private static class InternalServerError extends ErrorResponse {
-        private String requestId;
-        
         public InternalServerError(String briefDesc) {
             super(
                     briefDesc,
                     "Let us know something broke! Be sure to save the code."
             );
-            requestId = MDC.get("request");
         }
-        
-        public String getCode() { return requestId; }
     }
     
     private static class MissingParamErrorResponse extends ErrorResponse {

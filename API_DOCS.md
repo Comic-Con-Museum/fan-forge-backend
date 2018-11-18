@@ -293,6 +293,10 @@ already; this does not create one.
 
 You must be authorized as the creator of the exhibit.
 
+Note that some things cannot be edited through this interface:
+ *  Artifacts by anyone else
+ *  Comments (by anyone)
+
 ### Request body
 
 The request body format is identical to the format of `POST /exhibit`. The body
@@ -461,11 +465,83 @@ You must be authorized as the creator of the artifact.
 
 ## `DELETE /artifact/{id}`
 
-Delete an exhibit by ID.
+Delete an artifact by ID.
 
 ### Authorization
 
 You must be authorized as the creator of the artifact.
+
+## `GET /comment/{id}`
+
+Get all the details about a comment by its ID.
+
+### Response body
+
+```
+{
+    id: integer // The ID of the comment which you... just got by ID
+    text: string // The actual text of the comment
+    author: string // The username of the comment's author
+    reply: integer | null // The comment that this is a reply to, or `null` if none
+    created: datetime // When the comment was created
+}
+```
+
+## `POST /comment`
+
+Create a comment. This endpoint takes a single-part JSON response body. The
+format is:
+
+```
+{
+  text: string // The actual text of the comment
+  parent: integer // The exhibit this comment is being left on
+  // optional:
+  reply: integer | null // The comment ID to reply to, if any
+}
+```
+
+### Authorization
+
+You must be authorized to hit this endpoint.
+
+## `POST /comment/{id}`
+
+>   Do you think this should be `PUT` or `PATCH`? Us too! Unfortunately,
+    Apache has decided [it won't happen][apache-stop], and Pivotal has agreed
+    by using Apache Commons in Spring. File all complaints with them, and Roy
+    Thomas Fielding.
+>   
+>   Until that bug is fixed, this API literally cannot comply with the HTTP
+    standard, or be RESTful. Oh well.
+
+Edit a comment.
+
+### Request body
+
+Like with the rest of the editing endpoints, the value of any fields not
+provided are ignored.
+
+You cannot edit the parent of the comment, or what other comment it's replying
+to.
+
+```
+{
+  text: string // The actual text of the comment
+}
+```
+
+### Authorization
+
+You must be authorized as the author of the comment.
+
+## `DELETE /comment/{id}`
+
+Delete a comment.
+
+## Authorization
+
+You must be authorized as the author of the comment.
 
 ## `POST /support/exhibit/{id}`
 

@@ -6,6 +6,8 @@ import org.comic_con.museum.fcb.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -31,7 +33,7 @@ public class CommentQueryBean {
                 .usingGeneratedKeyColumns("cid");
     }
     
-    private static Comment mapRow(ResultSet rs, int rowNum) throws SQLException {
+    private static Comment mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
         return new Comment(
                 rs.getLong("cid"),
                 rs.getString("text"),
@@ -74,11 +76,20 @@ public class CommentQueryBean {
     }
     
     public List<Comment> commentsOfExhibit(long id) {
-        
         return sql.query(
                 "SELECT * FROM comments " +
                 "WHERE exhibit = :eid",
                 new MapSqlParameterSource("eid", id),
+                CommentQueryBean::mapRow
+        );
+    }
+    
+    public Comment byId(long id) {
+        LOG.info("Getting comment with ID {}", id);
+        return sql.queryForObject(
+                "SELECT * FROM comments " +
+                "WHERE cid = :id",
+                new MapSqlParameterSource("id", id),
                 CommentQueryBean::mapRow
         );
     }
@@ -98,5 +109,47 @@ public class CommentQueryBean {
         long id = key.longValue();
         co.setId(id);
         return id;
+    }
+    
+    public void update(Comment co, User by) {
+        LOG.info("{} updating comment {}", by.getUsername(), co.getId());
+        int count = sql.update(
+                "UPDATE comments " +
+                "SET text = :text " +
+                "WHERE cid = :id " +
+                "  AND (author = :author OR :isAdmin)",
+                new MapSqlParameterSource()
+                        .addValue("text", co.getText())
+                        .addValue("id", co.getId())
+                        .addValue("author", by.getId())
+                        .addValue("isAdmin", by.isAdmin())
+        );
+        if (count == 0) {
+            throw new EmptyResultDataAccessException("No comments updated. Does the creator own the artifact?", 1);
+        }
+        if (count > 1) {
+            throw new IncorrectUpdateSemanticsDataAccessException("More than one comment matched ID " + co.getId());
+        }
+    }
+    
+    public void delete(long id, User by) {
+        LOG.info("{} deleting comment {}", by.getUsername(), id);
+        
+        final int count = sql.update(
+                "DELETE FROM comments " +
+                "WHERE cid = :id " +
+                "  AND (author = :user OR :isAdmin)",
+                new MapSqlParameterSource()
+                        .addValue("id", id)
+                        .addValue("user", by.getId())
+                        .addValue("isAdmin", by.isAdmin())
+        );
+        
+        if (count > 1) {
+            throw new IncorrectUpdateSemanticsDataAccessException("More than one comment matched ID " + id);
+        }
+        if (count == 0) {
+            throw new EmptyResultDataAccessException("No comments with ID " + id + " by " + by.getUsername(), 1);
+        }
     }
 }
