@@ -119,8 +119,8 @@ details about any given exhibit, use `GET /exhibit/{id}`.
 
 *   `{type}`: The feed to return. This determines what the primary order is.
     Valid values are:
-    * `new`: Most recent exhibits first.
-    * `alphabetical`: In alphabetical order of titles.
+    * `recent`: Most recent exhibits first.
+    * `popular`: In order of most supporters
 
 ### Query parameters
 

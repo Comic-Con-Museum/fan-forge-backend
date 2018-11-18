@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class ExhibitEndpoints {
@@ -50,41 +50,29 @@ public class ExhibitEndpoints {
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
                                         @AuthenticationPrincipal User user) {
-        ExhibitQueryBean.FeedType feed;
-        switch (feedName) {
-            case "new":
-                LOG.info("NEW feed");
-                feed = ExhibitQueryBean.FeedType.NEW;
-                break;
-            case "alphabetical":
-                LOG.info("ALPHABETICAL feed");
-                feed = ExhibitQueryBean.FeedType.ALPHABETICAL;
-                break;
-            default:
-                LOG.info("Unknown feed: {}", feedName);
-                // 404 instead of 400 because they're trying to hit a
-                // nonexistent endpoint (/feed/whatever), not passing bad data
-                // to a real endpoint
-                return ResponseEntity.notFound().build();
+        ExhibitQueryBean.FeedType feed = ExhibitQueryBean.FeedType.parse(feedName);
+        if (feed == null) {
+            LOG.info("Unknown feed: {}", feedName);
+            // 404 instead of 400 because they're trying to hit a
+            // nonexistent endpoint (/feed/whatever), not passing bad data
+            // to a real endpoint
+            return ResponseEntity.notFound().build();
         }
         
-        long count;
-        List<Feed.Entry> entries;
         try (TransactionWrapper.Transaction tr = transactions.start()) {
-            count = exhibits.getCount();
+            long count = exhibits.getCount();
             // This can definitely be combined into one query if necessary
             // or even just two (instead of PAGE_SIZE+1)
             List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
-            entries = new ArrayList<>(feedRaw.size());
-            for (Exhibit exhibit : feedRaw) {
-                entries.add(new Feed.Entry(
+            List<Feed.Entry> entries = feedRaw.stream().map(exhibit ->
+                    new Feed.Entry(
                         exhibit, supports.supporterCount(exhibit),
                         supports.isSupporting(user, exhibit)
-                ));
-            }
+                    )
+            ).collect(Collectors.toList());
             tr.commit();
+            return ResponseEntity.ok(new Feed(startIdx, count, entries));
         } // no catch because we're just closing the transaction, we want errors to fall through
-        return ResponseEntity.ok(new Feed(startIdx, count, entries));
     }
 
     @RequestMapping(value = "/exhibit/{id}")
