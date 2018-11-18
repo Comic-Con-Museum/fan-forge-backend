@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class ExhibitEndpoints {
@@ -58,23 +59,20 @@ public class ExhibitEndpoints {
             return ResponseEntity.notFound().build();
         }
         
-        long count;
-        List<Feed.Entry> entries;
         try (TransactionWrapper.Transaction tr = transactions.start()) {
-            count = exhibits.getCount();
+            long count = exhibits.getCount();
             // This can definitely be combined into one query if necessary
             // or even just two (instead of PAGE_SIZE+1)
             List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
-            entries = new ArrayList<>(feedRaw.size());
-            for (Exhibit exhibit : feedRaw) {
-                entries.add(new Feed.Entry(
+            List<Feed.Entry> entries = feedRaw.stream().map(exhibit ->
+                    new Feed.Entry(
                         exhibit, supports.supporterCount(exhibit),
                         supports.isSupporting(user, exhibit)
-                ));
-            }
+                    )
+            ).collect(Collectors.toList());
             tr.commit();
+            return ResponseEntity.ok(new Feed(startIdx, count, entries));
         } // no catch because we're just closing the transaction, we want errors to fall through
-        return ResponseEntity.ok(new Feed(startIdx, count, entries));
     }
 
     @RequestMapping(value = "/exhibit/{id}")
