@@ -1,7 +1,7 @@
 # Contributing
 
-> This is an unfinished first draft. Please poke one of the contributors to
-> actually finish it.
+>   This is an unfinished first draft. Please poke one of the contributors to
+    actually finish it.
 
 There are three main ways to contribute. Feel free to make use of any or all
 of them, but please keep in mind that the developers are all volunteers. You
@@ -32,27 +32,27 @@ If you know your way around Java and want to help with the actual development,
 you can create a pull request. The process is a little complicated, and you'll
 need to know how to use Git and GitHub.
 
-1.  Find an issue that no one else has claimed. That means anything tagged
+ 1. Find an issue that no one else has claimed. That means anything tagged
     [up for grabs][gh-ufg], but if it's your first PR, you might also want
     to look at [good first issues][gh-gfi].
-2.  Comment on the issue's thread to claim it. Wait for a maintainer to say
+ 2. Comment on the issue's thread to claim it. Wait for a maintainer to say
     that the issue is yours before continuing.
-3.  Fork the repo with the button in the top right.
-4.  Create a new branch containing the number of your issue -- for example
+ 3. Fork the repo with the button in the top right.
+ 4. Create a new branch starting with the number of your issue -- for example
     `29-add-hello-world`.
-5.  Make your changes on that branch. Be sure to add unit tests as necessary
+ 5. Make your changes on that branch. Be sure to add unit tests as necessary
     to cover your new code! Do manual tests, too, to double-check.
-6.  When you're done with your code, open a pull request. Be descriptive in
-    the title and description, and link to the original issue.
-7.  The contributors and maintainers might have some changes for you to make.
+ 6. When you're done with your code, open a pull request. Be descriptive in
+    the title and description. At the end of the body of the PR, include the
+    text `fixes #n`, with the number of your issue.
+ 7. The contributors and maintainers might have some changes for you to make.
     Please make them promptly -- it helps speed everything up if we're not
     left waiting days for changes.
-8.  Once everything looks good, your PR will be accepted, and the code will
+ 8. Once everything looks good, your PR will be accepted, and the code will
     be automatically merged in and added to the next release. Congrats!
 
  [gh-br-tmpl]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?template=bug-report.md
  [gh-fr-tmpl]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?template=feature_request.md
- 
  [gh-ufg]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues?q=is%3Aissue+is%3Aopen+label%3A%22up+for+grabs%22
  [gh-gfi]: https://github.com/Comic-ConMuseum/fan-curation-spring/labels/good%20first%20issue
  [gh-hw]: https://github.com/Comic-ConMuseum/fan-curation-spring/labels/help%20wanted
