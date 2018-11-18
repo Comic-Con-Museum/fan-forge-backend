@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.comic-con.museum</groupId>
-    <artifactId>fan-curation-backend</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <groupId>org.comic-conmuseum</groupId>
+    <artifactId>fan-forge-backend</artifactId>
+    <version>0.0.5-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -63,7 +63,7 @@
         <defaultGoal>clean package spring-boot:run</defaultGoal>
         <sourceDirectory>./src/main/java</sourceDirectory>
         <testSourceDirectory>./src/test/java</testSourceDirectory>
-        <finalName>fan-curation-backend</finalName>
+        <finalName>fan-forge-backend</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
