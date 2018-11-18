@@ -117,15 +117,20 @@ details about any given exhibit, use `GET /exhibit/{id}`.
 
 ### Path parameters
 
-*   `{type}`: The feed to return. This determines what the primary order is.
+*   `{type}`: The feed to return. This determines what the feed order is.
     Valid values are:
-    * `recent`: Most recent exhibits first.
-    * `popular`: In order of most supporters
+    * `recent`: In order of creation date.
+    * `popular`: In order of most supporters.
 
 ### Query parameters
 
 *   `startIdx` (**required**): The starting index of the list of exhibits to
     return.
+
+You can also filter by several things. All of these parameters are optional:
+
+*   `tag`: Show only exhibits which have that tag.
+*   `author`: Show only exhibits by that author.
 
 ### Response
 
@@ -133,7 +138,7 @@ details about any given exhibit, use `GET /exhibit/{id}`.
 {
   startIdx: integer // The starting index which was passed in
   count: integer // The total number of exhibits
-  pageSize: integer // The maximum number of exhibits that can be returned
+  pageSize: integer // The maximum size of `exhibits`
   exhibits: [ // The actual exhibits in the feed at the requested position
     {
       id: integer // The exhibit's unique ID
@@ -151,6 +156,9 @@ details about any given exhibit, use `GET /exhibit/{id}`.
   ]
 }
 ```
+
+Note that if a filter is used, `count` reflects the total number of exhibits
+that match that filter, *not* the overall total.
 
 ## `GET /exhibit/{id}`
 

@@ -49,10 +49,7 @@ public class ArtifactQueryBean {
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
-            sql.execute(
-                    "DROP TABLE IF EXISTS artifacts CASCADE",
-                    new HashMap<>(), PreparedStatement::execute
-            );
+            sql.execute("DROP TABLE IF EXISTS artifacts CASCADE", PreparedStatement::execute);
         }
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS artifacts ( " +
@@ -68,7 +65,7 @@ public class ArtifactQueryBean {
                 "CREATE UNIQUE INDEX one_cover_per_exhibit " +
                 "ON artifacts(exhibit) " +
                 "WHERE cover;",
-                new HashMap<>(), PreparedStatement::execute
+                PreparedStatement::execute
         );
     }
     

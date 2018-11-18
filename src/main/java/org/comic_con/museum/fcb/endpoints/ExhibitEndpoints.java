@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -49,6 +50,8 @@ public class ExhibitEndpoints {
     // TODO separate out into its own class?
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
     public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
+                                        // `filters` also includes other stuff, but that'll be filtered out by getFeed
+                                        @RequestParam Map<String, String> filters,
                                         @AuthenticationPrincipal User user) {
         ExhibitQueryBean.FeedType feed = ExhibitQueryBean.FeedType.parse(feedName);
         if (feed == null) {
@@ -58,12 +61,11 @@ public class ExhibitEndpoints {
             // to a real endpoint
             return ResponseEntity.notFound().build();
         }
-        
         try (TransactionWrapper.Transaction tr = transactions.start()) {
-            long count = exhibits.getCount();
+            long count = exhibits.getCount(filters);
             // This can definitely be combined into one query if necessary
             // or even just two (instead of PAGE_SIZE+1)
-            List<Exhibit> feedRaw = exhibits.getFeedBy(feed, startIdx);
+            List<Exhibit> feedRaw = exhibits.getFeed(feed, startIdx, filters);
             List<Feed.Entry> entries = feedRaw.stream().map(exhibit ->
                     new Feed.Entry(
                         exhibit, supports.supporterCount(exhibit),
@@ -126,7 +128,6 @@ public class ExhibitEndpoints {
         // we don't care if things aren't specified, so don't validate that
         Exhibit ex = data.build(user);
         ex.setId(id);
-        ExhibitFull resp;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             exhibits.update(ex, user);
             // the rest won't be hit if the user isn't the author, because `update` throws an exception
