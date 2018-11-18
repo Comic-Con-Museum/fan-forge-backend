@@ -2,17 +2,17 @@
 
 A few universal notes, for completeness:
 
-*   A `datetime` is a string containing an ISO 8601-formatted date and time.
+ *  A `datetime` is a string containing an ISO 8601-formatted date and time.
     These will normally be in UTC, but this **is not** guaranteed, only that
     the datetime will be represented in an ISO 8601-compliant format, and
     contain both date and time information.
-*   A `{...}` in a URL indicates a path parameter -- that is, a section of the
+ *  A `{...}` in a URL indicates a path parameter -- that is, a section of the
     path which can have multiple valid values, each of which does something
     very similar. The valid values are described in that endpoint's "Path
     parameters" section.
-*   Some endpoints and properties in normal endpoints are only returned to
+ *  Some endpoints and properties in normal endpoints are only returned to
     logged-in users. These are noted in the relevant descriptions.
-*   If it's not mentioned, it doesn't exist or is ignored. For example, the
+ *  If it's not mentioned, it doesn't exist or is ignored. For example, the
     request body to `DELETE /exhibit/:id` is ignored, and therefore it's not
     mentioned in the documentation.
 
@@ -117,20 +117,20 @@ details about any given exhibit, use `GET /exhibit/{id}`.
 
 ### Path parameters
 
-*   `{type}`: The feed to return. This determines what the feed order is.
+ *  `{type}`: The feed to return. This determines what the feed order is.
     Valid values are:
-    * `recent`: In order of creation date.
-    * `popular`: In order of most supporters.
+     *  `recent`: In order of creation date.
+     *  `popular`: In order of most supporters.
 
 ### Query parameters
 
-*   `startIdx` (**required**): The starting index of the list of exhibits to
+ *  `startIdx` (**required**): The starting index of the list of exhibits to
     return.
 
 You can also filter by several things. All of these parameters are optional:
 
-*   `tag`: Show only exhibits which have that tag.
-*   `author`: Show only exhibits by that author.
+ *  `tag`: Show only exhibits which have that tag.
+ *  `author`: Show only exhibits by that author.
 
 ### Response
 
@@ -169,7 +169,7 @@ returns a 404.
 
 ### Path parameters
 
-*   `{id}`: The ID of the exhibit. 
+ *  `{id}`: The ID of the exhibit. 
 
 ### Response
 
@@ -301,7 +301,7 @@ However, any elements that aren't specified are left unchanged. For example,
 given this request:
 
 ```
-POST http://localhost:8080/exhibit HTTP/1.1
+POST http://localhost:8080/exhibit/5 HTTP/1.1
 Authorization: Bearer U3RvcCBkZWNvZGluZyA6KA==
 Content-Type: multipart/form-data; boundary=||FormBoundary||
 
@@ -338,14 +338,14 @@ Content-Disposition: form-data; name="magicflash"; filename="aagh my eyes.gif"
 --||FormBoundary||--
 ```
 
-*   The title will be changed to *This is an example exhibit*.
-*   The tags will be changed to `demo` and `stop`
-*   All the artifacts associated with the exhibit except the one with ID 4 will
+ *  The title will be changed to *This is an example exhibit*.
+ *  The tags will be changed to `demo` and `stop`
+ *  All the artifacts associated with the exhibit except the one with ID 4 will
     be deleted.
-*   Artifact 4 will:
-    *   Have a new image (the file in parameter `(na){16} batman`)
-    *   No longer be the cover of the exhibit
-*   A new artifact will be created with the passed title, description etc. and
+ *  Artifact 4 will:
+     *  Have a new image (the file in parameter `(na){16} batman`)
+     *  No longer be the cover of the exhibit
+ *  A new artifact will be created with the passed title, description etc. and
     `aagh my eyes.gif` attached to it.
 
 ## `DELETE /exhibit/{id}`
@@ -354,7 +354,7 @@ Delete an exhibit by ID.
 
 ### Authorization
 
-You must be authorized as the creator of the exhibit.
+You must be authorized as the author of the exhibit.
 
 ## `GET /artifact/{aid}`
 
@@ -420,13 +420,52 @@ You must be authorized to hit this endpoint.
 >   Until that bug is fixed, this API literally cannot comply with the HTTP
     standard, or be RESTful. Oh well.
 
-Edit an artifact
+Edit an artifact.
 
-Blend `POST /artifact` and `POST /exhibit/{id}` and you get this
+The format of this is analogous to `POST /exhibit/{id}`. The `data` section
+may include any of the same properties as `POST /exhibit`, except for `parent`.
+Any properties not included are left unchanged. The `image` parameter, if
+included, overwrites the already-present image. If it's not present, the
+existing image is kept.
 
-## `DELETE /artifact/{aid}`
+For example, this HTTP request:
 
-Delete an artifact
+```
+POST http://localhost:8080/artifact/3 HTTP/1.1
+Authorization: Bearer U3RvcCBkZWNvZGluZyA6KA==
+Content-Type: multipart/form-data; boundary=||FormBoundary||
+
+--||FormBoundary||
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "title": "Oh no! I modified this artifact!"
+}
+
+--||FormBoundary||
+Content-Disposition: form-data; name="image"; filename="proof of work.png"
+Content-Type: image/png
+
+<file contents omitted for brevity>
+
+--||FormBoundary||--
+```
+
+ *  Changes the title
+ *  Attaches a new image (`proof of work.png`) to the artifact
+
+### Authorization
+
+You must be authorized as the creator of the artifact.
+
+## `DELETE /artifact/{id}`
+
+Delete an exhibit by ID.
+
+### Authorization
+
+You must be authorized as the creator of the artifact.
 
 ## `POST /support/exhibit/{id}`
 
@@ -451,6 +490,14 @@ Remove the current user's support for this exhibit
 
 You must be authorized to hit this endpint. The user you're authorized
 as is the one whose support will be removed.
+
+## `GET /admin/support/{id}`
+
+Get all of the survey data for a given exhibit.
+
+### Authorization
+
+You must be authorized as an admin to hit this endpoint.
 
 ## `GET /image/{id}`
 
