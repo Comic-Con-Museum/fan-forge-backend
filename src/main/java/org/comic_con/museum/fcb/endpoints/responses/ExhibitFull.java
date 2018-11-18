@@ -2,11 +2,12 @@ package org.comic_con.museum.fcb.endpoints.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.comic_con.museum.fcb.models.Artifact;
+import org.comic_con.museum.fcb.models.Comment;
 import org.comic_con.museum.fcb.models.Exhibit;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ExhibitFull extends Feed.Entry {
     public static class Image extends Feed.Cover {
@@ -27,19 +28,18 @@ public class ExhibitFull extends Feed.Entry {
     public final Instant created;
     public final String[] tags;
     public final List<Image> artifacts;
+    public final List<CommentView> comments;
     
     // hide the parent's cover
-    @JsonIgnore public final Object cover = null;
+    @SuppressWarnings("unused") @JsonIgnore public final Object cover = null;
     
-    public ExhibitFull(Exhibit of, long supporters, Boolean supported, List<Artifact> artifacts) {
-        super(of, supporters, supported);
+    public ExhibitFull(Exhibit of, long supporters, Boolean supported, List<Artifact> artifacts,
+                       List<Comment> comments) {
+        super(of, supporters, 0, supported);
         this.author = of.getAuthor();
         this.created = of.getCreated();
         this.tags = of.getTags();
-        List<ExhibitFull.Image> converted = new ArrayList<>(artifacts.size());
-        for (Artifact a : artifacts) {
-            converted.add(new ExhibitFull.Image(a));
-        }
-        this.artifacts = converted;
+        this.artifacts = artifacts.stream().map(Image::new).collect(Collectors.toList());
+        this.comments = comments.stream().map(CommentView::new).collect(Collectors.toList());
     }
 }

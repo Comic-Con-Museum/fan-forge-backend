@@ -33,15 +33,18 @@ public class ExhibitEndpoints {
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
     private final ArtifactQueryBean artifacts;
+    private final CommentQueryBean comments;
     private final S3Bean s3;
     private final TransactionWrapper transactions;
     
     @Autowired
     public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
-                            ArtifactQueryBean artifacts, S3Bean s3, TransactionWrapper transactionWrapperBean) {
+                            ArtifactQueryBean artifacts, CommentQueryBean comments, S3Bean s3,
+                            TransactionWrapper transactionWrapperBean) {
         this.exhibits = exhibitQueryBean;
         this.supports = supportQueryBean;
         this.artifacts = artifacts;
+        this.comments = comments;
         this.s3 = s3;
         this.transactions = transactionWrapperBean;
     }
@@ -72,6 +75,7 @@ public class ExhibitEndpoints {
             for (Exhibit exhibit : feedRaw) {
                 entries.add(new Feed.Entry(
                         exhibit, supports.supporterCount(exhibit),
+                        comments.commentCount(exhibit),
                         supports.isSupporting(user, exhibit)
                 ));
             }
@@ -87,7 +91,8 @@ public class ExhibitEndpoints {
                 e,
                 supports.supporterCount(e),
                 supports.isSupporting(user, e),
-                artifacts.artifactsOfExhibit(id)
+                artifacts.artifactsOfExhibit(id),
+                comments.commentsOfExhibit(id)
         ));
     }
 

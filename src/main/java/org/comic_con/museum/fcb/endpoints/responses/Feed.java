@@ -28,16 +28,18 @@ public class Feed {
         public final String description;
         public final Cover cover;
         public final long supporters;
+        public final long comments;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         public final Boolean supported;
         
-        public Entry(Exhibit of, long supporters, Boolean supported) {
+        public Entry(Exhibit of, long supporters, long comments, Boolean supported) {
             this.id = of.getId();
             this.title = of.getTitle();
             this.description = of.getDescription();
             this.cover = of.getCover() == null ? null : new Cover(of.getCover());
             this.supporters = supporters;
             this.supported = supported;
+            this.comments = comments;
         }
     }
     
