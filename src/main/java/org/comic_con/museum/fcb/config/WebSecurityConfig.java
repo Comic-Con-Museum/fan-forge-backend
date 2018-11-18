@@ -27,8 +27,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             new AntPathRequestMatcher("/**", "OPTIONS"),
             // Everyone needs access to POST /login to get bearer tokens
             new AntPathRequestMatcher("/login", "POST"),
-            // Getting exhibit details and the feeds is available to everyone
+            // Getting model details and the feeds is available to everyone
             new AntPathRequestMatcher("/exhibit/*", "GET"),
+            new AntPathRequestMatcher("/artifact/*", "GET"),
+            new AntPathRequestMatcher("/comment/*", "GET"),
             new AntPathRequestMatcher("/feed/*", "GET"),
             // Healthcheck is used for automatic deployment and monitoring, and
             //  shouldn't require auth
