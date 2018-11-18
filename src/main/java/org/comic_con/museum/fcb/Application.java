@@ -77,8 +77,6 @@ public class Application implements CommandLineRunner {
      * can be tested more easily.
      */
     private void addTestData() throws SQLException {
-        if (!addTestData) return;
-        
         final List<String> exhibitTitles = Arrays.asList(
                 "Hello, World!",
                 "smook",
@@ -102,10 +100,10 @@ public class Application implements CommandLineRunner {
                 .toArray(User[]::new);
         for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
             String title = exhibitTitles.get(eIdx);
+            Instant exhibitMade = Instant.now().minus(eIdx + 5, ChronoUnit.DAYS);
             long exhibitId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
-                    Instant.now().minus(eIdx % 4, ChronoUnit.DAYS).minus(eIdx / 4, ChronoUnit.HOURS),
-                    new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
+                    exhibitMade, new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
                     null
             ), original);
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
@@ -122,7 +120,7 @@ public class Application implements CommandLineRunner {
                         "description of artifact",
                         aIdx == 0,
                         null,
-                        Instant.now()
+                        exhibitMade.plus(aIdx, ChronoUnit.DAYS)
                 ), exhibitId, supporters[aIdx]);
             }
             Long lastComment = null;
@@ -130,7 +128,7 @@ public class Application implements CommandLineRunner {
                 long inserted = comments.create(new Comment(
                         0, "This is a test comment; idx " + eIdx + "." + cIdx,
                         "shouldn't be shown", cIdx % 2 == 0 ? null : lastComment,
-                        Instant.ofEpochMilli(0)
+                        exhibitMade.plus(cIdx, ChronoUnit.HOURS)
                 ), exhibitId, supporters[cIdx % supporters.length]);
                 if (cIdx % 2 != 0) {
                     lastComment = inserted;
@@ -172,12 +170,21 @@ public class Application implements CommandLineRunner {
         }
         
         try {
-            addTestData();
+            if (addTestData) {
+                LOG.info("Adding test data");
+                addTestData();
+                LOG.info("Done adding test data");
+            } else {
+                LOG.info("Not adding test data");
+            }
         } catch (SQLException e) {
             LOG.error("Failed while adding test data", e);
             if (closeOnInitFail) {
                 ctx.close();
+                return;
             }
         }
+        
+        LOG.info("Startup completed. Server is ready to take requests.");
     }
 }
