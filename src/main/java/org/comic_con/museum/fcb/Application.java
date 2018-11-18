@@ -1,6 +1,7 @@
 package org.comic_con.museum.fcb;
 
 import org.comic_con.museum.fcb.models.Artifact;
+import org.comic_con.museum.fcb.models.Comment;
 import org.comic_con.museum.fcb.persistence.*;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
@@ -101,7 +102,7 @@ public class Application implements CommandLineRunner {
                 .toArray(User[]::new);
         for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
             String title = exhibitTitles.get(eIdx);
-            long newId = exhibits.create(new Exhibit(
+            long exhibitId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
                     Instant.now().minus(eIdx % 4, ChronoUnit.DAYS).minus(eIdx / 4, ChronoUnit.HOURS),
                     new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
@@ -110,8 +111,8 @@ public class Application implements CommandLineRunner {
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
                     supports.support(
-                            newId, supporters[sIdx],
-                            String.format("Support for %d by %s", newId, supporters[sIdx].getUsername())
+                            exhibitId, supporters[sIdx],
+                            String.format("Support for %d by %s", exhibitId, supporters[sIdx].getUsername())
                     );
                 }
             }
@@ -122,7 +123,18 @@ public class Application implements CommandLineRunner {
                         aIdx == 0,
                         null,
                         Instant.now()
-                ), newId, supporters[aIdx]);
+                ), exhibitId, supporters[aIdx]);
+            }
+            Long lastComment = null;
+            for (int cIdx = 0; cIdx < eIdx % 8; ++cIdx) {
+                long inserted = comments.create(new Comment(
+                        0, "This is a test comment; idx " + eIdx + "." + cIdx,
+                        "shouldn't be shown", cIdx % 2 == 0 ? null : lastComment,
+                        Instant.ofEpochMilli(0)
+                ), exhibitId, supporters[cIdx % supporters.length]);
+                if (cIdx % 2 != 0) {
+                    lastComment = inserted;
+                }
             }
         }
         LOG.info("Done adding test data");

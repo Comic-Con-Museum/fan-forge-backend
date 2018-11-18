@@ -60,6 +60,7 @@ public class CommentQueryBean {
     }
     
     public long commentCount(Exhibit exhibit) {
+        LOG.info("Getting comment count of {}", exhibit.getId());
         Long count = sql.queryForObject(
                 "SELECT COUNT(*) FROM comments " +
                 "WHERE exhibit = :eid",
@@ -73,11 +74,29 @@ public class CommentQueryBean {
     }
     
     public List<Comment> commentsOfExhibit(long id) {
+        
         return sql.query(
                 "SELECT * FROM comments " +
                 "WHERE exhibit = :eid",
                 new MapSqlParameterSource("eid", id),
                 CommentQueryBean::mapRow
         );
+    }
+    
+    public long create(Comment co, long ex, User by) throws SQLException {
+        LOG.info("{} creating comment on {}", by.getUsername(), ex);
+        Number key = insert.executeAndReturnKey(new MapSqlParameterSource()
+                .addValue("text", co.getText())
+                .addValue("author", by.getId())
+                .addValue("exhibit", ex)
+                .addValue("reply", co.getReply())
+                .addValue("created", new java.sql.Date(co.getCreated().toEpochMilli()))
+        );
+        if (key == null) {
+            throw new SQLException("Failed to insert rows (no key generated)");
+        }
+        long id = key.longValue();
+        co.setId(id);
+        return id;
     }
 }
