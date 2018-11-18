@@ -14,12 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 public class ImageServingEndpoints {
@@ -34,29 +28,11 @@ public class ImageServingEndpoints {
     
     @RequestMapping(value = "/image/{id}", method = RequestMethod.GET)
     public ResponseEntity<Resource> getImage(@PathVariable long id) {
+        LOG.info("Getting image {}", id);
         S3Object obj = s3.getImage(id);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", obj.getObjectMetadata().getContentType());
         InputStreamResource res = new InputStreamResource(obj.getObjectContent());
         return new ResponseEntity<>(res, headers, HttpStatus.OK);
-    }
-    
-    // TODO Delete this test endpoint
-    long nextId = 10000; // start, hopefully, after all the test data (there's a reason this is getting deleted)
-    @RequestMapping(value = "/image", method = RequestMethod.POST, consumes = "multipart/form-data")
-    public ResponseEntity<Map<String, Boolean>> putImages(MultipartHttpServletRequest req) {
-        Map<String, Boolean> successes = new HashMap<>();
-        for (MultipartFile f : req.getFiles("img")) {
-            LOG.info("Uploading file {}", f.getOriginalFilename());
-            try {
-                s3.putImage(++nextId, f);
-                successes.put(f.getOriginalFilename(), true);
-                LOG.info("Upload succeeded.");
-            } catch (IOException e) {
-                successes.put(f.getOriginalFilename(), false);
-                LOG.error("Upload failed!", e);
-            }
-        }
-        return ResponseEntity.ok(successes);
     }
 }

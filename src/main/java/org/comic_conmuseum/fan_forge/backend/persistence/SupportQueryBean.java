@@ -181,7 +181,7 @@ public class SupportQueryBean {
     }
 
     public List<Survey> getSurveys(long eid) {
-        LOG.info("Getting surveys for exhibit, {}", eid);
+        LOG.info("Getting surveys for exhibit {}", eid);
         return sql.query(
                 "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
                 new MapSqlParameterSource().addValue("eid", eid),

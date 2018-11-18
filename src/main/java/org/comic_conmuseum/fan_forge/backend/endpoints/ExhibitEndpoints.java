@@ -7,7 +7,6 @@ import org.comic_conmuseum.fan_forge.backend.endpoints.inputs.ExhibitCreation;
 import org.comic_conmuseum.fan_forge.backend.endpoints.responses.ExhibitFull;
 import org.comic_conmuseum.fan_forge.backend.endpoints.responses.Feed;
 import org.comic_conmuseum.fan_forge.backend.models.Artifact;
-import org.comic_con.museum.fcb.persistence.*;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.comic_conmuseum.fan_forge.backend.persistence.*;

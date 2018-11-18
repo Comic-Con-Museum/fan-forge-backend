@@ -2,7 +2,6 @@ package org.comic_conmuseum.fan_forge.backend;
 
 import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Comment;
-import org.comic_con.museum.fcb.persistence.*;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.comic_conmuseum.fan_forge.backend.persistence.*;
