@@ -40,13 +40,13 @@ public class Application implements CommandLineRunner {
     @Value("${s3.region}")
     private String region;
     
-    @Value("${fcb.reset-on-start}")
+    @Value("${ff.reset-on-start}")
     private boolean resetOnStart;
     
-    @Value("${fcb.add-test-data}")
+    @Value("${ff.add-test-data}")
     private boolean addTestData;
     
-    @Value("${fcb.close-on-init-fail}")
+    @Value("${ff.close-on-init-fail}")
     private boolean closeOnInitFail;
     
     private final ExhibitQueryBean exhibits;
