@@ -31,8 +31,8 @@ Code | Meaning
 
 ## Authorization
 
-Some endpoints require authorization. The FCB backend uses bearer tokens to
-authorize requests.
+Some endpoints require authorization. The Fan Forge backend uses bearer tokens
+to authorize requests.
 
 To get an authorization token, `POST /login` with the login credentials of the
 user whose authorization is being used.

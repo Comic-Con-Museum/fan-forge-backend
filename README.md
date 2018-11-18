@@ -54,7 +54,8 @@ To run the server, you need, in order:
         This ***must*** be kept secret and constant! It can be any random
         sequence of characters, so long as it's secret. Changing this will
         make every user account inaccessible unless the change is reverted.
-        FCB makes no attempts to track changes to this file.
+        The Fan Forge backend makes no attempts to track changes to this file
+        by design.
 
  4. A [PostgreSQL][postgres] database.
 
