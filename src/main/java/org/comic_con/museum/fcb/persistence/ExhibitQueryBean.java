@@ -16,7 +16,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +67,7 @@ public class ExhibitQueryBean {
     }
 
     // TODO Switch mappers to lambdas/method references?
-    private static Exhibit mapRow(ResultSet rs, int rowNum) throws SQLException {
+    private static Exhibit mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
         Artifact cover;
         if (rs.getString("atitle") == null) {
             cover = null;

@@ -34,15 +34,18 @@ public class ExhibitEndpoints {
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
     private final ArtifactQueryBean artifacts;
+    private final CommentQueryBean comments;
     private final S3Bean s3;
     private final TransactionWrapper transactions;
     
     @Autowired
     public ExhibitEndpoints(ExhibitQueryBean exhibitQueryBean, SupportQueryBean supportQueryBean,
-                            ArtifactQueryBean artifacts, S3Bean s3, TransactionWrapper transactionWrapperBean) {
+                            ArtifactQueryBean artifacts, CommentQueryBean comments, S3Bean s3,
+                            TransactionWrapper transactionWrapperBean) {
         this.exhibits = exhibitQueryBean;
         this.supports = supportQueryBean;
         this.artifacts = artifacts;
+        this.comments = comments;
         this.s3 = s3;
         this.transactions = transactionWrapperBean;
     }
@@ -69,6 +72,7 @@ public class ExhibitEndpoints {
             List<Feed.Entry> entries = feedRaw.stream().map(exhibit ->
                     new Feed.Entry(
                         exhibit, supports.supporterCount(exhibit),
+                        comments.commentCount(exhibit),
                         supports.isSupporting(user, exhibit)
                     )
             ).collect(Collectors.toList());
@@ -77,14 +81,15 @@ public class ExhibitEndpoints {
         } // no catch because we're just closing the transaction, we want errors to fall through
     }
 
-    @RequestMapping(value = "/exhibit/{id}")
+    @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.GET)
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
         Exhibit e = exhibits.getById(id);
         return ResponseEntity.ok(new ExhibitFull(
                 e,
                 supports.supporterCount(e),
                 supports.isSupporting(user, e),
-                artifacts.artifactsOfExhibit(id)
+                artifacts.artifactsOfExhibit(id),
+                comments.commentsOfExhibit(id)
         ));
     }
 
@@ -119,7 +124,7 @@ public class ExhibitEndpoints {
         return ResponseEntity.ok(id);
     }
 
-    // TODO Fix Apache so we can use PUT instead of POST
+    // TODO Do we... need bulk edit of artifacts? This might be more painful than just a few individual requests
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<ExhibitFull> editExhibit(@PathVariable long id, MultipartHttpServletRequest req,
                                                    @RequestParam("data") String dataString,
@@ -131,7 +136,6 @@ public class ExhibitEndpoints {
         try (TransactionWrapper.Transaction t = transactions.start()) {
             exhibits.update(ex, user);
             // the rest won't be hit if the user isn't the author, because `update` throws an exception
-            // TODO Delete all unmentioned artifacts
             List<Long> mentioned = new ArrayList<>();
             for (ArtifactCreation a : data.getArtifacts()) {
                 if (a.getId() != null) {
@@ -150,6 +154,7 @@ public class ExhibitEndpoints {
                     // if no ID provided, create a new one
                     long aid = artifacts.create(a.build(user), id, user);
                     mentioned.add(aid);
+                    // this time an image is required -- you can't have an artifact without one.
                     if (a.getImageName() == null) {
                         return ResponseEntity.badRequest().build();
                     }

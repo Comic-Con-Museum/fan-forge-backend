@@ -1,12 +1,10 @@
 package org.comic_con.museum.fcb;
 
 import org.comic_con.museum.fcb.models.Artifact;
-import org.comic_con.museum.fcb.persistence.ArtifactQueryBean;
-import org.comic_con.museum.fcb.persistence.S3Bean;
-import org.comic_con.museum.fcb.persistence.SupportQueryBean;
+import org.comic_con.museum.fcb.models.Comment;
+import org.comic_con.museum.fcb.persistence.*;
 import org.comic_con.museum.fcb.models.Exhibit;
 import org.comic_con.museum.fcb.models.User;
-import org.comic_con.museum.fcb.persistence.ExhibitQueryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,15 +52,17 @@ public class Application implements CommandLineRunner {
     private final ExhibitQueryBean exhibits;
     private final SupportQueryBean supports;
     private final ArtifactQueryBean artifacts;
+    private final CommentQueryBean comments;
     private final S3Bean s3;
     private final ConfigurableApplicationContext ctx;
     
     @Autowired
     public Application(ExhibitQueryBean exhibits, SupportQueryBean supports, ArtifactQueryBean artifacts,
-                       S3Bean s3, ConfigurableApplicationContext ctx) {
+                       CommentQueryBean comments, S3Bean s3, ConfigurableApplicationContext ctx) {
         this.exhibits = exhibits;
         this.supports = supports;
         this.artifacts = artifacts;
+        this.comments = comments;
         this.s3 = s3;
         this.ctx = ctx;
     }
@@ -77,8 +77,6 @@ public class Application implements CommandLineRunner {
      * can be tested more easily.
      */
     private void addTestData() throws SQLException {
-        if (!addTestData) return;
-        
         final List<String> exhibitTitles = Arrays.asList(
                 "Hello, World!",
                 "smook",
@@ -100,20 +98,19 @@ public class Application implements CommandLineRunner {
         User[] supporters = IntStream.range(0, 5)
                 .mapToObj(i -> new User(("user" + i), "user" + i, null, false))
                 .toArray(User[]::new);
-        int imageId = 0;
         for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
             String title = exhibitTitles.get(eIdx);
-            long newId = exhibits.create(new Exhibit(
+            Instant exhibitMade = Instant.now().minus(eIdx + 5, ChronoUnit.DAYS);
+            long exhibitId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
-                    Instant.now().minus(eIdx % 4, ChronoUnit.DAYS).minus(eIdx / 4, ChronoUnit.HOURS),
-                    new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
+                    exhibitMade, new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
                     null
             ), original);
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
                     supports.support(
-                            newId, supporters[sIdx],
-                            String.format("Support for %d by %s", newId, supporters[sIdx].getUsername())
+                            exhibitId, supporters[sIdx],
+                            String.format("Support for %d by %s", exhibitId, supporters[sIdx].getUsername())
                     );
                 }
             }
@@ -123,8 +120,19 @@ public class Application implements CommandLineRunner {
                         "description of artifact",
                         aIdx == 0,
                         null,
-                        Instant.now()
-                ), newId, supporters[aIdx]);
+                        exhibitMade.plus(aIdx, ChronoUnit.DAYS)
+                ), exhibitId, supporters[aIdx]);
+            }
+            Long lastComment = null;
+            for (int cIdx = 0; cIdx < eIdx % 8; ++cIdx) {
+                long inserted = comments.create(new Comment(
+                        0, "This is a test comment; idx " + eIdx + "." + cIdx,
+                        "shouldn't be shown", cIdx % 2 == 0 ? null : lastComment,
+                        exhibitMade.plus(cIdx, ChronoUnit.HOURS)
+                ), exhibitId, supporters[cIdx % supporters.length]);
+                if (cIdx % 2 != 0) {
+                    lastComment = inserted;
+                }
             }
         }
         LOG.info("Done adding test data");
@@ -139,6 +147,7 @@ public class Application implements CommandLineRunner {
             exhibits.setupTable(resetOnStart);
             supports.setupTable(resetOnStart);
             artifacts.setupTable(resetOnStart);
+            comments.setupTable(resetOnStart);
             LOG.info("Done initializing DB");
         } catch (Exception e) {
             LOG.error("Failed while initializing DB", e);
@@ -161,12 +170,21 @@ public class Application implements CommandLineRunner {
         }
         
         try {
-            addTestData();
+            if (addTestData) {
+                LOG.info("Adding test data");
+                addTestData();
+                LOG.info("Done adding test data");
+            } else {
+                LOG.info("Not adding test data");
+            }
         } catch (SQLException e) {
             LOG.error("Failed while adding test data", e);
             if (closeOnInitFail) {
                 ctx.close();
+                return;
             }
         }
+        
+        LOG.info("Startup completed. Server is ready to take requests.");
     }
 }

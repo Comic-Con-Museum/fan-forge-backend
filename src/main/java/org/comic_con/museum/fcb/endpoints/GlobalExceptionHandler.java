@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -31,31 +32,31 @@ import java.lang.reflect.InvocationTargetException;
 public class GlobalExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger("endpoints.exception");
     
-    // TODO: Custom error handler for 404 and 401
-    // TODO: Explicit mapping for /error
+    // TODO Custom error handler for 404 and 401
+    // TODO Make sure /error is not used
     
     private static class ErrorResponse {
         private String error;
-        @JsonInclude(JsonInclude.Include.NON_NULL)
         private String fix;
+        private String requestId;
         
         public ErrorResponse(String error, String fix) {
             this.error = error;
             this.fix = fix;
+            this.requestId = MDC.get("request");
         }
 
         public String getError() { return error; }
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         public String getFix() { return fix; }
-
-        public void setError(String error) { this.error = error; }
-        public void setFix(String fix) { this.fix = fix; }
+        public String getCode() { return requestId; }
     }
     
     private static class InternalServerError extends ErrorResponse {
         public InternalServerError(String briefDesc) {
             super(
                     briefDesc,
-                    "Contact the developers immediately -- see README.md"
+                    "Let us know something broke! Be sure to save the code."
             );
         }
     }
