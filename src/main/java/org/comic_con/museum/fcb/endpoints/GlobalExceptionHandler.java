@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
@@ -52,12 +53,17 @@ public class GlobalExceptionHandler {
     }
     
     private static class InternalServerError extends ErrorResponse {
+        private String requestId;
+        
         public InternalServerError(String briefDesc) {
             super(
                     briefDesc,
-                    "Contact the developers immediately -- see README.md"
+                    "Let us know something broke! Be sure to save the code."
             );
+            requestId = MDC.get("request");
         }
+        
+        public String getCode() { return requestId; }
     }
     
     private static class MissingParamErrorResponse extends ErrorResponse {

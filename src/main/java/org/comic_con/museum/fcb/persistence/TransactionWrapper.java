@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
@@ -57,7 +58,9 @@ public class TransactionWrapper {
     
     public Transaction start() {
         LOG.info("Starting transaction");
-        return new Transaction(transactionManager.getTransaction(new DefaultTransactionDefinition()));
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        return new Transaction(transactionManager.getTransaction(def));
     }
     
     public DataSourceTransactionManager getTransactionManager() {
