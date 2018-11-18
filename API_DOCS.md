@@ -423,6 +423,10 @@ You must be authorized to hit this endpoint.
 >   
 >   Until that bug is fixed, this API literally cannot comply with the HTTP
     standard, or be RESTful. Oh well.
+>   
+>   Now, in this case, Apache does allow it, but for consistency, we use the
+    same verb. It's simpler if we use the same HTTP-noncompliant but Roy
+    Fielding-approved syntax everywhere.
 
 Edit an artifact.
 
