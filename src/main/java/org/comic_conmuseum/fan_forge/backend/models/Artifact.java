@@ -1,5 +1,7 @@
 package org.comic_conmuseum.fan_forge.backend.models;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 
 public class Artifact {
@@ -9,7 +11,18 @@ public class Artifact {
     private boolean cover;
     private String creator;
     private Instant created;
-    
+
+    public Artifact(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
+        this(
+                rs.getLong("aid"),
+                rs.getString("title"),
+                rs.getString("description"),
+                rs.getBoolean("cover"),
+                rs.getString("creator"),
+                rs.getTimestamp("created").toInstant()
+        );
+    }
+
     public Artifact(long id, String title, String description, boolean cover,
                     String creator, Instant created) {
         this.id = id;
