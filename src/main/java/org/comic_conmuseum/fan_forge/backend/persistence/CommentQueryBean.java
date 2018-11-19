@@ -8,13 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectUpdateSemanticsDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -22,31 +20,20 @@ import java.util.List;
 public class CommentQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.comments");
     
-    private final NamedParameterJdbcTemplate sql;
+    private final JdbcTemplate sql;
     private final SimpleJdbcInsert insert;
     
     @Autowired
-    public CommentQueryBean(NamedParameterJdbcTemplate sql) {
+    public CommentQueryBean(JdbcTemplate sql) {
         this.sql = sql;
-        this.insert = new SimpleJdbcInsert(sql.getJdbcTemplate())
+        this.insert = new SimpleJdbcInsert(sql)
                 .withTableName("comments")
                 .usingGeneratedKeyColumns("cid");
     }
     
-    private static Comment mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
-        return new Comment(
-                rs.getLong("cid"),
-                rs.getString("text"),
-                rs.getString("author"),
-                rs.getObject("reply") == null ? null : rs.getLong("reply"),
-                rs.getTimestamp("created").toInstant()
-        );
-    }
-    
     public void setupTable(boolean resetOnStart) {
         if (resetOnStart) {
-            LOG.info("Creating table; resetting {}", resetOnStart);
-            sql.execute("DROP TABLE IF EXISTS comments CASCADE", PreparedStatement::execute);
+            sql.execute("DROP TABLE IF EXISTS comments CASCADE");
         }
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS comments (" +
@@ -56,18 +43,16 @@ public class CommentQueryBean {
                 "    exhibit INTEGER NOT NULL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "    reply INTEGER REFERENCES comments(cid) ON DELETE SET NULL ON UPDATE CASCADE," +
                 "    created TIMESTAMP WITH TIME ZONE NOT NULL " +
-                ")",
-                PreparedStatement::execute
+                ")"
         );
     }
     
     public long commentCount(Exhibit exhibit) {
         LOG.info("Getting comment count of {}", exhibit.getId());
         Long count = sql.queryForObject(
-                "SELECT COUNT(*) FROM comments " +
-                "WHERE exhibit = :eid",
-                new MapSqlParameterSource("eid", exhibit.getId()),
-                Long.class
+                "SELECT COUNT(*) FROM comments WHERE exhibit = ?",
+                Long.class,
+                exhibit.getId()
         );
         if (count == null) {
             throw new IllegalStateException("No count returned somehow");
@@ -77,20 +62,18 @@ public class CommentQueryBean {
     
     public List<Comment> commentsOfExhibit(long id) {
         return sql.query(
-                "SELECT * FROM comments " +
-                "WHERE exhibit = :eid",
-                new MapSqlParameterSource("eid", id),
-                CommentQueryBean::mapRow
+                "SELECT * FROM comments WHERE exhibit = :eid",
+                Comment::new,
+                id
         );
     }
     
-    public Comment byId(long id) {
+    public Comment get(long id) {
         LOG.info("Getting comment with ID {}", id);
         return sql.queryForObject(
-                "SELECT * FROM comments " +
-                "WHERE cid = :id",
-                new MapSqlParameterSource("id", id),
-                CommentQueryBean::mapRow
+                "SELECT * FROM comments WHERE cid = ?",
+                Comment::new,
+                id
         );
     }
     
@@ -114,15 +97,12 @@ public class CommentQueryBean {
     public void update(Comment co, User by) {
         LOG.info("{} updating comment {}", by.getUsername(), co.getId());
         int count = sql.update(
-                "UPDATE comments " +
-                "SET text = :text " +
-                "WHERE cid = :id " +
-                "  AND (author = :author OR :isAdmin)",
-                new MapSqlParameterSource()
-                        .addValue("text", co.getText())
-                        .addValue("id", co.getId())
-                        .addValue("author", by.getId())
-                        .addValue("isAdmin", by.isAdmin())
+                "UPDATE comments SET text = ? " +
+                "WHERE cid = ? AND (author = ? OR ?)",
+                co.getText(),
+                co.getId(),
+                by.getId(),
+                by.isAdmin()
         );
         if (count == 0) {
             throw new EmptyResultDataAccessException("No comments updated. Does the creator own the artifact?", 1);
@@ -137,12 +117,10 @@ public class CommentQueryBean {
         
         final int count = sql.update(
                 "DELETE FROM comments " +
-                "WHERE cid = :id " +
-                "  AND (author = :user OR :isAdmin)",
-                new MapSqlParameterSource()
-                        .addValue("id", id)
-                        .addValue("user", by.getId())
-                        .addValue("isAdmin", by.isAdmin())
+                "WHERE cid = ? AND (author = ? OR ?)",
+                id,
+                by.getId(),
+                by.isAdmin()
         );
         
         if (count > 1) {
