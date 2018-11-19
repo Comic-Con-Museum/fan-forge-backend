@@ -53,7 +53,7 @@ public class SupportQueryBean {
     }
     
     public Boolean isSupportingById(User user, long exhibit) {
-        if (user == null) {
+        if (user.isAnonymous()) {
             LOG.info("Checked for anon support");
             return null;
         }
@@ -79,7 +79,7 @@ public class SupportQueryBean {
     }
     
     public Map<Long, Boolean> isSupportingByIds(User user, List<Long> exhibits) {
-        if (user == null) {
+        if (user.isAnonymous()) {
             LOG.info("Getting {} supports for anon user", exhibits.size());
             return new HashMap<>();
         }

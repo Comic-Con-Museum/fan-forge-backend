@@ -27,7 +27,7 @@ public class BearerTokenAuthFilter extends AbstractAuthenticationProcessingFilte
     
     @Override
     protected boolean requiresAuthentication(HttpServletRequest request, HttpServletResponse response) {
-        // every request requires an auth attempt
+        // every request requires an auth attempt; even public URLs should have a user attached to them
         return true;
     }
     
@@ -38,6 +38,7 @@ public class BearerTokenAuthFilter extends AbstractAuthenticationProcessingFilte
         LOG.info("Checking auth on {} {}", req.getMethod(), req.getRequestURI());
         if (requireHttps) {
             if (!req.getProtocol().equalsIgnoreCase("https")) {
+                LOG.info("HTTPS required but protocol is {}", req.getProtocol());
                 return new UsernamePasswordAuthenticationToken(null, null);
             }
         }
