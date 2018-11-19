@@ -77,7 +77,7 @@ public class ArtifactEndpoints {
         full.setId(id);
         
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            artifacts.update(full, user);
+            artifacts.update(full);
             MultipartFile file = req.getFile("image");
             if (file != null) {
                 s3.putImage(id, file);

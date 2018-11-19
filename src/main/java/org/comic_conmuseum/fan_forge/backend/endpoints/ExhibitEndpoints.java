@@ -141,7 +141,7 @@ public class ExhibitEndpoints {
                 if (a.getId() != null) {
                     // if ID is provided, update the existing one
                     mentioned.add(a.getId());
-                    artifacts.update(a.build(user), user);
+                    artifacts.update(a.build(user));
                     // if no image provided, just don't update it!
                     if (a.getImageName() != null) {
                         MultipartFile file = req.getFile(a.getImageName());
