@@ -7,7 +7,7 @@ public class Survey {
     public final String supporter;
     public final String survey;
 
-    public Survey(ResultSet rs) throws SQLException {
+    public Survey(ResultSet rs, int rowIndex) throws SQLException {
         this.supporter = rs.getString("supporter");
         this.survey = rs.getString("survey_data");
     }
