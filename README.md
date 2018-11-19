@@ -122,8 +122,10 @@ make debugging easier. **Do not set them to any value** in production.
  *  `ff.add-test-data`: Whether or not to add a few dozen rows of test data
     to the database on startup. This ensures that there's always data to test
     against, even if the persistence is being reset with every restart.
- *  `ff.close-on-init-fail`: Whether or not to close the server if any of the
-    initialization and connection checking fails. 
+ *  `ff.close-on-init-fail`: Choose if a failure during initialization should
+    lead to a crash on startup.
+ *  `ff.require-https`: Enable or disable the HTTPS requirement for
+    authentication.
 
 ### Building a fat JAR from source
 
