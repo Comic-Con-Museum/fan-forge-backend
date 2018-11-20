@@ -38,7 +38,7 @@ public class ArtifactEndpoints {
 
     @RequestMapping(value = "/artifact/{id}", method = RequestMethod.GET)
     public ResponseEntity<Artifact> getArtifact(@PathVariable long id) {
-        return ResponseEntity.ok(artifacts.byId(id));
+        return ResponseEntity.ok(artifacts.get(id));
     }
 
     @RequestMapping(value = "/artifact", method = RequestMethod.POST)
@@ -77,7 +77,7 @@ public class ArtifactEndpoints {
         full.setId(id);
         
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            artifacts.update(full, user);
+            artifacts.update(full);
             MultipartFile file = req.getFile("image");
             if (file != null) {
                 s3.putImage(id, file);
@@ -89,7 +89,7 @@ public class ArtifactEndpoints {
     
     @RequestMapping(value = "/artifact/{id}", method = RequestMethod.DELETE)
     public ResponseEntity deleteArtifact(@PathVariable long id, @AuthenticationPrincipal User user) {
-        artifacts.delete(id, user);
+        artifacts.delete(id);
         return ResponseEntity.ok().build();
     }
 }

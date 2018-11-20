@@ -71,9 +71,9 @@ public class ExhibitEndpoints {
             List<Exhibit> feedRaw = exhibits.getFeed(feed, startIdx, filters);
             List<Feed.Entry> entries = feedRaw.stream().map(exhibit ->
                     new Feed.Entry(
-                        exhibit, supports.supporterCount(exhibit),
-                        comments.commentCount(exhibit),
-                        supports.isSupporting(user, exhibit)
+                        exhibit, supports.getSupporterCount(exhibit),
+                        comments.getCommentCount(exhibit),
+                        supports.isSupportingExhibit(user, exhibit)
                     )
             ).collect(Collectors.toList());
             tr.commit();
@@ -83,13 +83,13 @@ public class ExhibitEndpoints {
 
     @RequestMapping(value = "/exhibit/{id}", method = RequestMethod.GET)
     public ResponseEntity<ExhibitFull> getExhibit(@PathVariable long id, @AuthenticationPrincipal User user) {
-        Exhibit e = exhibits.getById(id);
+        Exhibit e = exhibits.get(id);
         return ResponseEntity.ok(new ExhibitFull(
                 e,
-                supports.supporterCount(e),
-                supports.isSupporting(user, e),
+                supports.getSupporterCount(e),
+                supports.isSupportingExhibit(user, e),
                 artifacts.artifactsOfExhibit(id),
-                comments.commentsOfExhibit(id)
+                comments.getComments(id)
         ));
     }
 
@@ -141,7 +141,7 @@ public class ExhibitEndpoints {
                 if (a.getId() != null) {
                     // if ID is provided, update the existing one
                     mentioned.add(a.getId());
-                    artifacts.update(a.build(user), user);
+                    artifacts.update(a.build(user));
                     // if no image provided, just don't update it!
                     if (a.getImageName() != null) {
                         MultipartFile file = req.getFile(a.getImageName());

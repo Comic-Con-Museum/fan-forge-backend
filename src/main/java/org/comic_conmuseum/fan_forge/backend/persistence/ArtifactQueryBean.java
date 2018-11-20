@@ -13,7 +13,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -23,17 +22,6 @@ public class ArtifactQueryBean {
     
     private final NamedParameterJdbcTemplate sql;
     private final SimpleJdbcInsert insert;
-
-    private static Artifact mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
-        return new Artifact(
-                rs.getLong("aid"),
-                rs.getString("title"),
-                rs.getString("description"),
-                rs.getBoolean("cover"),
-                rs.getString("creator"),
-                rs.getTimestamp("created").toInstant()
-        );
-    }
 
     @Autowired
     public ArtifactQueryBean(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -70,9 +58,9 @@ public class ArtifactQueryBean {
         LOG.info("Getting artifact with ID {}", id);
         return sql.query(
                 "SELECT * FROM artifacts " +
-                "WHERE exhibit = :eid",
-                new MapSqlParameterSource("eid", id),
-                ArtifactQueryBean::mapRow
+                "WHERE exhibit = :id",
+                new MapSqlParameterSource("id", id),
+                Artifact::new
         );
     }
     
@@ -94,20 +82,18 @@ public class ArtifactQueryBean {
         return id;
     }
 
-    public void update(Artifact ar, User by) {
-        LOG.info("{} updating artifact {}", by.getUsername(), ar.getId());
+    public void update(Artifact ar) {
+        LOG.info("updating artifact {}", ar.getId());
 
         int count = sql.update(
                 "UPDATE artifacts " +
                 "SET title = COALESCE(:title, title), " +
                 "    description = COALESCE(:description, description) " +
-                "WHERE aid = :aid "/* +
-                "  AND creator = :creator "*/,
+                "WHERE aid = :aid ",
                 new MapSqlParameterSource()
-                        .addValue("title", ar.getTitle())
-                        .addValue("description", ar.getDescription())
-                        .addValue("aid", ar.getId())
-//                        .addValue("creator", by.getId())
+                    .addValue("title", ar.getTitle())
+                    .addValue("description", ar.getDescription())
+                    .addValue("aid", ar.getId())
         );
         if (count == 0) {
             throw new EmptyResultDataAccessException("No artifacts updated. Does the creator own the artifact?", 1);
@@ -117,43 +103,42 @@ public class ArtifactQueryBean {
         }
     }
 
-    public Artifact byId(long id) {
+    public Artifact get(long id) {
         LOG.info("Getting artifact {}", id);
         return sql.queryForObject(
                 "SELECT * FROM artifacts WHERE aid = :id",
                 new MapSqlParameterSource("id", id),
-                ArtifactQueryBean::mapRow
+                Artifact::new
         );
     }
 
-    public void delete(long aid, User by) {
-        LOG.info("Deleting artifact {} by {}", aid, by);
+    public void delete(long aid) {
+        LOG.info("Deleting artifact {}", aid);
         int count = sql.update(
-                "DELETE FROM artifacts " +
-                "WHERE aid = :aid "/* +
-                "  AND (creator = :creator OR :isAdmin) "*/,
-                new MapSqlParameterSource()
-                        .addValue("aid", aid)
-//                        .addValue("creator", by.getId())
-//                        .addValue("isAdmin", by.isAdmin())
+                "DELETE FROM artifacts WHERE aid = :id",
+                new MapSqlParameterSource("id", aid)
         );
         if (count > 1) {
             throw new IncorrectUpdateSemanticsDataAccessException("More than one exhibit matched ID " + aid);
         }
         if (count == 0) {
-            throw new EmptyResultDataAccessException("No artifacts with ID " + aid + " by " + by.getUsername(), 1);
+            throw new EmptyResultDataAccessException("No artifacts with ID " + aid, 1);
         }
     }
     
     public void deleteAllFromExcept(long exFrom, List<Long> except) {
         LOG.info("Deleting all artifacts of {} except {}", exFrom, except);
-        String query = "DELETE FROM artifacts " +
-                       "WHERE exhibit = :exhibit ";
-        MapSqlParameterSource source = new MapSqlParameterSource("exhibit", exFrom);
-        if (except != null && !except.isEmpty()) {
-            query += "  AND aid NOT IN (:except)";
-            source.addValue("except", except);
+        if (except.isEmpty()) {
+            sql.update(
+                    "DELETE FROM artifacts WHERE exhibit = :eid",
+                    new MapSqlParameterSource("eid", exFrom)
+            );
+        } else {
+            sql.update(
+                    "DELETE FROM artifacts WHERE exhibit = :eid AND aid NOT IN (:list)",
+                    new MapSqlParameterSource("eid", exFrom)
+                        .addValue("list", except)
+            );
         }
-        sql.update(query, source);
     }
 }

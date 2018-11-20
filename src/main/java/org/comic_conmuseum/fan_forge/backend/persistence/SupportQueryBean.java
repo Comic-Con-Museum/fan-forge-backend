@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 public class SupportQueryBean {
@@ -21,12 +20,8 @@ public class SupportQueryBean {
     
     private final NamedParameterJdbcTemplate sql;
 
-    private List<Long> getIds(List<Exhibit> exhibits) {
-        return exhibits.stream().map(Exhibit::getId).collect(Collectors.toList());
-    }
-    
-    public SupportQueryBean(NamedParameterJdbcTemplate jdbcTemplate) {
-        this.sql = jdbcTemplate;
+    public SupportQueryBean(NamedParameterJdbcTemplate sql) {
+        this.sql = sql;
     }
     
     public void setupTable(boolean reset) {
@@ -48,68 +43,36 @@ public class SupportQueryBean {
         );
     }
     
-    public Boolean isSupporting(User user, Exhibit exhibit) {
-        return isSupportingById(user, exhibit.getId());
+    public Boolean isSupportingExhibit(User user, Exhibit exhibit) {
+        return isSupportingExhibit(user, exhibit.getId());
     }
     
-    public Boolean isSupportingById(User user, long exhibit) {
+    private Boolean isSupportingExhibit(User user, long exhibit) {
         if (user.isAnonymous()) {
             LOG.info("Checked for anon support");
             return null;
         }
         LOG.info("Checking if {} supports {}", user.getUsername(), exhibit);
-        Boolean supportCount = sql.queryForObject(
-                "SELECT COUNT(*) = 1 " +
-                "FROM supports " +
-                "WHERE exhibit = :eid " +
-                "  AND supporter = :uid",
-                new MapSqlParameterSource()
-                        .addValue("eid", exhibit)
-                        .addValue("uid", user.getId()),
-                Boolean.class
+
+
+        Integer countSupported = sql.queryForObject(
+                "SELECT COUNT(*) FROM supports " +
+                        "WHERE exhibit = :eid AND supporter = :supporter",
+                new MapSqlParameterSource("eid" ,exhibit)
+                    .addValue("supporter", user.getId()),
+                Integer.class
         );
-        if (supportCount == null) {
+        if (countSupported == null) {
             throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
         }
-        return supportCount;
+        return countSupported == 1;
     }
     
-    public Map<Long, Boolean> isSupporting(User user, List<Exhibit> exhibits) {
-        return isSupportingByIds(user, getIds(exhibits));
+    public long getSupporterCount(Exhibit exhibit) {
+        return getSupporterCount(exhibit.getId());
     }
     
-    public Map<Long, Boolean> isSupportingByIds(User user, List<Long> exhibits) {
-        if (user.isAnonymous()) {
-            LOG.info("Getting {} supports for anon user", exhibits.size());
-            return new HashMap<>();
-        }
-        LOG.info("Getting if {} is supporting {} exhibits", user.getUsername(), exhibits.size());
-        return sql.query(
-                "SELECT eid, COUNT(sid) = 1 AS supporting " +
-                "FROM exhibits " +
-                "LEFT JOIN supports " +
-                "       ON eid = exhibit " +
-                "      AND supporter = :uid " +
-                "WHERE eid IN (:eids) " +
-                "GROUP BY eid;",
-                new MapSqlParameterSource()
-                        .addValue("eids", exhibits)
-                        .addValue("uid", user.getId()),
-                rs -> {
-                    Map<Long, Boolean> results = new HashMap<>();
-                    while (rs.next()) {
-                        results.put(rs.getLong("eid"), rs.getBoolean("supporting"));
-                    }
-                    return results;
-                }
-        );
-    }
-    
-    public long supporterCount(Exhibit exhibit) {
-        return supporterCountById(exhibit.getId());
-    }
-    
-    public long supporterCountById(long exhibit) {
+    private long getSupporterCount(long exhibit) {
         LOG.info("Getting supporter count for {}", exhibit);
         Long supporterCount = sql.queryForObject(
                 "SELECT COUNT(*) FROM supports WHERE exhibit = :eid",
@@ -121,44 +84,16 @@ public class SupportQueryBean {
         }
         return supporterCount;
     }
-    
-    public Map<Long, Integer> supporterCounts(List<Exhibit> exhibits) {
-        return supporterCountsByIds(getIds(exhibits));
-    }
-    
-    public Map<Long, Integer> supporterCountsByIds(List<Long> exhibits) {
-        LOG.info("Getting supporter counts for {} exhibits", exhibits.size());
-        return sql.query(
-                "SELECT eid, COUNT(sid) AS supporters " +
-                "FROM exhibits " +
-                "LEFT JOIN supports ON eid = exhibit " +
-                "WHERE eid IN (:eids)" +
-                "GROUP BY eid;",
-                new MapSqlParameterSource()
-                        .addValue("eids", exhibits),
-                rs -> {
-                    Map<Long, Integer> results = new HashMap<>();
-                    while (rs.next()) {
-                        results.put(rs.getLong("eid"), rs.getInt("supporters"));
-                    }
-                    return results;
-                }
-        );
-    }
-    
-    public boolean support(long eid, User by, String survey) {
+
+    public boolean createSupport(long eid, User by, String survey) {
         LOG.info("{} supporting {}; survey: {}", by.getUsername(), eid, survey);
         try {
             sql.update(
-                    "INSERT INTO supports ( " +
-                    "    exhibit, supporter, survey_data " +
-                    ") VALUES ( " +
-                    "    :eid, :uid, :survey " +
-                    ")",
-                    new MapSqlParameterSource()
-                            .addValue("eid", eid)
-                            .addValue("uid", by.getId())
-                            .addValue("survey", survey)
+                    "INSERT INTO supports (exhibit, supporter, survey_data) " +
+                    "VALUES (:exhibit, :supporter, :data)",
+                    new MapSqlParameterSource("exhibit", eid)
+                        .addValue("supporter", by.getId())
+                        .addValue("data", survey)
             );
             return true;
         } catch (DuplicateKeyException e) {
@@ -167,26 +102,24 @@ public class SupportQueryBean {
         }
     }
     
-    public boolean unsupport(long eid, User by) {
+    public boolean deleteSupport(long eid, User by) {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
                 "DELETE FROM supports " +
-                "WHERE exhibit = :eid " +
-                "  AND supporter = :uid",
-                new MapSqlParameterSource()
-                        .addValue("eid", eid)
-                        .addValue("uid", by.getId())
+                "WHERE exhibit = :eid AND supporter = :supporter",
+                new MapSqlParameterSource("eid", eid)
+                    .addValue("supporter", by.getId())
         );
         return removed == 1;
     }
 
     public List<Survey> getSurveys(long eid) {
         LOG.info("Getting surveys for exhibit {}", eid);
+
         return sql.query(
                 "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
-                new MapSqlParameterSource().addValue("eid", eid),
-                (rs, rowNum) -> new Survey(rs)
+                new MapSqlParameterSource("eid", eid),
+                Survey::new
         );
-
     }
 }

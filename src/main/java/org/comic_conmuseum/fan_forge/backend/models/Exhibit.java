@@ -1,5 +1,7 @@
 package org.comic_conmuseum.fan_forge.backend.models;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 
 public class Exhibit {
@@ -21,6 +23,19 @@ public class Exhibit {
         this.tags = tags;
         this.cover = cover;
     }
+
+    public Exhibit (ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
+        this (
+                rs.getInt("eid"),
+                rs.getString("title"),
+                rs.getString("description"),
+                rs.getString("author"),
+                rs.getTimestamp("created").toInstant(),
+                (String[]) rs.getArray("tags").getArray(),
+                rs.getString("atitle") != null ? Artifact.coverFromJoined(rs) : null
+        );
+    }
+
 
     public long getId() { return id; }
     public String getTitle() { return title; }
