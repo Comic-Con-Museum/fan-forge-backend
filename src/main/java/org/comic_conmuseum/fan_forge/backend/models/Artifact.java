@@ -32,6 +32,19 @@ public class Artifact {
         this.creator = creator;
         this.created = created;
     }
+
+    /** Creates an artifact from the result set joined with the exhibit.
+     * Here the names for fields are slightly different */
+    static Artifact coverFromJoined(ResultSet rs) throws SQLException {
+        return new Artifact(
+                rs.getLong("aid"),
+                rs.getString("atitle"),
+                rs.getString("adesc"),
+                true, // always true; we only get covers in this bean
+                rs.getString("acreator"),
+                rs.getTimestamp("acreated").toInstant()
+        );
+    }
     
     public long getId() { return id; }
     public String getTitle() { return title; }

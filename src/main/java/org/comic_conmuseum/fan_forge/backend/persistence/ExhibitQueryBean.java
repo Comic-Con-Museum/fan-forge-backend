@@ -1,6 +1,5 @@
 package org.comic_conmuseum.fan_forge.backend.persistence;
 
-import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.slf4j.Logger;
@@ -66,34 +65,6 @@ public class ExhibitQueryBean {
                 .usingGeneratedKeyColumns("eid");
     }
 
-    // TODO Switch mappers to lambdas/method references?
-    private static Exhibit mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
-        Artifact cover;
-        if (rs.getString("atitle") == null) {
-            cover = null;
-        } else {
-            cover = new Artifact(
-                    rs.getLong("aid"),
-                    rs.getString("atitle"),
-                    rs.getString("adesc"),
-                    true, // always true; we only get covers in this bean
-                    rs.getString("acreator"),
-                    rs.getTimestamp("acreated").toInstant()
-            );
-        }
-
-        return new Exhibit(
-                rs.getInt("eid"),
-                rs.getString("title"),
-                rs.getString("description"),
-                rs.getString("author"),
-                // TODO: getting a java.sql.Timestamp and converting to Instant may have issues
-                rs.getTimestamp("created").toInstant(),
-                (String[]) rs.getArray("tags").getArray(),
-                cover
-        );
-    }
-
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
@@ -124,7 +95,7 @@ public class ExhibitQueryBean {
                 "      AND a.cover " +
                 "WHERE eid = :id",
                 new MapSqlParameterSource("id", id),
-                ExhibitQueryBean::mapRow
+                Exhibit::new
         );
     }
 
@@ -229,7 +200,7 @@ public class ExhibitQueryBean {
         params.addValue("limit", PAGE_SIZE);
         params.addValue("offset", startIdx);
         
-        return sql.query(query.toString(), params, ExhibitQueryBean::mapRow);
+        return sql.query(query.toString(), params, Exhibit::new);
     }
 
     // TODO Implement filters here too
