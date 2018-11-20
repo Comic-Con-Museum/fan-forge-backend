@@ -27,7 +27,10 @@ public class BearerTokenAuthenticationProvider extends AbstractUserDetailsAuthen
     @Override
     protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         // TODO replace with SQL call
-        LOG.info("Getting user {}", username);
-        return new User(username, username, authentication.getCredentials().toString(), username.equals("admin"));
+        LOG.info("Getting user {}", authentication.getPrincipal());
+        if (authentication.getCredentials() == null) {
+            return User.ANONYMOUS;
+        }
+        return new User(username, username, (String) authentication.getCredentials(), username.contains("admin"));
     }
 }

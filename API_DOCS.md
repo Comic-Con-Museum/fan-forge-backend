@@ -46,7 +46,7 @@ Authorization: Bearer WW91ciB0b2tlbiBoZXJlIQ==
 
 Under some circumstances, the `Authorization` header may be ignored:
 
-* If the request is made over HTTP, instead of HTTPS.
+* If the request is made over HTTP, instead of HTTPS
 * If the header is malformed (i.e. anything but bearer authorization)
 * If the token is expired, nonexistent, or otherwise invalid
 
