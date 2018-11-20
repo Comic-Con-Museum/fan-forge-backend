@@ -7,25 +7,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.util.*;
 
 @Repository
 public class SupportQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.support");
     
-    private final JdbcTemplate sql;
+    private final NamedParameterJdbcTemplate sql;
 
-    public SupportQueryBean(JdbcTemplate sql) {
+    public SupportQueryBean(NamedParameterJdbcTemplate sql) {
         this.sql = sql;
     }
     
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
-            this.sql.execute("DROP TABLE IF EXISTS supports CASCADE");
+            this.sql.execute("DROP TABLE IF EXISTS supports CASCADE", PreparedStatement::execute);
         }
         this.sql.execute(
                 "CREATE TABLE IF NOT EXISTS supports ( " +
@@ -36,7 +38,8 @@ public class SupportQueryBean {
                 "    survey_data TEXT, " +
                 // we shouldn't have the same person supporting the same exhibit more than once
                 "    UNIQUE (exhibit, supporter)" +
-                ")"
+                ")",
+                PreparedStatement::execute
         );
     }
     
@@ -54,10 +57,10 @@ public class SupportQueryBean {
 
         Integer countSupported = sql.queryForObject(
                 "SELECT COUNT(*) FROM supports " +
-                        "WHERE exhibit = ? AND supporter = ?",
-                Integer.class,
-                exhibit,
-                user.getId()
+                        "WHERE exhibit = :eid AND supporter = :supporter",
+                new MapSqlParameterSource("eid" ,exhibit)
+                    .addValue("supporter", user.getId()),
+                Integer.class
         );
         if (countSupported == null) {
             throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
@@ -72,9 +75,9 @@ public class SupportQueryBean {
     private long getSupporterCount(long exhibit) {
         LOG.info("Getting supporter count for {}", exhibit);
         Long supporterCount = sql.queryForObject(
-                "SELECT COUNT(*) FROM supports WHERE exhibit = ?",
-                Long.class,
-                exhibit
+                "SELECT COUNT(*) FROM supports WHERE exhibit = :eid",
+                new MapSqlParameterSource("eid", exhibit),
+                Long.class
         );
         if (supporterCount == null) {
             throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
@@ -87,10 +90,10 @@ public class SupportQueryBean {
         try {
             sql.update(
                     "INSERT INTO supports (exhibit, supporter, survey_data) " +
-                    "VALUES (?, ?, ?)",
-                    eid,
-                    by.getId(),
-                    survey
+                    "VALUES (:exhibit, :supporter, :data)",
+                    new MapSqlParameterSource("exhibit", eid)
+                        .addValue("supporter", by.getId())
+                        .addValue("data", survey)
             );
             return true;
         } catch (DuplicateKeyException e) {
@@ -103,10 +106,9 @@ public class SupportQueryBean {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
                 "DELETE FROM supports " +
-                "WHERE exhibit = ? " +
-                "  AND supporter = ?",
-                eid,
-                by.getId()
+                "WHERE exhibit = :eid AND supporter = :supporter",
+                new MapSqlParameterSource("eid", eid)
+                    .addValue("supporter", by.getId())
         );
         return removed == 1;
     }
@@ -115,9 +117,9 @@ public class SupportQueryBean {
         LOG.info("Getting surveys for exhibit {}", eid);
 
         return sql.query(
-                "SELECT supporter, survey_data FROM supports WHERE exhibit = ?",
-                Survey::new,
-                eid
+                "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
+                new MapSqlParameterSource("eid", eid),
+                Survey::new
         );
     }
 }
