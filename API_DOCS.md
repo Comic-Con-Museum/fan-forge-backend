@@ -604,8 +604,15 @@ shows the image type.
 Gets all the tags being used by exhibits
 
 Returns a list of Strings, each of which is a tag.
+This list is sorted alphabetically.
 
 ### Response body
+
+```
+[ string ]
+```
+
+For example:
 
 ```
 [
