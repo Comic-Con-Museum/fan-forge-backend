@@ -40,11 +40,11 @@ public class SupportQueryBean {
         );
     }
     
-    public Boolean isSupporting(User user, Exhibit exhibit) {
-        return isSupportingById(user, exhibit.getId());
+    public Boolean isSupportingExhibit(User user, Exhibit exhibit) {
+        return isSupportingExhibit(user, exhibit.getId());
     }
     
-    private Boolean isSupportingById(User user, long exhibit) {
+    private Boolean isSupportingExhibit(User user, long exhibit) {
         if (user == null) {
             LOG.info("Checked for anon support");
             return null;
@@ -65,11 +65,11 @@ public class SupportQueryBean {
         return countSupported == 1;
     }
     
-    public long supporterCount(Exhibit exhibit) {
-        return supporterCountById(exhibit.getId());
+    public long getSupporterCount(Exhibit exhibit) {
+        return getSupporterCount(exhibit.getId());
     }
     
-    private long supporterCountById(long exhibit) {
+    private long getSupporterCount(long exhibit) {
         LOG.info("Getting supporter count for {}", exhibit);
         Long supporterCount = sql.queryForObject(
                 "SELECT COUNT(*) FROM supports WHERE exhibit = ?",
@@ -82,7 +82,7 @@ public class SupportQueryBean {
         return supporterCount;
     }
 
-    public boolean support(long eid, User by, String survey) {
+    public boolean createSupport(long eid, User by, String survey) {
         LOG.info("{} supporting {}; survey: {}", by.getUsername(), eid, survey);
         try {
             sql.update(
@@ -99,7 +99,7 @@ public class SupportQueryBean {
         }
     }
     
-    public boolean unsupport(long eid, User by) {
+    public boolean deleteSupport(long eid, User by) {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
                 "DELETE FROM supports " +

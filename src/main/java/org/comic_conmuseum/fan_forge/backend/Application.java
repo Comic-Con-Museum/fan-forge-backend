@@ -108,7 +108,7 @@ public class Application implements CommandLineRunner {
             ), original);
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
-                    supports.support(
+                    supports.createSupport(
                             exhibitId, supporters[sIdx],
                             String.format("Support for %d by %s", exhibitId, supporters[sIdx].getUsername())
                     );

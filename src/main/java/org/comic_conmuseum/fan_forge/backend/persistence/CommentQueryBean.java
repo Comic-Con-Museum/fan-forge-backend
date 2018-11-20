@@ -47,7 +47,7 @@ public class CommentQueryBean {
         );
     }
     
-    public long commentCount(Exhibit exhibit) {
+    public long getCommentCount(Exhibit exhibit) {
         LOG.info("Getting comment count of {}", exhibit.getId());
         Long count = sql.queryForObject(
                 "SELECT COUNT(*) FROM comments WHERE exhibit = ?",
@@ -60,20 +60,20 @@ public class CommentQueryBean {
         return count;
     }
     
-    public List<Comment> commentsOfExhibit(long id) {
+    public List<Comment> getComments(long exhibitId) {
         return sql.query(
-                "SELECT * FROM comments WHERE exhibit = :eid",
+                "SELECT * FROM comments WHERE exhibit = ?",
                 Comment::new,
-                id
+                exhibitId
         );
     }
     
-    public Comment get(long id) {
-        LOG.info("Getting comment with ID {}", id);
+    public Comment get(long exhibitId) {
+        LOG.info("Getting comment with ID {}", exhibitId);
         return sql.queryForObject(
                 "SELECT * FROM comments WHERE cid = ?",
                 Comment::new,
-                id
+                exhibitId
         );
     }
     

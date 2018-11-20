@@ -83,8 +83,8 @@ public class ExhibitQueryBean {
         );
     }
     
-    public Exhibit getById(long id) {
-        LOG.info("Getting exhibit with ID {}", id);
+    public Exhibit get(long exhibitId) {
+        LOG.info("Getting exhibit with ID {}", exhibitId);
         return sql.queryForObject(
                 "SELECT e.*, " +
                 "       a.aid aid, a.title atitle, a.description adesc, " +
@@ -94,7 +94,7 @@ public class ExhibitQueryBean {
                 "       ON a.exhibit = e.eid " +
                 "      AND a.cover " +
                 "WHERE eid = :id",
-                new MapSqlParameterSource("id", id),
+                new MapSqlParameterSource("id", exhibitId),
                 Exhibit::new
         );
     }
@@ -203,7 +203,6 @@ public class ExhibitQueryBean {
         return sql.query(query.toString(), params, Exhibit::new);
     }
 
-    // TODO Implement filters here too
     public long getCount(Map<String, String> filters) throws DataAccessException {
         LOG.info("Getting total exhibit count");
         
