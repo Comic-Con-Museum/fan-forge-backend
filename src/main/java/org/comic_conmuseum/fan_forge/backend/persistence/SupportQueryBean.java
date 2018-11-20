@@ -45,7 +45,7 @@ public class SupportQueryBean {
     }
     
     private Boolean isSupportingExhibit(User user, long exhibit) {
-        if (user == null) {
+        if (user.isAnonymous()) {
             LOG.info("Checked for anon support");
             return null;
         }

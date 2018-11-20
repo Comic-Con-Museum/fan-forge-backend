@@ -25,12 +25,23 @@ public class User implements UserDetails {
      * Whether or not this user is an administrator
      */
     private final boolean admin;
+    /**
+     * Whether or not this User represents an anonymous login
+     */
+    private final boolean anonymous;
 
-    public User(String uid, String username, String token, boolean admin) {
+    private User(String uid, String username, String token, boolean admin, boolean anonymous) {
         this.uid = uid;
         this.username = username;
         this.token = token;
         this.admin = admin;
+        this.anonymous = anonymous;
+    }
+
+    public static final User ANONYMOUS = new User("0", null, null, false, true);
+
+    public User(String uid, String username, String token, boolean admin) {
+        this(uid, username, token, admin, false);
     }
 
     public String getId() {
@@ -40,6 +51,8 @@ public class User implements UserDetails {
     public boolean isAdmin() {
         return this.admin;
     }
+
+    public boolean isAnonymous() { return this.anonymous; }
 
     @Override
     public String toString() {

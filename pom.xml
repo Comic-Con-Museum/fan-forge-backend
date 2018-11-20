@@ -6,7 +6,7 @@
 
     <groupId>org.comic-conmuseum</groupId>
     <artifactId>fan-forge-backend</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.9.1</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
