@@ -597,3 +597,27 @@ hotlink directly to it from an `image` tag in HTML. The `Content-Type` header
 shows the image type.
 
  [apache-stop]: https://issues.apache.org/jira/browse/FILEUPLOAD-197
+
+
+## `GET /tags`
+
+Gets all the tags being used by exhibits
+
+Returns a list of Strings, each of which is a tag.
+This list is sorted alphabetically.
+
+### Response body
+
+```
+[ string ]
+```
+
+For example:
+
+```
+[
+    "alphabetically",
+    "sorted",
+    "tags"
+]
+```

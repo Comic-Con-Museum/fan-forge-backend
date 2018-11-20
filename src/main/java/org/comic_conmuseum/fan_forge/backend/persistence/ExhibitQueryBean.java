@@ -217,4 +217,13 @@ public class ExhibitQueryBean {
         }
         return count;
     }
+
+    public List<String> getAllTags() {
+        LOG.info("Getting all tags");
+        return sql.queryForList(
+                "SELECT DISTINCT UNNEST(tags) t FROM exhibits ORDER BY t ASC",
+                new MapSqlParameterSource(),
+                String.class
+        );
+    }
 }

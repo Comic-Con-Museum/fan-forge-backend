@@ -176,4 +176,10 @@ public class ExhibitEndpoints {
         exhibits.delete(id, user);
         return ResponseEntity.noContent().build();
     }
+
+    @RequestMapping(value = "/tags", method = RequestMethod.GET)
+    public ResponseEntity getAllTags() {
+        List<String> results = exhibits.getAllTags();
+        return ResponseEntity.ok(results);
+    }
 }
