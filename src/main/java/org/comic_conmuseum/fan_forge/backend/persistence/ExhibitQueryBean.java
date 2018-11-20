@@ -1,5 +1,6 @@
 package org.comic_conmuseum.fan_forge.backend.persistence;
 
+import com.oracle.tools.packager.Log;
 import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.User;
@@ -246,5 +247,14 @@ public class ExhibitQueryBean {
             throw new EmptyResultDataAccessException("Somehow no count returned", 1);
         }
         return count;
+    }
+
+    public List<String> getAllTags() {
+        LOG.info("Getting all tags");
+        return sql.queryForList(
+                "SELECT DISTINCT UNNEST(tags) t FROM exhibits ORDER BY t ASC",
+                new MapSqlParameterSource(),
+                String.class
+        );
     }
 }

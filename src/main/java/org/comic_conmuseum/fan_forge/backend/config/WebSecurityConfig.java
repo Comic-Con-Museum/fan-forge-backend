@@ -37,6 +37,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             new AntPathRequestMatcher("/healthcheck/**", "GET"),
             // This endpoint is how images are loaded by the frontend
             new AntPathRequestMatcher("/image/*", "GET"),
+            // Can get the list of all tags without being signed in, since it's on the feed
+            new AntPathRequestMatcher("/tags", "GET"),
             // And /error is the default error page; it should never be shown,
             //  but in case it is, we don't want to give a 404.
             new AntPathRequestMatcher("/error", "GET")
