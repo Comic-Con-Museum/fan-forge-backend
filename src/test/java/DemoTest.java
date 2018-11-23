@@ -1,14 +1,14 @@
-import org.junit.Assume;
-import org.junit.Test;
+import com.tngtech.jgiven.junit5.ScenarioTest;
+import org.junit.jupiter.api.Test;
 
-public class DemoTest {
+public class DemoTest extends ScenarioTest<GivenDemo, WhenDemo, ThenDemo> {
     @Test
-    public void demoTest() {
-        System.out.println("This is a test!");
-    }
-    
-    @Test
-    public void demoIgnoredTest() {
-        Assume.assumeTrue("This is skipped because the condition is false", false);
+    public void theTestSystemWorks() {
+        given() .someDemoThing("magic");
+        
+        when()  .aThingHappens("pixie dust");
+        
+        then()  .expectADemo("leprechaun bones")
+        .and()  .expectADemo("mushroom circles");
     }
 }

@@ -6,6 +6,8 @@
 
     <groupId>org.comic-conmuseum</groupId>
     <artifactId>fan-forge-backend</artifactId>
+    <name>Fan Forge Backend</name>
+    <description>The backend of the Comic-Con Museum's Fan Forge</description>
     <version>0.9.1</version>
 
     <parent>
@@ -13,6 +15,14 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.0.5.RELEASE</version>
     </parent>
+    
+    <properties>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <junit.version>5.3.1</junit.version>
+        <jgiven.version>0.16.1</jgiven.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -39,28 +49,45 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.jgiven</groupId>
+            <artifactId>jgiven-junit5</artifactId>
+            <version>${jgiven.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.jgiven</groupId>
+            <artifactId>jgiven-html5-report</artifactId>
+            <version>${jgiven.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.jgiven</groupId>
+            <artifactId>jgiven-spring</artifactId>
+            <version>${jgiven.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
-
     <build>
-        <defaultGoal>clean package spring-boot:run</defaultGoal>
+        <defaultGoal>clean package</defaultGoal>
         <sourceDirectory>./src/main/java</sourceDirectory>
         <testSourceDirectory>./src/test/java</testSourceDirectory>
         <finalName>fan-forge-backend</finalName>
@@ -71,10 +98,32 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <forkCount>0</forkCount>
+                    <trimStackTrace>false</trimStackTrace>
+                    <testSourceDirectory>${basedir}/src/test/</testSourceDirectory>
+                    <systemPropertyValues>
+                        <jgiven.report.dir>${project.build.directory}/jgiven-reports</jgiven.report.dir>
+                    </systemPropertyValues>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.tngtech.jgiven</groupId>
+                <artifactId>jgiven-maven-plugin</artifactId>
+                <version>${jgiven.version}</version>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <format>html</format>
+                    <outputDirectory>${project.build.directory}/jgiven-reports</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
