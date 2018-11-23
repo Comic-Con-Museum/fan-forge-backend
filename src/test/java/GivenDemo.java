@@ -1,12 +1,12 @@
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.tngtech.jgiven.Stage;
+import com.tngtech.jgiven.annotation.ProvidedScenarioState;
 
 public class GivenDemo extends Stage<GivenDemo> {
-    private static final Logger LOG = LoggerFactory.getLogger(GivenDemo.class);
+    @ProvidedScenarioState
+    String demoName;
     
-    public GivenDemo someDemoThing(String theThing) {
-        LOG.info("Setting up demo with {}", theThing);
-        return self();
+    public GivenDemo demoIsReady(String demoName) {
+        this.demoName = demoName;
+        return this;
     }
 }

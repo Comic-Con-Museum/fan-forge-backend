@@ -104,9 +104,9 @@
                     <forkCount>0</forkCount>
                     <trimStackTrace>false</trimStackTrace>
                     <testSourceDirectory>${basedir}/src/test/</testSourceDirectory>
-                    <systemPropertyValues>
+                    <systemProperties>
                         <jgiven.report.dir>${project.build.directory}/jgiven-reports</jgiven.report.dir>
-                    </systemPropertyValues>
+                    </systemProperties>
                 </configuration>
             </plugin>
             <plugin>

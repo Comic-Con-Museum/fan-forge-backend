@@ -3,12 +3,26 @@ import org.junit.jupiter.api.Test;
 
 public class DemoTest extends ScenarioTest<GivenDemo, WhenDemo, ThenDemo> {
     @Test
-    public void theTestSystemWorks() {
-        given() .someDemoThing("magic");
+    public void aGoodDemoIsGood() {
+        given()
+                .demoIsReady("good");
         
-        when()  .aThingHappens("pixie dust");
+        when()
+                .theDemoRuns();
         
-        then()  .expectADemo("leprechaun bones")
-        .and()  .expectADemo("mushroom circles");
+        then()
+                .theDemoWasGood();
+    }
+    
+    @Test
+    public void aNotGoodDemoIsNotGood() {
+        given()
+                .demoIsReady("not good");
+        
+        when()
+                .theDemoRuns();
+        
+        then()
+                .theDemoWasNotGood();
     }
 }
