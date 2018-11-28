@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class Survey {
     public final String supporter;
+    public final long exhibit;
     public final int visits;
     public final Map<String, Boolean> populations;
     public final int nps;
@@ -20,6 +21,7 @@ public class Survey {
 
     public Survey(ResultSet rs, @SuppressWarnings("unused") int rowIndex) throws SQLException {
         this.supporter = rs.getString("supporter");
+        this.exhibit = rs.getLong("exhibit");
         this.visits = rs.getInt("visits");
         this.populations = new HashMap<>();
         this.populations.put("male", rs.getBoolean("pop_male"));

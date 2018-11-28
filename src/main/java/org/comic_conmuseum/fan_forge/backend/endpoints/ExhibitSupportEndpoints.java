@@ -1,5 +1,6 @@
 package org.comic_conmuseum.fan_forge.backend.endpoints;
 
+import org.comic_conmuseum.fan_forge.backend.endpoints.inputs.SurveyCreation;
 import org.comic_conmuseum.fan_forge.backend.persistence.SupportQueryBean;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.slf4j.Logger;
@@ -19,10 +20,10 @@ public class ExhibitSupportEndpoints {
     }
     
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.PUT)
-    public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody(required = false) String data,
+    public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody SurveyCreation data,
                                          @AuthenticationPrincipal User user) {
         LOG.info("Supporting {} as {}", id, user);
-        boolean newSupporter = supports.createSupport(id, user, data);
+        boolean newSupporter = supports.createSupport(id, user, data.build(user));
         LOG.info("New supporter? {}", newSupporter);
         if (newSupporter) {
             return ResponseEntity.noContent().build();

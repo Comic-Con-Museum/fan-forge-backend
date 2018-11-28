@@ -90,7 +90,7 @@ public class SupportQueryBean {
         return supporterCount;
     }
 
-    public boolean createSupport(long eid, User by, Survey survey) {
+    public boolean createSupport(long eid, Survey survey) {
         LOG.info("{} supporting {}; survey: {}", by.getUsername(), eid, survey);
         try {
             sql.update(
@@ -103,7 +103,7 @@ public class SupportQueryBean {
                     "    :nps " +
                     ")",
                     new MapSqlParameterSource("exhibit", eid)
-                            .addValue("supporter", by.getId())
+                            .addValue("supporter", survey.supporter)
                             .addValue("visits", survey.visits)
                             .addValue("pop_male", survey.populations.get("male"))
                             .addValue("pop_female", survey.populations.get("female"))
