@@ -34,9 +34,14 @@ public class SupportQueryBean {
                 "    sid SERIAL PRIMARY KEY, " +
                 "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
-                // TODO Get actual survey data fields to use and use them
-                "    survey_data TEXT, " +
-                // we shouldn't have the same person supporting the same exhibit more than once
+                "    visits INTEGER NOT NULL CHECK (0 <= visits AND visits <= 10), " +
+                "    pop_male BOOLEAN NOT NULL, " +
+                "    pop_female BOOLEAN NOT NULL, " +
+                "    pop_kids BOOLEAN NOT NULL, " +
+                "    pop_teenagers BOOLEAN NOT NULL, " +
+                "    pop_adults BOOLEAN NOT NULL, " +
+                "    nps INTEGER NOT NULL CHECK (0 <= nps AND nps <= 10), " +
+        // we shouldn't have the same person supporting the same exhibit more than once
                 "    UNIQUE (exhibit, supporter)" +
                 ")",
                 PreparedStatement::execute
@@ -59,11 +64,11 @@ public class SupportQueryBean {
                 "SELECT COUNT(*) FROM supports " +
                         "WHERE exhibit = :eid AND supporter = :supporter",
                 new MapSqlParameterSource("eid" ,exhibit)
-                    .addValue("supporter", user.getId()),
+                        .addValue("supporter", user.getId()),
                 Integer.class
         );
         if (countSupported == null) {
-            throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
+            throw new EmptyResultDataAccessException("Somehow no COUNT(*) returned", 1);
         }
         return countSupported == 1;
     }
@@ -80,20 +85,32 @@ public class SupportQueryBean {
                 Long.class
         );
         if (supporterCount == null) {
-            throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
+            throw new EmptyResultDataAccessException("Somehow no COUNT(*) returned", 1);
         }
         return supporterCount;
     }
 
-    public boolean createSupport(long eid, User by, String survey) {
+    public boolean createSupport(long eid, User by, Survey survey) {
         LOG.info("{} supporting {}; survey: {}", by.getUsername(), eid, survey);
         try {
             sql.update(
-                    "INSERT INTO supports (exhibit, supporter, survey_data) " +
-                    "VALUES (:exhibit, :supporter, :data)",
+                    "INSERT INTO supports (" +
+                    "    exhibit, supporter, visits, pop_male, pop_female, pop_kids, pop_teenagers, pop_adults, nps" +
+                    ") " +
+                    "VALUES (" +
+                    "    :exhibit, :supporter, :visits, " +
+                    "    :pop_male, :pop_female, :pop_kids, :pop_teenagers, :pop_adults, " +
+                    "    :nps " +
+                    ")",
                     new MapSqlParameterSource("exhibit", eid)
-                        .addValue("supporter", by.getId())
-                        .addValue("data", survey)
+                            .addValue("supporter", by.getId())
+                            .addValue("visits", survey.visits)
+                            .addValue("pop_male", survey.populations.get("male"))
+                            .addValue("pop_female", survey.populations.get("female"))
+                            .addValue("pop_kids", survey.populations.get("kids"))
+                            .addValue("pop_teenagers", survey.populations.get("teenagers"))
+                            .addValue("pop_adults", survey.populations.get("adults"))
+                            .addValue("nps", survey.nps)
             );
             return true;
         } catch (DuplicateKeyException e) {
@@ -106,9 +123,10 @@ public class SupportQueryBean {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
                 "DELETE FROM supports " +
-                "WHERE exhibit = :eid AND supporter = :supporter",
+                "WHERE exhibit = :eid AND (supporter = :supporter OR :isAdmin)",
                 new MapSqlParameterSource("eid", eid)
-                    .addValue("supporter", by.getId())
+                        .addValue("supporter", by.getId())
+                        .addValue("isAdmin", by.isAdmin())
         );
         return removed == 1;
     }
@@ -117,7 +135,8 @@ public class SupportQueryBean {
         LOG.info("Getting surveys for exhibit {}", eid);
 
         return sql.query(
-                "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
+                "SELECT supporter, visits, pop_male, pop_female, pop_kids, pop_teenagers, pop_adults FROM supports " +
+                "WHERE exhibit = :eid",
                 new MapSqlParameterSource("eid", eid),
                 Survey::new
         );
