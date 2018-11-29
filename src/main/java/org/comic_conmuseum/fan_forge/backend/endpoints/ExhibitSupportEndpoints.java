@@ -1,6 +1,8 @@
 package org.comic_conmuseum.fan_forge.backend.endpoints;
 
 import org.comic_conmuseum.fan_forge.backend.endpoints.inputs.SurveyCreation;
+import org.comic_conmuseum.fan_forge.backend.endpoints.responses.ErrorResponse;
+import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.persistence.SupportQueryBean;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.slf4j.Logger;
@@ -23,7 +25,21 @@ public class ExhibitSupportEndpoints {
     public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody SurveyCreation data,
                                          @AuthenticationPrincipal User user) {
         LOG.info("Supporting {} as {}", id, user);
-        boolean newSupporter = supports.createSupport(id, user, data.build(user));
+        if (data.getVisits() == null || data.getPopulations() == null || data.getNps() == null) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(
+                    "Must provide all fields -- visit, populations, and nps",
+                    "Provide all the fields"
+            ));
+        }
+        for (String pop : Survey.POPULATIONS) {
+            if (!data.getPopulations().containsKey(pop)) {
+                return ResponseEntity.badRequest().body(new ErrorResponse(
+                        "Must provide all populations -- see documentation",
+                        "Provide all of the populations"
+                ));
+            }
+        }
+        boolean newSupporter = supports.createSupport(id, data.build(user));
         LOG.info("New supporter? {}", newSupporter);
         if (newSupporter) {
             return ResponseEntity.noContent().build();

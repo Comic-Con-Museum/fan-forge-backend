@@ -1,9 +1,6 @@
 package org.comic_conmuseum.fan_forge.backend;
 
-import org.comic_conmuseum.fan_forge.backend.models.Artifact;
-import org.comic_conmuseum.fan_forge.backend.models.Comment;
-import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
-import org.comic_conmuseum.fan_forge.backend.models.User;
+import org.comic_conmuseum.fan_forge.backend.models.*;
 import org.comic_conmuseum.fan_forge.backend.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
@@ -108,9 +103,18 @@ public class Application implements CommandLineRunner {
             ), original);
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
+                    Map<String, Boolean> predictions = new HashMap<>();
+                    predictions.put("male", sIdx % 5 == 0);
+                    predictions.put("female", sIdx % 5 == 0);
+                    predictions.put("kids", sIdx % 5 == 0);
+                    predictions.put("teenagers", sIdx % 5 == 0);
+                    predictions.put("adults", sIdx % 5 == 0);
                     supports.createSupport(
-                            exhibitId, supporters[sIdx],
-                            String.format("Support for %d by %s", exhibitId, supporters[sIdx].getUsername())
+                            exhibitId, new Survey(
+                                    (sIdx + eIdx) % 10, predictions,
+                                    (sIdx + eIdx + 3) % 10,
+                                    supporters[sIdx].getId()
+                            )
                     );
                 }
             }

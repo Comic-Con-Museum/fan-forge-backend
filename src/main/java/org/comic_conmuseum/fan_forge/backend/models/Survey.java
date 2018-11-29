@@ -6,6 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Survey {
+    // These should _never_ be referenced directly if at all possible. It
+    // must also never, ever be edited. If you edit it, I will slap you.
+    public static final String[] POPULATIONS = {
+            "male", "female", "kids", "teenagers", "adults"
+    };
+    
     public final String supporter;
     public final int visits;
     public final Map<String, Boolean> populations;
@@ -22,11 +28,9 @@ public class Survey {
         this.supporter = rs.getString("supporter");
         this.visits = rs.getInt("visits");
         this.populations = new HashMap<>();
-        this.populations.put("male", rs.getBoolean("pop_male"));
-        this.populations.put("female", rs.getBoolean("pop_female"));
-        this.populations.put("kids", rs.getBoolean("pop_kids"));
-        this.populations.put("teenagers", rs.getBoolean("pop_teenagers"));
-        this.populations.put("adults", rs.getBoolean("pop_adults"));
+        for (String pop : POPULATIONS) {
+            this.populations.put(pop, rs.getBoolean("pop_" + pop));
+        }
         this.nps = rs.getInt("nps");
     }
 }

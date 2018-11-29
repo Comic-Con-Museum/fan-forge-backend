@@ -1,17 +1,17 @@
 package org.comic_conmuseum.fan_forge.backend.endpoints;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.comic_conmuseum.fan_forge.backend.endpoints.responses.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -34,23 +34,6 @@ public class GlobalExceptionHandler {
     
     // TODO Custom error handler for 404 and 401
     // TODO Make sure /error is not used
-    
-    private static class ErrorResponse {
-        private String error;
-        private String fix;
-        private String requestId;
-        
-        public ErrorResponse(String error, String fix) {
-            this.error = error;
-            this.fix = fix;
-            this.requestId = MDC.get("request");
-        }
-
-        public String getError() { return error; }
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        public String getFix() { return fix; }
-        public String getCode() { return requestId; }
-    }
     
     private static class InternalServerError extends ErrorResponse {
         public InternalServerError(String briefDesc) {
@@ -139,6 +122,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> unwrapReflectionError(HttpServletRequest req, InvocationTargetException e) throws Throwable {
         LOG.info("Unwrapping exception {}", e);
         throw e.getTargetException();
+    }
+    
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> badHttpRequest(HttpServletRequest req, HttpMessageNotReadableException e) {
+        LOG.info("Bad HTTP body");
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+                "Body expected but none provided",
+                "Provide a body that follows the documented requirements."
+        ));
     }
     
     @ExceptionHandler(Throwable.class)

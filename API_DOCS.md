@@ -558,9 +558,20 @@ as is the one which will be recorded as supporting this endpoint.
 
 ### Request body
 
-When supporting an exhibit, a survey is presented by the frontend. The request
-body contains the survey data. As the specific survey questions haven't been
-decided yet, this is taken as a raw string and saved as-is.
+```
+{
+  visits: integer // How many times the respondent would visit this exhibit
+  nps: integer // The NPS rating of the user
+  populations: { // Which populations the respondent thinks would like this
+    // for each of these: `true` means the population would support it
+    male: boolean
+    female: boolean
+    kids: boolean
+    teenagers: boolean
+    adults: boolean
+  }
+}
+```
 
 ## `DELETE /support/exhibit/{id}`
 
@@ -571,7 +582,7 @@ Remove the current user's support for this exhibit
 You must be authorized to hit this endpint. The user you're authorized
 as is the one whose support will be removed.
 
-## `GET /admin/support/{id}`
+## `GET /admin/supports/{id}`
 
 Get all of the survey data for a given exhibit.
 
