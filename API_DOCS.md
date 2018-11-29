@@ -561,7 +561,7 @@ as is the one which will be recorded as supporting this endpoint.
 ```
 {
   visits: integer // [1-10] How many times the respondent would visit this exhibit
-  rating: integer // [1-10] Rating given by the user, for NPS calculation
+  rating: integer // [0-10] Rating given by the user, for NPS calculation
   populations: { // Which populations the respondent thinks would like this
     // for each of these: `true` means the population would support it
     male: boolean

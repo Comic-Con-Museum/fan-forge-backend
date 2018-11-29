@@ -40,7 +40,7 @@ public class SupportQueryBean {
                 "    sid SERIAL PRIMARY KEY, " +
                 "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
-                "    visits INTEGER NOT NULL CHECK (0 <= visits AND visits <= 10), " +
+                "    visits INTEGER NOT NULL CHECK (1 <= visits AND visits <= 10), " +
                 "    rating INTEGER NOT NULL CHECK (0 <= rating AND rating <= 10), " +
                 "    " + POPULATIONS_COLUMN_DEFS + ", " +
                 // we shouldn't have the same person supporting the same exhibit more than once
