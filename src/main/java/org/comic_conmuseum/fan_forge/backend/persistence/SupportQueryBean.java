@@ -209,6 +209,6 @@ public class SupportQueryBean {
                 }
         );
         
-        return new SurveyAggregate(nps, expVisitPercents, expPopulations);
+        return new SurveyAggregate(total, nps, expVisitPercents, expPopulations);
     }
 }
