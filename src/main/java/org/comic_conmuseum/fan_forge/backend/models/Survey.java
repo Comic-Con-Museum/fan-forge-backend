@@ -6,12 +6,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Survey {
-    // These should _never_ be referenced directly if at all possible. It
-    // must also never, ever be edited. If you edit it, I will slap you.
-    public static final String[] POPULATIONS = {
-            "male", "female", "kids", "teenagers", "adults"
-    };
-    
+    public enum Population {
+        MALE, FEMALE, KIDS, TEENAGERS, ADULTS;
+
+        private final String lowercase;
+
+        Population() {
+            this.lowercase = this.name().toLowerCase();
+        }
+
+        public String displayName() { return lowercase; }
+        public String columnName() { return "pop_" + this.lowercase; }
+        public String sqlParam() { return ":" + columnName(); }
+
+    }
+
     public final String supporter;
     public final int visits;
     public final Map<String, Boolean> populations;
@@ -28,8 +37,8 @@ public class Survey {
         this.supporter = rs.getString("supporter");
         this.visits = rs.getInt("visits");
         this.populations = new HashMap<>();
-        for (String pop : POPULATIONS) {
-            this.populations.put(pop, rs.getBoolean("pop_" + pop));
+        for (Population pop : Population.values()) {
+            this.populations.put(pop.displayName(), rs.getBoolean("pop_" + pop));
         }
         this.rating = rs.getInt("rating");
     }

@@ -34,8 +34,8 @@ public class ExhibitSupportEndpoints {
                     "Provide all the fields"
             ));
         }
-        for (String pop : Survey.POPULATIONS) {
-            if (!data.getPopulations().containsKey(pop)) {
+        for (Survey.Population pop : Survey.Population.values()) {
+            if (!data.getPopulations().containsKey(pop.displayName())) {
                 return ResponseEntity.badRequest().body(new ErrorResponse(
                         "Must provide all populations -- see documentation",
                         "Provide all of the populations"

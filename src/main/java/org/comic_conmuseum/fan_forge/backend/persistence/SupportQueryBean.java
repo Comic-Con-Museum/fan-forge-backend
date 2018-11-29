@@ -27,8 +27,8 @@ public class SupportQueryBean {
     }
     
     private static final String POPULATIONS_COLUMN_DEFS =
-            Arrays.stream(Survey.POPULATIONS)
-                    .map(pop -> "pop_" + pop + " BOOLEAN NOT NULL")
+            Arrays.stream(Survey.Population.values())
+                    .map(pop -> pop.columnName() + " BOOLEAN NOT NULL")
                     .collect(Collectors.joining(", "));
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
@@ -93,9 +93,13 @@ public class SupportQueryBean {
     }
     
     private static final String POPULATIONS_COLUMN_NAMES =
-            Arrays.stream(Survey.POPULATIONS).map(s -> "pop_" + s).collect(Collectors.joining(", "));
+            Arrays.stream(Survey.Population.values())
+                    .map(Survey.Population::columnName)
+                    .collect(Collectors.joining(", "));
     private static final String POPULATIONS_PARAMS =
-            Arrays.stream(Survey.POPULATIONS).map(s -> ":pop_" + s).collect(Collectors.joining(", "));
+            Arrays.stream(Survey.Population.values())
+                    .map(Survey.Population::sqlParam)
+                    .collect(Collectors.joining(", "));
     public boolean createSupport(long eid, Survey survey) {
         LOG.info("{} supporting {}", survey.supporter, eid);
         try {
@@ -104,8 +108,8 @@ public class SupportQueryBean {
                             .addValue("supporter", survey.supporter)
                             .addValue("visits", survey.visits)
                             .addValue("rating", survey.rating);
-            for (String pop : Survey.POPULATIONS) {
-                params.addValue("pop_" + pop, survey.populations.get(pop));
+            for (Survey.Population pop : Survey.Population.values()) {
+                params.addValue(pop.columnName(), survey.populations.get(pop.displayName()));
             }
             sql.update(
                     "INSERT INTO supports (" +
@@ -170,8 +174,8 @@ public class SupportQueryBean {
     }
     
     private static final String POPULATION_COUNT_QUERIES =
-            Arrays.stream(Survey.POPULATIONS)
-                    .map(p -> "COUNT(sid) FILTER (WHERE pop_"+p+") AS pop_"+p+"_count")
+            Arrays.stream(Survey.Population.values())
+                    .map(p -> "COUNT(sid) FILTER (WHERE " + p.columnName() + ") AS " + p.columnName() + "_count")
                     .collect(Collectors.joining(", "));
     public SurveyAggregate getAggregateData(long eid) {
         LOG.info("Getting survey aggregate data for {}", eid);
@@ -202,8 +206,8 @@ public class SupportQueryBean {
                 params,
                 (rs, rn) -> {
                     Map<String, Float> ret = new HashMap<>();
-                    for (String pop : Survey.POPULATIONS) {
-                        ret.put(pop, (float) rs.getLong("pop_" + pop + "_count") / total);
+                    for (Survey.Population pop : Survey.Population.values()) {
+                        ret.put(pop.displayName(), (float) rs.getLong(pop.columnName() + "_count") / total);
                     }
                     return ret;
                 }
