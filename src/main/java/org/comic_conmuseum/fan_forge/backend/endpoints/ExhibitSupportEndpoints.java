@@ -42,6 +42,18 @@ public class ExhibitSupportEndpoints {
                 ));
             }
         }
+        if (data.getRating() < 0 || 10 < data.getRating()) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(
+                    "Invalid rating -- must be in [0,10]",
+                    "Pass a rating in the valid range"
+            ));
+        }
+        if (data.getVisits() < 1 || 10 < data.getVisits()) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(
+                    "Invalid visits -- must be in [1,10]",
+                    "Pass a visits in the valid range"
+            ));
+        }
         boolean newSupporter = supports.createSupport(id, data.build(user));
         LOG.info("New supporter? {}", newSupporter);
         if (newSupporter) {

@@ -111,7 +111,7 @@ public class Application implements CommandLineRunner {
                     predictions.put("adults", (sIdx + eIdx) % 6 == 0);
                     supports.createSupport(
                             exhibitId, new Survey(
-                                    (sIdx + eIdx) % 10, predictions,
+                                    ((sIdx + eIdx) % 9) + 1, predictions,
                                     (sIdx + eIdx + 3) % 10,
                                     supporters[sIdx].getId()
                             )
