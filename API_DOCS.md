@@ -149,6 +149,7 @@ You can also filter by several things. All of these parameters are optional:
         description: string // its description
         image: integer // the ID of the actual image
       }
+      featured: boolean // if the exhibit is featured by the staff at Comic-Con
       supporters: integer // How many people have supported the exhibit
       // requires login:
       isSupported: boolean // Whether or not the current user supports it
@@ -181,6 +182,7 @@ returns a 404.
   supporters: integer // How many people have supported the exhibit
   author: string // The username of the creator of the exhibit
   created: datetime // When the exhibit was created
+  featured: boolean // if the exhibit is featured by the staff at Comic-Con
   tags: [ string ] // The tags of the exhibit
   artifacts: [ // The artifacts associated with this exhibit
     {
@@ -578,6 +580,34 @@ Get all of the survey data for a given exhibit.
 ### Authorization
 
 You must be authorized as an admin to hit this endpoint.
+
+
+## `POST /admin/feature/{id}`
+
+Marks an exhibit as featured.
+If the exhibit is already featured, this will have no effect.
+
+### Authorization
+
+You must be authorized as an admin to hit this endpoint.
+
+### Response
+ - 204 if the exhibit exists and you are an admin
+ - 404 if the exhibit does not exist
+
+
+## `DELETE /admin/feature/{id}`
+
+Un-marks an exhibit as featured.
+If the exhibit is already not featured, this will have no effect.
+
+### Authorization
+
+You must be authorized as an admin to hit this endpoint.
+
+### Response
+ - 204 if the exhibit exists and you are an admin
+ - 404 if the exhibit does not exist
 
 ## `GET /image/{id}`
 
