@@ -1,6 +1,6 @@
 package org.comic_conmuseum.fan_forge.backend.persistence;
 
-import org.comic_conmuseum.fan_forge.backend.models.SurveyAggregate;
+import org.comic_conmuseum.fan_forge.backend.endpoints.responses.SurveyAggregate;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
@@ -41,9 +41,9 @@ public class SupportQueryBean {
                 "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "    visits INTEGER NOT NULL CHECK (0 <= visits AND visits <= 10), " +
+                "    rating INTEGER NOT NULL CHECK (0 <= rating AND rating <= 10), " +
                 "    " + POPULATIONS_COLUMN_DEFS + ", " +
-                "    nps INTEGER NOT NULL CHECK (0 <= nps AND nps <= 10), " +
-        // we shouldn't have the same person supporting the same exhibit more than once
+                // we shouldn't have the same person supporting the same exhibit more than once
                 "    UNIQUE (exhibit, supporter)" +
                 ")",
                 PreparedStatement::execute
@@ -91,11 +91,11 @@ public class SupportQueryBean {
         }
         return supporterCount;
     }
-
-    private static final String POPULATIONS_PARAMS =
-            Arrays.stream(Survey.POPULATIONS).map(s -> ":pop_" + s).collect(Collectors.joining(", "));
+    
     private static final String POPULATIONS_COLUMN_NAMES =
             Arrays.stream(Survey.POPULATIONS).map(s -> "pop_" + s).collect(Collectors.joining(", "));
+    private static final String POPULATIONS_PARAMS =
+            Arrays.stream(Survey.POPULATIONS).map(s -> ":pop_" + s).collect(Collectors.joining(", "));
     public boolean createSupport(long eid, Survey survey) {
         LOG.info("{} supporting {}", survey.supporter, eid);
         try {
@@ -103,16 +103,16 @@ public class SupportQueryBean {
                     new MapSqlParameterSource("exhibit", eid)
                             .addValue("supporter", survey.supporter)
                             .addValue("visits", survey.visits)
-                            .addValue("nps", survey.nps);
+                            .addValue("rating", survey.rating);
             for (String pop : Survey.POPULATIONS) {
                 params.addValue("pop_" + pop, survey.populations.get(pop));
             }
             sql.update(
                     "INSERT INTO supports (" +
-                    "    exhibit, supporter, visits, nps, " + POPULATIONS_COLUMN_NAMES +
+                    "    exhibit, supporter, visits, rating, " + POPULATIONS_COLUMN_NAMES +
                     ") " +
                     "VALUES (" +
-                    "    :exhibit, :supporter, :visits, :nps, " +
+                    "    :exhibit, :supporter, :visits, :rating, " +
                     "    " + POPULATIONS_PARAMS +
                     ")",
                     params
@@ -147,20 +147,68 @@ public class SupportQueryBean {
         );
     }
     
-    public SurveyAggregate getAggregateData(long eid) {
-        LOG.info("Getting survey aggregate data for {}", eid);
-        
-        return sql.queryForObject(
-                "SELECT COUNT(*) AS total_supports, " +
-                "       SUM(CASE " +
-                "         WHEN nps >= 9 THEN 1" +
-                "         WHEN nps <= 6 THEN -1  " +
-                "         ELSE 0" +
-                "       END) AS net_supports " +
+    private int getNPS(long eid, long total) {
+        Long npsCount = sql.queryForObject(
+                "SELECT SUM(CASE " +
+                "         WHEN rating >= 9 THEN 1 " +
+                "         WHEN rating <= 6 THEN -1 " +
+                "         ELSE 0 " +
+                "       END) " +
                 "FROM supports " +
                 "WHERE exhibit = :eid",
                 new MapSqlParameterSource("eid", eid),
-                SurveyAggregate::new
+                Long.class
         );
+        if (npsCount == null) {
+            throw new EmptyResultDataAccessException("Somehow no COUNT(*) returned", 1);
+        }
+        return Math.round(100 * (float) npsCount / total);
+    }
+    
+    public int getNPS(long eid) {
+        return getNPS(eid, this.getSupporterCount(eid));
+    }
+    
+    private static final String POPULATION_COUNT_QUERIES =
+            Arrays.stream(Survey.POPULATIONS)
+                    .map(p -> "COUNT(sid) FILTER (WHERE pop_"+p+") AS pop_"+p+"_count")
+                    .collect(Collectors.joining(", "));
+    public SurveyAggregate getAggregateData(long eid) {
+        LOG.info("Getting survey aggregate data for {}", eid);
+        
+        MapSqlParameterSource params = new MapSqlParameterSource("eid", eid);
+        
+        long total = this.getSupporterCount(eid);
+        
+        int nps = this.getNPS(eid, total);
+        
+        Long[] expVisitCounts = sql.queryForList(
+                "SELECT COUNT(sid) AS count " +
+                "FROM GENERATE_SERIES(0, 9) r " +
+                "LEFT JOIN supports ON visits = r " +
+                "      AND exhibit = :eid " +
+                "GROUP BY r " +
+                "ORDER BY r ",
+                params,
+                Long.class
+        ).toArray(new Long[0]);
+        double[] expVisitPercents = Arrays.stream(expVisitCounts)
+                .mapToDouble(l -> (double) l / total)
+                .toArray();
+        
+        Map<String, Float> expPopulations = sql.queryForObject(
+                "SELECT " + POPULATION_COUNT_QUERIES + " " +
+                "FROM supports WHERE exhibit = :eid",
+                params,
+                (rs, rn) -> {
+                    Map<String, Float> ret = new HashMap<>();
+                    for (String pop : Survey.POPULATIONS) {
+                        ret.put(pop, (float) rs.getLong("pop_" + pop + "_count") / total);
+                    }
+                    return ret;
+                }
+        );
+        
+        return new SurveyAggregate(nps, expVisitPercents, expPopulations);
     }
 }

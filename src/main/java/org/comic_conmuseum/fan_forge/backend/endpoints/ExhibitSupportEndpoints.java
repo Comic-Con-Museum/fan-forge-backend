@@ -3,6 +3,7 @@ package org.comic_conmuseum.fan_forge.backend.endpoints;
 import org.comic_conmuseum.fan_forge.backend.endpoints.inputs.SurveyCreation;
 import org.comic_conmuseum.fan_forge.backend.endpoints.responses.ErrorResponse;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
+import org.comic_conmuseum.fan_forge.backend.endpoints.responses.SurveyAggregate;
 import org.comic_conmuseum.fan_forge.backend.persistence.SupportQueryBean;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.slf4j.Logger;
@@ -10,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class ExhibitSupportEndpoints {
@@ -25,9 +28,9 @@ public class ExhibitSupportEndpoints {
     public ResponseEntity supportExhibit(@PathVariable int id, @RequestBody SurveyCreation data,
                                          @AuthenticationPrincipal User user) {
         LOG.info("Supporting {} as {}", id, user);
-        if (data.getVisits() == null || data.getPopulations() == null || data.getNps() == null) {
+        if (data.getVisits() == null || data.getPopulations() == null || data.getRating() == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse(
-                    "Must provide all fields -- visit, populations, and nps",
+                    "Must provide all fields -- visit, populations, and rating",
                     "Provide all the fields"
             ));
         }
@@ -61,7 +64,12 @@ public class ExhibitSupportEndpoints {
     }
 
     @RequestMapping(value = "/admin/supports/{eid}", method = RequestMethod.GET)
-    public ResponseEntity getSurveys(@PathVariable long eid) {
+    public ResponseEntity<List<Survey>> getSurveys(@PathVariable long eid) {
         return ResponseEntity.ok(supports.getSurveys(eid));
+    }
+    
+    @RequestMapping(value = "/admin/survey-data/{eid}", method = RequestMethod.GET)
+    public ResponseEntity<SurveyAggregate> getAggregate(@PathVariable long eid) {
+        return ResponseEntity.ok(supports.getAggregateData(eid));
     }
 }

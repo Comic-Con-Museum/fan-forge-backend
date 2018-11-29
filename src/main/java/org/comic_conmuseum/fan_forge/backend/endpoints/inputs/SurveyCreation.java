@@ -8,17 +8,17 @@ import java.util.Map;
 public class SurveyCreation {
     private Integer visits;
     private Map<String, Boolean> populations;
-    private Integer nps;
+    private Integer rating;
 
     public Survey build(User by) {
-        return new Survey(visits, populations, nps, by.getId());
+        return new Survey(visits, populations, rating, by.getId());
     }
     
     public Integer getVisits() { return visits; }
     public Map<String, Boolean> getPopulations() { return populations; }
-    public Integer getNps() { return nps; }
+    public Integer getRating() { return rating; }
     
     public void setVisits(Integer visits) { this.visits = visits; }
     public void setPopulations(Map<String, Boolean> populations) { this.populations = populations; }
-    public void setNps(Integer nps) { this.nps = nps; }
+    public void setRating(Integer rating) { this.rating = rating; }
 }

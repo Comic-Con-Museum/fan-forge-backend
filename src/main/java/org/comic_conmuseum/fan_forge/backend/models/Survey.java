@@ -15,12 +15,12 @@ public class Survey {
     public final String supporter;
     public final int visits;
     public final Map<String, Boolean> populations;
-    public final int nps;
+    public final int rating;
 
-    public Survey(int visits, Map<String, Boolean> populations, int nps, String supporter) {
+    public Survey(int visits, Map<String, Boolean> populations, int rating, String supporter) {
         this.visits = visits;
         this.populations = populations;
-        this.nps = nps;
+        this.rating = rating;
         this.supporter = supporter;
     }
 
@@ -31,6 +31,6 @@ public class Survey {
         for (String pop : POPULATIONS) {
             this.populations.put(pop, rs.getBoolean("pop_" + pop));
         }
-        this.nps = rs.getInt("nps");
+        this.rating = rs.getInt("rating");
     }
 }
