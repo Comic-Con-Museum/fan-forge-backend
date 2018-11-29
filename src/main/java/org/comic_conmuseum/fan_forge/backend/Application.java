@@ -104,11 +104,11 @@ public class Application implements CommandLineRunner {
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
                     Map<String, Boolean> predictions = new HashMap<>();
-                    predictions.put("male", sIdx % 5 == 0);
-                    predictions.put("female", sIdx % 5 == 0);
-                    predictions.put("kids", sIdx % 5 == 0);
-                    predictions.put("teenagers", sIdx % 5 == 0);
-                    predictions.put("adults", sIdx % 5 == 0);
+                    predictions.put("male", (sIdx + eIdx) % 2 == 0);
+                    predictions.put("female", (sIdx + eIdx) % 3 == 0);
+                    predictions.put("kids", (sIdx + eIdx) % 4 == 0);
+                    predictions.put("teenagers", (sIdx + eIdx) % 5 == 0);
+                    predictions.put("adults", (sIdx + eIdx) % 6 == 0);
                     supports.createSupport(
                             exhibitId, new Survey(
                                     (sIdx + eIdx) % 10, predictions,
