@@ -423,10 +423,6 @@ You must be authorized to hit this endpoint.
 >   
 >   Until that bug is fixed, this API literally cannot comply with the HTTP
     standard, or be RESTful. Oh well.
->   
->   Now, in this case, Apache does allow it, but for consistency, we use the
-    same verb. It's simpler if we use the same HTTP-noncompliant but Roy
-    Fielding-approved syntax everywhere.
 
 Edit an artifact.
 
@@ -518,6 +514,10 @@ You must be authorized to hit this endpoint.
 >   
 >   Until that bug is fixed, this API literally cannot comply with the HTTP
     standard, or be RESTful. Oh well.
+>   
+>   Now, in this case, Apache does allow it, but for consistency, we use the
+    same verb. It's simpler if we use the same HTTP-noncompliant but Roy
+    Fielding-approved syntax everywhere.
 
 Edit a comment.
 
@@ -589,6 +589,49 @@ Get all of the survey data for a given exhibit.
 ### Authorization
 
 You must be authorized as an admin to hit this endpoint.
+
+### Response body
+
+```
+[ { // Returns an array of objects, each describing one support
+  supporter: string // The supporter
+  visits: integer // How many times the supporter thinks people will see it
+  rating: integer // The supporter's rating of this exhibit
+  populations: { // If the supporter thinks various demographics will like it
+    male: boolean
+    female: boolean
+    kids: boolean
+    teenagers: boolean
+    adults: boolean
+] }
+```
+
+## `GET /admin/survey-data/{id}`
+
+Get a variety of aggregate data about the surveys of the exhibit.
+
+### Authorization
+
+You must be authorized as an admin to hit this endpoint.
+
+### Response body
+
+```
+{
+  total: integer // The total number of people who supported this exhibit
+  nps: integer // The Net Promoter Score of this exhibit
+  visitsExpected: [ // The columns for the expected-visits bar char
+    float // what proportion of people think people will visit that often
+  ],
+  populationsExpected { // the proportion of people who think each will like it
+    male: float
+    female: float
+    kids: float
+    teenagers: float
+    adults: float
+  }
+}
+```
 
 ## `GET /image/{id}`
 
