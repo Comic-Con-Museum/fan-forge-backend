@@ -91,7 +91,7 @@ public class SupportQueryBean {
     }
 
     public boolean createSupport(long eid, Survey survey) {
-        LOG.info("{} supporting {}; survey: {}", by.getUsername(), eid, survey);
+        LOG.info("{} supporting {}; survey: {}", survey.supporter, eid, survey);
         try {
             sql.update(
                     "INSERT INTO supports (" +
