@@ -47,7 +47,7 @@ public class ArtifactQueryBean {
                 "    created TIMESTAMP WITH TIME ZONE NOT NULL " +
                 ");" +
                 // Partial index to ensure no exhibits have more than one cover
-                "CREATE UNIQUE INDEX one_cover_per_exhibit " +
+                "CREATE UNIQUE INDEX IF NOT EXISTS one_cover_per_exhibit " +
                 "ON artifacts(exhibit) " +
                 "WHERE cover;",
                 PreparedStatement::execute
