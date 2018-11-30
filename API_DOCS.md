@@ -124,13 +124,15 @@ details about any given exhibit, use `GET /exhibit/{id}`.
 
 ### Query parameters
 
- *  `startIdx` (**required**): The starting index of the list of exhibits to
-    return.
-
-You can also filter by several things. All of these parameters are optional:
-
- *  `tag`: Show only exhibits which have that tag.
- *  `author`: Show only exhibits by that author.
+ *  `startIdx` (**optional**): The starting index of the list of exhibits to
+    return. Defaults to 0.
+ *  `pageSize` (**optional**): The maximum number of exhibits to return.
+    Defaults to 10, and maximum is 50. Anything more than the maximum will be
+    taken as the maximum instead.
+ *  `tag` (**optional**): The tag to filter by. If passed, the query is applied
+    only to posts with that tag (including `count`).
+ *  `author` (**optional**): The author to filter by. If passed, the query is
+    applied only to posts by that author (including `count`).
 
 ### Response
 
