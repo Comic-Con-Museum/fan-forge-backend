@@ -1,6 +1,6 @@
 ### What does this PR do?
 
-Fixes #n
+Resolves #n
 
 ### Migration
 
