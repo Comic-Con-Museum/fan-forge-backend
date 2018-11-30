@@ -50,10 +50,10 @@ public class Feed {
     public final int pageSize;
     public final List<Entry> exhibits;
     
-    public Feed(long startIdx, long count, List<Entry> exhibits) {
+    public Feed(long startIdx, int pageSize, long count, List<Entry> exhibits) {
         this.startIdx = startIdx;
         this.count = count;
-        this.pageSize = ExhibitQueryBean.PAGE_SIZE;
+        this.pageSize = pageSize;
         this.exhibits = exhibits;
     }
 }
