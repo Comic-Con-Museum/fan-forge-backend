@@ -41,7 +41,7 @@ public class Feed {
             this.supporters = supporters;
             this.supported = supported;
             this.comments = comments;
-            this.featured = of.getFeatured();
+            this.featured = of.isFeatured();
         }
     }
     

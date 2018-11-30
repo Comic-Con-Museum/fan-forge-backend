@@ -108,8 +108,8 @@ public class Application implements CommandLineRunner {
                     null, false
             ), original);
 
-            // exhibit 1 is featured
-            if (exhibitId == 1) {
+            // exhibit 1 and 11 are featured
+            if (exhibitId % 10 == 1) {
                 exhibits.markFeatured(exhibitId);
             }
 

@@ -591,10 +591,6 @@ If the exhibit is already featured, this will have no effect.
 
 You must be authorized as an admin to hit this endpoint.
 
-### Response
- - 204 if the exhibit exists and you are an admin
- - 404 if the exhibit does not exist
-
 
 ## `DELETE /admin/feature/{id}`
 
@@ -605,9 +601,6 @@ If the exhibit is already not featured, this will have no effect.
 
 You must be authorized as an admin to hit this endpoint.
 
-### Response
- - 204 if the exhibit exists and you are an admin
- - 404 if the exhibit does not exist
 
 ## `GET /image/{id}`
 

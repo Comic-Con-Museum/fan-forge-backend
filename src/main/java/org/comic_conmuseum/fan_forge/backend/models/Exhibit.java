@@ -47,7 +47,7 @@ public class Exhibit {
     public Instant getCreated() { return created; }
     public String[] getTags() { return tags; }
     public Artifact getCover() { return cover; }
-    public boolean getFeatured() { return featured; }
+    public boolean isFeatured() { return featured; }
 
     public void setId(long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
