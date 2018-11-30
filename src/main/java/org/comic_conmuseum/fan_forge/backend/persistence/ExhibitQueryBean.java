@@ -23,7 +23,7 @@ import java.util.Map;
 public class ExhibitQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.exhibits");
     
-    public static final int PAGE_SIZE = 10;
+    public static final int MAX_PAGE_SIZE = 50;
 
     public enum FeedType {
         recent("created", true),
@@ -182,7 +182,7 @@ public class ExhibitQueryBean {
         }
     }
     
-    public List<Exhibit> getFeed(FeedType type, int startIdx, Map<String, String> filters) {
+    public List<Exhibit> getFeed(FeedType type, long startIdx, int pageSize, Map<String, String> filters) {
         LOG.info("Getting {} feed", type);
 
         StringBuilder query = new StringBuilder(
@@ -199,7 +199,7 @@ public class ExhibitQueryBean {
         
         // TODO Add support for reversing
         query.append("ORDER BY ").append(type.getSql(false)).append(" LIMIT :limit OFFSET :offset");
-        params.addValue("limit", PAGE_SIZE);
+        params.addValue("limit", pageSize);
         params.addValue("offset", startIdx);
         
         return sql.query(query.toString(), params, Exhibit::new);

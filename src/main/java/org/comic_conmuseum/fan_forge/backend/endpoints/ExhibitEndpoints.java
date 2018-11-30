@@ -52,7 +52,9 @@ public class ExhibitEndpoints {
 
     // TODO separate out into its own class?
     @RequestMapping(value = "/feed/{type}", method = RequestMethod.GET)
-    public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName, @RequestParam int startIdx,
+    public ResponseEntity<Feed> getFeed(@PathVariable("type") String feedName,
+                                        @RequestParam(defaultValue = "0") long startIdx,
+                                        @RequestParam(defaultValue = "10") int pageSize,
                                         // `filters` also includes other stuff, but that'll be filtered out by getFeed
                                         @RequestParam Map<String, String> filters,
                                         @AuthenticationPrincipal User user) {
@@ -64,11 +66,14 @@ public class ExhibitEndpoints {
             // to a real endpoint
             return ResponseEntity.notFound().build();
         }
+        if (pageSize > ExhibitQueryBean.MAX_PAGE_SIZE) {
+            pageSize = ExhibitQueryBean.MAX_PAGE_SIZE;
+        }
         try (TransactionWrapper.Transaction tr = transactions.start()) {
             long count = exhibits.getCount(filters);
             // This can definitely be combined into one query if necessary
-            // or even just two (instead of PAGE_SIZE+1)
-            List<Exhibit> feedRaw = exhibits.getFeed(feed, startIdx, filters);
+            // or even just two (instead of (4*pageSize)+1)
+            List<Exhibit> feedRaw = exhibits.getFeed(feed, startIdx, pageSize, filters);
             List<Feed.Entry> entries = feedRaw.stream().map(exhibit ->
                     new Feed.Entry(
                         exhibit, supports.getSupporterCount(exhibit),
@@ -77,7 +82,7 @@ public class ExhibitEndpoints {
                     )
             ).collect(Collectors.toList());
             tr.commit();
-            return ResponseEntity.ok(new Feed(startIdx, count, entries));
+            return ResponseEntity.ok(new Feed(startIdx, pageSize, count, entries));
         } // no catch because we're just closing the transaction, we want errors to fall through
     }
 
