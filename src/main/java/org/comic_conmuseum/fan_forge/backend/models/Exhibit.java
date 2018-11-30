@@ -12,9 +12,10 @@ public class Exhibit {
     private Instant created;
     private String[] tags;
     private Artifact cover;
+    private boolean featured;
 
     public Exhibit(long eid, String title, String description, String author,
-                   Instant created, String[] tags, Artifact cover) {
+                   Instant created, String[] tags, Artifact cover, boolean featured) {
         this.id = eid;
         this.title = title;
         this.description = description;
@@ -22,6 +23,7 @@ public class Exhibit {
         this.created = created;
         this.tags = tags;
         this.cover = cover;
+        this.featured = featured;
     }
 
     public Exhibit (ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
@@ -32,7 +34,8 @@ public class Exhibit {
                 rs.getString("author"),
                 rs.getTimestamp("created").toInstant(),
                 (String[]) rs.getArray("tags").getArray(),
-                rs.getString("atitle") != null ? Artifact.coverFromJoined(rs) : null
+                rs.getString("atitle") != null ? Artifact.coverFromJoined(rs) : null,
+                rs.getBoolean("featured")
         );
     }
 
@@ -44,7 +47,8 @@ public class Exhibit {
     public Instant getCreated() { return created; }
     public String[] getTags() { return tags; }
     public Artifact getCover() { return cover; }
-    
+    public boolean isFeatured() { return featured; }
+
     public void setId(long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
