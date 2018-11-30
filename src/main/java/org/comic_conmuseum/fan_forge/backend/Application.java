@@ -1,9 +1,6 @@
 package org.comic_conmuseum.fan_forge.backend;
 
-import org.comic_conmuseum.fan_forge.backend.models.Artifact;
-import org.comic_conmuseum.fan_forge.backend.models.Comment;
-import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
-import org.comic_conmuseum.fan_forge.backend.models.User;
+import org.comic_conmuseum.fan_forge.backend.models.*;
 import org.comic_conmuseum.fan_forge.backend.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
@@ -101,16 +96,32 @@ public class Application implements CommandLineRunner {
         for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
             String title = exhibitTitles.get(eIdx);
             Instant exhibitMade = Instant.now().minus(eIdx + 5, ChronoUnit.DAYS);
+            // tags are based on even/odd indexes
             long exhibitId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
                     exhibitMade, new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
-                    null
+                    null, false
             ), original);
+
+            // exhibit 1 and 11 are featured
+            if (exhibitId % 10 == 1) {
+                exhibits.markFeatured(exhibitId);
+            }
+
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
+                    Map<String, Boolean> predictions = new HashMap<>();
+                    predictions.put("male", (sIdx + eIdx) % 2 == 0);
+                    predictions.put("female", (sIdx + eIdx) % 3 == 0);
+                    predictions.put("kids", (sIdx + eIdx) % 4 == 0);
+                    predictions.put("teenagers", (sIdx + eIdx) % 5 == 0);
+                    predictions.put("adults", (sIdx + eIdx) % 6 == 0);
                     supports.createSupport(
-                            exhibitId, supporters[sIdx],
-                            String.format("Support for %d by %s", exhibitId, supporters[sIdx].getUsername())
+                            exhibitId, new Survey(
+                                    ((sIdx + eIdx) % 9) + 1, predictions,
+                                    (sIdx + eIdx + 3) % 10,
+                                    supporters[sIdx].getId()
+                            )
                     );
                 }
             }

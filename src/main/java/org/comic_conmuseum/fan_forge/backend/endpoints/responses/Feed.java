@@ -31,6 +31,7 @@ public class Feed {
         public final long comments;
         @JsonInclude(JsonInclude.Include.NON_NULL)
         public final Boolean supported;
+        public final boolean featured;
         
         public Entry(Exhibit of, long supporters, long comments, Boolean supported) {
             this.id = of.getId();
@@ -40,6 +41,7 @@ public class Feed {
             this.supporters = supporters;
             this.supported = supported;
             this.comments = comments;
+            this.featured = of.isFeatured();
         }
     }
     

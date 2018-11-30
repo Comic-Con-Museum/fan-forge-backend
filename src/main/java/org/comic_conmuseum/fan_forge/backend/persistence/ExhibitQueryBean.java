@@ -24,7 +24,7 @@ public class ExhibitQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.exhibits");
     
     public static final int PAGE_SIZE = 10;
-    
+
     public enum FeedType {
         recent("created", true),
         popular("(SELECT COUNT(*) FROM supports WHERE exhibit = eid)", true);
@@ -73,6 +73,7 @@ public class ExhibitQueryBean {
         sql.execute(
                 "CREATE TABLE IF NOT EXISTS exhibits ( " +
                 "   eid SERIAL PRIMARY KEY, " +
+                "   featured BOOLEAN NOT NULL, " +
                 "   title VARCHAR(255) NOT NULL, " +
                 "   description TEXT NOT NULL, " +
                 "   author TEXT ,"+//TODO INTEGER REFERENCES users(uid) ON DELETE SET NULL ON UPDATE CASCADE, " +
@@ -108,6 +109,7 @@ public class ExhibitQueryBean {
         args.put("author", by.getId());
         args.put("created", new java.sql.Date(ex.getCreated().toEpochMilli()));
         args.put("tags", ex.getTags());
+        args.put("featured", false);
         Number key = insert.executeAndReturnKey(args);
         if (key == null) {
             throw new SQLException("Failed to insert rows (no key generated)");
@@ -225,5 +227,25 @@ public class ExhibitQueryBean {
                 new MapSqlParameterSource(),
                 String.class
         );
+    }
+
+    /** Marks the exhibit by id as featured. If it is already, there is no effect */
+    public boolean markFeatured(long eid) {
+        LOG.info("Marking exhibit {} as featured", eid);
+        int count = sql.update("UPDATE exhibits " +
+                "SET featured = TRUE " +
+                "WHERE eid = :exhibit",
+                new MapSqlParameterSource("exhibit", eid));
+        return count == 1;
+    }
+
+    /** Removes the featured status of an exhibit by id. If it is not featured, there is no effect */
+    public boolean deleteFeatured(long eid) {
+        LOG.info("Marking exhibit {} as featured", eid);
+        int count = sql.update("UPDATE exhibits " +
+                        "SET featured = FALSE " +
+                        "WHERE eid = :exhibit",
+                new MapSqlParameterSource("exhibit", eid));
+        return count == 1;
     }
 }

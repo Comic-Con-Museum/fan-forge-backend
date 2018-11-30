@@ -149,6 +149,7 @@ You can also filter by several things. All of these parameters are optional:
         description: string // its description
         image: integer // the ID of the actual image
       }
+      featured: boolean // if the exhibit is featured by the staff at Comic-Con
       supporters: integer // How many people have supported the exhibit
       // requires login:
       isSupported: boolean // Whether or not the current user supports it
@@ -181,6 +182,7 @@ returns a 404.
   supporters: integer // How many people have supported the exhibit
   author: string // The username of the creator of the exhibit
   created: datetime // When the exhibit was created
+  featured: boolean // if the exhibit is featured by the staff at Comic-Con
   tags: [ string ] // The tags of the exhibit
   artifacts: [ // The artifacts associated with this exhibit
     {
@@ -423,10 +425,6 @@ You must be authorized to hit this endpoint.
 >   
 >   Until that bug is fixed, this API literally cannot comply with the HTTP
     standard, or be RESTful. Oh well.
->   
->   Now, in this case, Apache does allow it, but for consistency, we use the
-    same verb. It's simpler if we use the same HTTP-noncompliant but Roy
-    Fielding-approved syntax everywhere.
 
 Edit an artifact.
 
@@ -518,6 +516,10 @@ You must be authorized to hit this endpoint.
 >   
 >   Until that bug is fixed, this API literally cannot comply with the HTTP
     standard, or be RESTful. Oh well.
+>   
+>   Now, in this case, Apache does allow it, but for consistency, we use the
+    same verb. It's simpler if we use the same HTTP-noncompliant but Roy
+    Fielding-approved syntax everywhere.
 
 Edit a comment.
 
@@ -558,9 +560,20 @@ as is the one which will be recorded as supporting this endpoint.
 
 ### Request body
 
-When supporting an exhibit, a survey is presented by the frontend. The request
-body contains the survey data. As the specific survey questions haven't been
-decided yet, this is taken as a raw string and saved as-is.
+```
+{
+  visits: integer // [1-10] How many times the respondent would visit this exhibit
+  rating: integer // [0-10] Rating given by the user, for NPS calculation
+  populations: { // Which populations the respondent thinks would like this
+    // for each of these: `true` means the population would support it
+    male: boolean
+    female: boolean
+    kids: boolean
+    teenagers: boolean
+    adults: boolean
+  }
+}
+```
 
 ## `DELETE /support/exhibit/{id}`
 
@@ -571,13 +584,70 @@ Remove the current user's support for this exhibit
 You must be authorized to hit this endpint. The user you're authorized
 as is the one whose support will be removed.
 
-## `GET /admin/support/{id}`
+## `GET /admin/supports/{id}`
 
 Get all of the survey data for a given exhibit.
 
 ### Authorization
 
 You must be authorized as an admin to hit this endpoint.
+
+### Response body
+
+```
+[ { // Returns an array of objects, each describing one support
+  supporter: string // The supporter
+  visits: integer // How many times the supporter thinks people will see it
+  rating: integer // The supporter's rating of this exhibit
+  populations: { // If the supporter thinks various demographics will like it
+    male: boolean
+    female: boolean
+    kids: boolean
+    teenagers: boolean
+    adults: boolean
+] }
+```
+
+## `POST /admin/feature/{id}`
+
+Marks an exhibit as featured.
+If the exhibit is already featured, this will have no effect.
+
+### Authorization
+
+You must be authorized as an admin to hit this endpoint.
+
+## `DELETE /admin/feature/{id}`
+
+Un-marks an exhibit as featured.
+If the exhibit is already not featured, this will have no effect.
+
+### Authorization
+
+You must be authorized as an admin to hit this endpoint.
+
+## `GET /admin/survey-data/{id}`
+
+Get a variety of aggregate data about the surveys of the exhibit.
+
+### Response body
+
+```
+{
+  total: integer // The total number of people who supported this exhibit
+  nps: integer // The Net Promoter Score of this exhibit
+  visitsExpected: [ // The columns for the expected-visits bar char
+    float // what proportion of people think people will visit that often
+  ],
+  populationsExpected { // the proportion of people who think each will like it
+    male: float
+    female: float
+    kids: float
+    teenagers: float
+    adults: float
+  }
+}
+```
 
 ## `GET /image/{id}`
 

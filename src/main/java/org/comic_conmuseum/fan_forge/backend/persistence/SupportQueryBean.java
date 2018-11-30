@@ -1,5 +1,6 @@
 package org.comic_conmuseum.fan_forge.backend.persistence;
 
+import org.comic_conmuseum.fan_forge.backend.endpoints.responses.SurveyAggregate;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class SupportQueryBean {
@@ -24,6 +26,10 @@ public class SupportQueryBean {
         this.sql = sql;
     }
     
+    private static final String POPULATIONS_COLUMN_DEFS =
+            Arrays.stream(Survey.Population.values())
+                    .map(pop -> pop.columnName() + " BOOLEAN NOT NULL")
+                    .collect(Collectors.joining(", "));
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
         if (reset) {
@@ -34,8 +40,9 @@ public class SupportQueryBean {
                 "    sid SERIAL PRIMARY KEY, " +
                 "    exhibit SERIAL REFERENCES exhibits(eid) ON DELETE CASCADE ON UPDATE CASCADE, " +
                 "    supporter TEXT ,"+//TODO SERIAL REFERENCES users(uid) ON DELETE CASCADE ON UPDATE CASCADE, " +
-                // TODO Get actual survey data fields to use and use them
-                "    survey_data TEXT, " +
+                "    visits INTEGER NOT NULL CHECK (1 <= visits AND visits <= 10), " +
+                "    rating INTEGER NOT NULL CHECK (0 <= rating AND rating <= 10), " +
+                "    " + POPULATIONS_COLUMN_DEFS + ", " +
                 // we shouldn't have the same person supporting the same exhibit more than once
                 "    UNIQUE (exhibit, supporter)" +
                 ")",
@@ -59,11 +66,11 @@ public class SupportQueryBean {
                 "SELECT COUNT(*) FROM supports " +
                         "WHERE exhibit = :eid AND supporter = :supporter",
                 new MapSqlParameterSource("eid" ,exhibit)
-                    .addValue("supporter", user.getId()),
+                        .addValue("supporter", user.getId()),
                 Integer.class
         );
         if (countSupported == null) {
-            throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
+            throw new EmptyResultDataAccessException("Somehow no COUNT(*) returned", 1);
         }
         return countSupported == 1;
     }
@@ -80,20 +87,39 @@ public class SupportQueryBean {
                 Long.class
         );
         if (supporterCount == null) {
-            throw new EmptyResultDataAccessException("Somehow no COUNT(*)=1 returned", 1);
+            throw new EmptyResultDataAccessException("Somehow no COUNT(*) returned", 1);
         }
         return supporterCount;
     }
-
-    public boolean createSupport(long eid, User by, String survey) {
-        LOG.info("{} supporting {}; survey: {}", by.getUsername(), eid, survey);
+    
+    private static final String POPULATIONS_COLUMN_NAMES =
+            Arrays.stream(Survey.Population.values())
+                    .map(Survey.Population::columnName)
+                    .collect(Collectors.joining(", "));
+    private static final String POPULATIONS_PARAMS =
+            Arrays.stream(Survey.Population.values())
+                    .map(Survey.Population::sqlParam)
+                    .collect(Collectors.joining(", "));
+    public boolean createSupport(long eid, Survey survey) {
+        LOG.info("{} supporting {}", survey.supporter, eid);
         try {
-            sql.update(
-                    "INSERT INTO supports (exhibit, supporter, survey_data) " +
-                    "VALUES (:exhibit, :supporter, :data)",
+            MapSqlParameterSource params =
                     new MapSqlParameterSource("exhibit", eid)
-                        .addValue("supporter", by.getId())
-                        .addValue("data", survey)
+                            .addValue("supporter", survey.supporter)
+                            .addValue("visits", survey.visits)
+                            .addValue("rating", survey.rating);
+            for (Survey.Population pop : Survey.Population.values()) {
+                params.addValue(pop.columnName(), survey.populations.get(pop.displayName()));
+            }
+            sql.update(
+                    "INSERT INTO supports (" +
+                    "    exhibit, supporter, visits, rating, " + POPULATIONS_COLUMN_NAMES +
+                    ") " +
+                    "VALUES (" +
+                    "    :exhibit, :supporter, :visits, :rating, " +
+                    "    " + POPULATIONS_PARAMS +
+                    ")",
+                    params
             );
             return true;
         } catch (DuplicateKeyException e) {
@@ -106,9 +132,10 @@ public class SupportQueryBean {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
                 "DELETE FROM supports " +
-                "WHERE exhibit = :eid AND supporter = :supporter",
+                "WHERE exhibit = :eid AND (supporter = :supporter OR :isAdmin)",
                 new MapSqlParameterSource("eid", eid)
-                    .addValue("supporter", by.getId())
+                        .addValue("supporter", by.getId())
+                        .addValue("isAdmin", by.isAdmin())
         );
         return removed == 1;
     }
@@ -117,9 +144,75 @@ public class SupportQueryBean {
         LOG.info("Getting surveys for exhibit {}", eid);
 
         return sql.query(
-                "SELECT supporter, survey_data FROM supports WHERE exhibit = :eid",
+                "SELECT * FROM supports " +
+                "WHERE exhibit = :eid",
                 new MapSqlParameterSource("eid", eid),
                 Survey::new
         );
+    }
+    
+    private int getNPS(long eid, long total) {
+        Long npsCount = sql.queryForObject(
+                "SELECT SUM(CASE " +
+                "         WHEN rating >= 9 THEN 1 " +
+                "         WHEN rating <= 6 THEN -1 " +
+                "         ELSE 0 " +
+                "       END) " +
+                "FROM supports " +
+                "WHERE exhibit = :eid",
+                new MapSqlParameterSource("eid", eid),
+                Long.class
+        );
+        if (npsCount == null) {
+            throw new EmptyResultDataAccessException("Somehow no COUNT(*) returned", 1);
+        }
+        return Math.round(100 * (float) npsCount / total);
+    }
+    
+    public int getNPS(long eid) {
+        return getNPS(eid, this.getSupporterCount(eid));
+    }
+    
+    private static final String POPULATION_COUNT_QUERIES =
+            Arrays.stream(Survey.Population.values())
+                    .map(p -> "COUNT(sid) FILTER (WHERE " + p.columnName() + ") AS " + p.columnName() + "_count")
+                    .collect(Collectors.joining(", "));
+    public SurveyAggregate getAggregateData(long eid) {
+        LOG.info("Getting survey aggregate data for {}", eid);
+        
+        MapSqlParameterSource params = new MapSqlParameterSource("eid", eid);
+        
+        long total = this.getSupporterCount(eid);
+        
+        int nps = this.getNPS(eid, total);
+        
+        Long[] expVisitCounts = sql.queryForList(
+                "SELECT COUNT(sid) AS count " +
+                "FROM GENERATE_SERIES(0, 9) r " +
+                "LEFT JOIN supports ON visits = r " +
+                "      AND exhibit = :eid " +
+                "GROUP BY r " +
+                "ORDER BY r ",
+                params,
+                Long.class
+        ).toArray(new Long[0]);
+        double[] expVisitPercents = Arrays.stream(expVisitCounts)
+                .mapToDouble(l -> (double) l / total)
+                .toArray();
+        
+        Map<String, Float> expPopulations = sql.queryForObject(
+                "SELECT " + POPULATION_COUNT_QUERIES + " " +
+                "FROM supports WHERE exhibit = :eid",
+                params,
+                (rs, rn) -> {
+                    Map<String, Float> ret = new HashMap<>();
+                    for (Survey.Population pop : Survey.Population.values()) {
+                        ret.put(pop.displayName(), (float) rs.getLong(pop.columnName() + "_count") / total);
+                    }
+                    return ret;
+                }
+        );
+        
+        return new SurveyAggregate(total, nps, expVisitPercents, expPopulations);
     }
 }
