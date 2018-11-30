@@ -101,11 +101,18 @@ public class Application implements CommandLineRunner {
         for (int eIdx = 0; eIdx < exhibitTitles.size(); ++eIdx) {
             String title = exhibitTitles.get(eIdx);
             Instant exhibitMade = Instant.now().minus(eIdx + 5, ChronoUnit.DAYS);
+            // tags are based on even/odd indexes
             long exhibitId = exhibits.create(new Exhibit(
                     0, title, "Description for " + title, original.getId(),
                     exhibitMade, new String[] { "post", "exhibit", eIdx % 2 == 0 ? "even" : "odd", "index:" + eIdx },
-                    null
+                    null, false
             ), original);
+
+            // exhibit 1 and 11 are featured
+            if (exhibitId % 10 == 1) {
+                exhibits.markFeatured(exhibitId);
+            }
+
             for (int sIdx = 0; sIdx < supporters.length; ++sIdx) {
                 if ((eIdx & sIdx) == sIdx) {
                     supports.createSupport(

@@ -182,4 +182,16 @@ public class ExhibitEndpoints {
         List<String> results = exhibits.getAllTags();
         return ResponseEntity.ok(results);
     }
+
+    @RequestMapping(value = "/admin/feature/{id}", method = RequestMethod.POST)
+    public ResponseEntity createFeatured(@PathVariable long id) { // auth handled by WebSecurityConfig
+        boolean found = exhibits.markFeatured(id);
+        return found ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @RequestMapping(value = "/admin/feature/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity deleteFeatured(@PathVariable long id) { // auth handled by WebSecurityConfig
+        boolean found = exhibits.deleteFeatured(id);
+        return found ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
 }

@@ -29,7 +29,7 @@ public class ExhibitFull extends Feed.Entry {
     public final String[] tags;
     public final List<Image> artifacts;
     public final List<CommentView> comments;
-    
+
     // hide the parent's cover
     @SuppressWarnings("unused") @JsonIgnore public final Object cover = null;
     
