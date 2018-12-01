@@ -2,7 +2,6 @@ package integration.when;
 
 import com.tngtech.jgiven.Stage;
 import com.tngtech.jgiven.annotation.AfterStage;
-import com.tngtech.jgiven.annotation.ExpectedScenarioState;
 import com.tngtech.jgiven.annotation.ProvidedScenarioState;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +11,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -56,7 +57,7 @@ public class WhenEndpointHit extends Stage<WhenEndpointHit> {
             builder.header("Authorization", "Bearer " + authToken);
         }
         
-        MockMvc mvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        MockMvc mvc = MockMvcBuilders.webAppContextSetup(wac).apply(springSecurity()).build();
         response = mvc.perform(builder).andReturn().getResponse();
     }
 }
