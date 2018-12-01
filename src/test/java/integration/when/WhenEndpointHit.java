@@ -6,6 +6,7 @@ import com.tngtech.jgiven.annotation.ProvidedScenarioState;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -14,12 +15,10 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 
-import javax.servlet.http.HttpServletResponse;
-
 @JGivenStage
 public class WhenEndpointHit extends Stage<WhenEndpointHit> {
     @ProvidedScenarioState
-    HttpServletResponse response;
+    MockHttpServletResponse response;
     
     private HttpMethod method;
     private String url;

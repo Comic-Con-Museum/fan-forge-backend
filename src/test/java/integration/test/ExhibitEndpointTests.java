@@ -7,6 +7,7 @@ import integration.when.WhenEndpointHit;
 import integration.given.GivenDB;
 import org.comic_conmuseum.fan_forge.backend.Application;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
+import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -16,13 +17,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.io.IOException;
 import java.time.Instant;
 
 import static util.JsonGenerator.*;
 
 @SpringBootTest(
         classes = {WebApplicationContext.class, IntegrationTestContext.class},
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {"ff.add-test-data=false", "ff.reset-on-start=true"}
 )
 @EnableAutoConfiguration
 @EnableWebSecurity
@@ -42,7 +45,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
-    public void existingExhibitGivesGoodBody() {
+    public void existingExhibitGivesGoodBody() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
                 Instant.ofEpochSecond(200), new String[] { "a", "b" },
@@ -60,13 +63,13 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         
         then()
                 .statusIs(200).and()
-                .bodyMatches(o(
+                .bodyIs(o(
                         p("id", v(0)),
                         p("title", v("a title")),
                         p("description", v("and a description")),
                         p("supporters", v(0)),
                         p("comments", a()),
-                        p("featured", v(true)),
+                        p("featured", v(false)),
                         p("author", v("me!")),
                         p("created", v("1970-01-01T00:03:20Z")),
                         p("tags", a(v("a"), v("b"))),

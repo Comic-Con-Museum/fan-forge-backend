@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +108,7 @@ public class ExhibitQueryBean {
         args.put("title", ex.getTitle());
         args.put("description", ex.getDescription());
         args.put("author", by.getId());
-        args.put("created", new java.sql.Date(ex.getCreated().toEpochMilli()));
+        args.put("created", java.sql.Timestamp.valueOf(ex.getCreated().atZone(ZoneId.systemDefault()).toLocalDateTime()));
         args.put("tags", ex.getTags());
         args.put("featured", false);
         Number key = insert.executeAndReturnKey(args);
