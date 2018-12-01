@@ -76,7 +76,7 @@
             <groupId>com.tngtech.jgiven</groupId>
             <artifactId>jgiven-spring</artifactId>
             <version>${jgiven.version}</version>
-            <!-- Can't be scope: test since the annotation is needed on the Configuration class for Spring-->
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -104,6 +104,9 @@
                     <forkCount>0</forkCount>
                     <trimStackTrace>false</trimStackTrace>
                     <testSourceDirectory>${basedir}/src/test/</testSourceDirectory>
+                    <systemPropertyVariables>
+                        <jgiven.report.dir>${project.build.directory}/jgiven-reports/json</jgiven.report.dir>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -120,6 +123,7 @@
                 </executions>
                 <configuration>
                     <format>html</format>
+                    <outputDirectory>${project.build.directory}/jgiven-reports/html</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

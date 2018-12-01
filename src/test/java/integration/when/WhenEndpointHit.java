@@ -28,6 +28,18 @@ public class WhenEndpointHit extends Stage<WhenEndpointHit> {
         return this;
     }
     
+    public WhenEndpointHit get(String url) {
+        return request(HttpMethod.GET, url);
+    }
+    
+    public WhenEndpointHit post(String url) {
+        return request(HttpMethod.POST, url);
+    }
+    
+    public WhenEndpointHit put(String url) {
+        return request(HttpMethod.PUT, url);
+    }
+    
     private String authToken;
     public WhenEndpointHit withAuth(String auth) {
         this.authToken = auth;

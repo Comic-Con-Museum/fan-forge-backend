@@ -1,5 +1,6 @@
 package integration.then;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.tngtech.jgiven.Stage;
 import com.tngtech.jgiven.annotation.ExpectedScenarioState;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
@@ -15,6 +16,11 @@ public class ThenJsonResponse extends Stage<ThenJsonResponse> {
     
     public ThenJsonResponse statusIs(int status) {
         assertEquals(status, response.getStatus());
+        return this;
+    }
+    
+    public ThenJsonResponse bodyMatches(JsonNode root) {
+        
         return this;
     }
 }

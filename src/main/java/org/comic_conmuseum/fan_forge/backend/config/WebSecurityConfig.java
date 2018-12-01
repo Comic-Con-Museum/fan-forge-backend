@@ -1,6 +1,5 @@
 package org.comic_conmuseum.fan_forge.backend.config;
 
-import com.tngtech.jgiven.integration.spring.EnableJGiven;
 import org.comic_conmuseum.fan_forge.backend.filters.BearerTokenAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +18,6 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 
 // https://medium.com/@nydiarra/secure-a-spring-boot-rest-api-with-json-web-token-reference-to-angular-integration-e57a25806c50
 
-@EnableJGiven
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
