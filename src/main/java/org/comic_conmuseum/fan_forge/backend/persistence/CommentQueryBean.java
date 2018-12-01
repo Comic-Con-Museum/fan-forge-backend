@@ -17,6 +17,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.idToLong;
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.timestampOf;
+
 @Repository
 public class CommentQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.comments");
@@ -86,14 +89,9 @@ public class CommentQueryBean {
                 .addValue("author", by.getId())
                 .addValue("exhibit", ex)
                 .addValue("reply", co.getReply())
-                .addValue("created", new java.sql.Date(co.getCreated().toEpochMilli()))
+                .addValue("created", timestampOf(co.getCreated()))
         );
-        if (key == null) {
-            throw new SQLException("Failed to insert rows (no key generated)");
-        }
-        long id = key.longValue();
-        co.setId(id);
-        return id;
+        return idToLong(key, co::setId);
     }
     
     public void update(Comment co, User by) {

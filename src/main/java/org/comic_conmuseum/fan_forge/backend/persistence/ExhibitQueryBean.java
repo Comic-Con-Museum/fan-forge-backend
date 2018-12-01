@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.idToLong;
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.timestampOf;
+
 @Repository
 public class ExhibitQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.exhibits");
@@ -104,21 +107,18 @@ public class ExhibitQueryBean {
     public long create(Exhibit ex, User by) throws SQLException {
         LOG.info("{} creating exhibit '{}'", by.getUsername(), ex.getTitle());
         Instant now = Instant.now();
-        Map<String, Object> args = new HashMap<>();
-        args.put("title", ex.getTitle());
-        args.put("description", ex.getDescription());
-        args.put("author", by.getId());
-        args.put("created", java.sql.Timestamp.valueOf(ex.getCreated().atZone(ZoneId.systemDefault()).toLocalDateTime()));
-        args.put("tags", ex.getTags());
-        args.put("featured", false);
-        Number key = insert.executeAndReturnKey(args);
+        Number key = insert.executeAndReturnKey(new MapSqlParameterSource()
+                .addValue("title", ex.getTitle())
+                .addValue("description", ex.getDescription())
+                .addValue("author", by.getId())
+                .addValue("created", timestampOf(ex.getCreated()))
+                .addValue("tags", ex.getTags())
+                .addValue("featured", false)
+        );
         if (key == null) {
             throw new SQLException("Failed to insert rows (no key generated)");
         }
-        long id = key.longValue();
-        ex.setId(id);
-        ex.setCreated(now);
-        return id;
+        return idToLong(key, ex::setId);
     }
     
     public void update(Exhibit ex, User by) {

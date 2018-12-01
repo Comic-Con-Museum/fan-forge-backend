@@ -14,7 +14,10 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.ZoneId;
 import java.util.Properties;
+
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.timestampOf;
 
 @JGivenStage
 public class GivenDB extends Stage<GivenDB> {
@@ -65,7 +68,7 @@ public class GivenDB extends Stage<GivenDB> {
                         .addValue("title", ex.getTitle())
                         .addValue("description", ex.getDescription())
                         .addValue("author", ex.getAuthor())
-                        .addValue("created", new java.sql.Date(ex.getCreated().toEpochMilli()))
+                        .addValue("created", timestampOf(ex.getCreated()))
                         .addValue("tags", ex.getTags())
                         .addValue("featured", false)
 

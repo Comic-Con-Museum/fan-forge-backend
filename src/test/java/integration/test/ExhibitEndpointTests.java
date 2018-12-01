@@ -53,7 +53,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         );
         
         given()
-                .exhibitExists(val).and()
+                .exhibijatExists(val).and()
                 .noSupportersFor(val.getId()).and()
                 .noCommentsFor(val.getId()).and()
                 .noArtifactsFor(val.getId());

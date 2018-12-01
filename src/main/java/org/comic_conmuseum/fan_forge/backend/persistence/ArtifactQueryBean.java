@@ -16,6 +16,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.idToLong;
+import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.timestampOf;
+
 @Repository
 public class ArtifactQueryBean {
     private static final Logger LOG = LoggerFactory.getLogger("persist.artifacts");
@@ -71,15 +74,10 @@ public class ArtifactQueryBean {
                 .addValue("description", ar.getDescription())
                 .addValue("cover", ar.isCover())
                 .addValue("creator", by.getId())
-                .addValue("created", new java.sql.Date(ar.getCreated().toEpochMilli()))
+                .addValue("created", timestampOf(ar.getCreated()))
                 .addValue("exhibit", ex)
         );
-        if (key == null) {
-            throw new SQLException("Failed to insert rows (no key generated)");
-        }
-        long id = key.longValue();
-        ar.setId(id);
-        return id;
+        return idToLong(key, ar::setId);
     }
 
     public void update(Artifact ar) {
