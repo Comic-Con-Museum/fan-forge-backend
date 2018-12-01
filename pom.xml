@@ -21,7 +21,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <junit.version>4.12</junit.version>
-        <jgiven.version>0.16.1</jgiven.version>
+        <jgiven.version>0.17.0</jgiven.version>
     </properties>
 
     <dependencies>
@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>com.tngtech.jgiven</groupId>
-            <artifactId>jgiven-junit5</artifactId>
+            <artifactId>jgiven-junit</artifactId>
             <version>${jgiven.version}</version>
             <scope>test</scope>
         </dependency>
@@ -76,7 +76,7 @@
             <groupId>com.tngtech.jgiven</groupId>
             <artifactId>jgiven-spring</artifactId>
             <version>${jgiven.version}</version>
-            <scope>test</scope>
+            <!-- Can't be scope: test since the annotation is needed on the Configuration class for Spring-->
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
