@@ -551,7 +551,7 @@ Delete a comment.
 
 You must be authorized as the author of the comment.
 
-## `POST /support/exhibit/{id}`
+## `PUT /support/exhibit/{id}`
 
 Mark this exhibit as supported by the current user.
 
