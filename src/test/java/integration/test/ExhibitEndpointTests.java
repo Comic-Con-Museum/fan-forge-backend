@@ -5,10 +5,14 @@ import integration.IntegrationTestContext;
 import integration.then.ThenJsonResponse;
 import integration.when.WhenEndpointHit;
 import integration.given.GivenDB;
+import org.comic_conmuseum.fan_forge.backend.Application;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -16,7 +20,13 @@ import java.time.Instant;
 
 import static util.JsonGenerator.*;
 
-@SpringBootTest(classes = {WebApplicationContext.class, IntegrationTestContext.class})
+@SpringBootTest(
+        classes = {WebApplicationContext.class, IntegrationTestContext.class},
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@EnableAutoConfiguration
+@EnableWebSecurity
+@ComponentScan(basePackageClasses = Application.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpointHit, ThenJsonResponse> {
     @Test
