@@ -2,7 +2,9 @@ package integration.when;
 
 import com.tngtech.jgiven.Stage;
 import com.tngtech.jgiven.annotation.AfterStage;
+import com.tngtech.jgiven.annotation.As;
 import com.tngtech.jgiven.annotation.ProvidedScenarioState;
+import com.tngtech.jgiven.annotation.Quoted;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -22,26 +24,30 @@ public class WhenEndpointHit extends Stage<WhenEndpointHit> {
     
     private HttpMethod method;
     private String url;
+    @As("$")
     public WhenEndpointHit request(HttpMethod method, String url) {
         this.method = method;
         this.url = url;
         return this;
     }
     
+    @As("GET")
     public WhenEndpointHit get(String url) {
         return request(HttpMethod.GET, url);
     }
     
+    @As("POST")
     public WhenEndpointHit post(String url) {
         return request(HttpMethod.POST, url);
     }
     
+    @As("PUT")
     public WhenEndpointHit put(String url) {
         return request(HttpMethod.PUT, url);
     }
     
     private String authToken;
-    public WhenEndpointHit withAuth(String auth) {
+    public WhenEndpointHit withAuthToken(@Quoted String auth) {
         this.authToken = auth;
         return this;
     }

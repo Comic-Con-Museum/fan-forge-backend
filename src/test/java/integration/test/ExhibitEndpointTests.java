@@ -1,5 +1,6 @@
 package integration.test;
 
+import com.tngtech.jgiven.annotation.As;
 import com.tngtech.jgiven.integration.spring.SpringScenarioTest;
 import integration.IntegrationTestContext;
 import integration.then.ThenJsonResponse;
@@ -37,6 +38,7 @@ import static util.JsonGenerator.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpointHit, ThenJsonResponse> {
     @Test
+    @As("Nonexistent exhibit gives a 404")
     public void nonexistentExhibitGives404() {
         given()
                 .exhibitDoesntExist(0);
@@ -49,6 +51,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
+    @As("Existing exhibit result is valid")
     public void existingExhibitGivesGoodBody() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
@@ -58,7 +61,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         
         given()
                 .exhibitExists(val).and()
-                .noSupportersFor(val.getId()).and()
+                .noSupportsFor(val.getId()).and()
                 .noCommentsFor(val.getId()).and()
                 .noArtifactsFor(val.getId());
         
@@ -86,6 +89,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
+    @As("Logged in but not supported gives supported:false")
     public void withLoginButNoSupportShowsNotSupported() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
@@ -94,14 +98,14 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         );
         
         given()
+                .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .noSupportersFor(val.getId()).and()
+                .noSupportsFor(val.getId()).and()
                 .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId()).and()
-                .authExists("auth", new User("auth", "auth", "auth", false));
+                .noArtifactsFor(val.getId());
         
         when()
-                .get("/exhibit/0").withAuth("auth");
+                .get("/exhibit/0").withAuthToken("auth");
         
         then()
                 .statusIs(200).and()
@@ -111,6 +115,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
+    @As("Logged in and supported gives supported:true")
     public void withLoginAndSupportShowsSupported() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
@@ -123,14 +128,14 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         }
         
         given()
-                .authExists("auth", new User("auth", "auth", "auth", false)).and()
+                .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "auth"))
+                .supportExists(val.getId(), new Survey(4, pops, 8, "auth")).and()
                 .noCommentsFor(val.getId()).and()
                 .noArtifactsFor(val.getId()).and();
         
         when()
-                .get("/exhibit/0").withAuth("auth");
+                .get("/exhibit/0").withAuthToken("auth");
         
         then()
                 .statusIs(200).and()

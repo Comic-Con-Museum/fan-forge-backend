@@ -3,6 +3,7 @@ package integration.given;
 import com.tngtech.jgiven.Stage;
 import com.tngtech.jgiven.annotation.As;
 import com.tngtech.jgiven.annotation.BeforeStage;
+import com.tngtech.jgiven.annotation.Quoted;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import com.zaxxer.hikari.util.DriverDataSource;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
@@ -62,7 +63,7 @@ public class GivenDB extends Stage<GivenDB> {
     @Autowired
     WebApplicationContext wac;
     
-    @As("exhibit doesn't exist")
+    @As("exhibit $ doesn't exist")
     public GivenDB exhibitDoesntExist(long id) {
         sql.update(
                 "DELETE FROM exhibits WHERE eid = :eid",
@@ -91,12 +92,13 @@ public class GivenDB extends Stage<GivenDB> {
         return this;
     }
 
-    public GivenDB authExists(String token, User user) {
+    @As("token $ auths as")
+    public GivenDB authTokenExists(@Quoted String token, User user) {
         // TODO add token to DB when that's a thing
         return this;
     }
     
-    public GivenDB noSupportersFor(long id) {
+    public GivenDB noSupportsFor(long id) {
         sql.update(
                 "DELETE FROM supports WHERE exhibit = :id",
                 new MapSqlParameterSource("id", id)
