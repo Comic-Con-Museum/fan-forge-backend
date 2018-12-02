@@ -7,6 +7,8 @@ import integration.when.WhenEndpointHit;
 import integration.given.GivenDB;
 import org.comic_conmuseum.fan_forge.backend.Application;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
+import org.comic_conmuseum.fan_forge.backend.models.Survey;
+import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +21,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 import static util.JsonGenerator.*;
 
@@ -63,19 +67,75 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         
         then()
                 .statusIs(200).and()
-                .bodyIs(o(
+                .bodyMatches(o(
+                        // all the data is correct
                         p("id", v(0)),
                         p("title", v("a title")),
                         p("description", v("and a description")),
                         p("supporters", v(0)),
-                        p("comments", a()),
                         p("featured", v(false)),
                         p("author", v("me!")),
                         p("created", v("1970-01-01T00:03:20Z")),
                         p("tags", a(v("a"), v("b"))),
-                        p("artifacts", a())
+                        // and we don't have any mysterious extra stuff
+                        p("artifacts", a()),
+                        p("comments", a())
+                )).and()
+                // request isn't authorized, so we shouldn't have this
+                .bodyDoesntContain("isSupported");
+    }
+    
+    @Test
+    public void withLoginButNoSupportShowsNotSupported() throws IOException, JSONException {
+        Exhibit val = new Exhibit(
+                0, "a title", "and a description", "me!",
+                Instant.ofEpochSecond(200), new String[] { "a", "b" },
+                null, false
+        );
+        
+        given()
+                .exhibitExists(val).and()
+                .noSupportersFor(val.getId()).and()
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId()).and()
+                .authExists("auth", new User("auth", "auth", "auth", false));
+        
+        when()
+                .get("/exhibit/0").withAuth("auth");
+        
+        then()
+                .statusIs(200).and()
+                .bodyMatches(o(
+                        p("supported", v(false))
                 ));
     }
     
-    
+    @Test
+    public void withLoginAndSupportShowsSupported() throws IOException, JSONException {
+        Exhibit val = new Exhibit(
+                0, "a title", "and a description", "me!",
+                Instant.ofEpochSecond(200), new String[] { "a", "b" },
+                null, false
+        );
+        Map<String, Boolean> pops = new HashMap<>();
+        for (Survey.Population pop : Survey.Population.values()) {
+            pops.put(pop.displayName(), false);
+        }
+        
+        given()
+                .authExists("auth", new User("auth", "auth", "auth", false)).and()
+                .exhibitExists(val).and()
+                .supportExists(val.getId(), new Survey(4, pops, 8, "auth"))
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId()).and();
+        
+        when()
+                .get("/exhibit/0").withAuth("auth");
+        
+        then()
+                .statusIs(200).and()
+                .bodyMatches(o(
+                        p("supported", v(true))
+                ));
+    }
 }

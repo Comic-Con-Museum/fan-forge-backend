@@ -1,30 +1,40 @@
 package integration.given;
 
 import com.tngtech.jgiven.Stage;
+import com.tngtech.jgiven.annotation.As;
 import com.tngtech.jgiven.annotation.BeforeStage;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import com.zaxxer.hikari.util.DriverDataSource;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
+import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.time.ZoneId;
+import java.sql.PreparedStatement;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.timestampOf;
 
 @JGivenStage
 public class GivenDB extends Stage<GivenDB> {
-    @Value("${spring.datasource.url}") String sqlUrl;
-    @Value("${spring.datasource.driver}") String sqlDriver;
-    @Value("${spring.datasource.username}") String sqlUsername;
-    @Value("${spring.datasource.password}") String sqlPassword;
+    @Value("${spring.datasource.url}")
+    String sqlUrl;
+    
+    @Value("${spring.datasource.driver}")
+    String sqlDriver;
+    
+    @Value("${spring.datasource.username}")
+    String sqlUsername;
+    
+    @Value("${spring.datasource.password}")
+    String sqlPassword;
     
     private NamedParameterJdbcTemplate makeSql() {
         return new NamedParameterJdbcTemplate(
@@ -43,11 +53,16 @@ public class GivenDB extends Stage<GivenDB> {
     @BeforeStage
     public void setUpSql() {
         this.sql = makeSql();
+        this.sql.execute(
+                "TRUNCATE artifacts, comments, exhibits, supports",
+                PreparedStatement::execute
+        );
     }
     
     @Autowired
     WebApplicationContext wac;
     
+    @As("exhibit doesn't exist")
     public GivenDB exhibitDoesntExist(long id) {
         sql.update(
                 "DELETE FROM exhibits WHERE eid = :eid",
@@ -85,6 +100,35 @@ public class GivenDB extends Stage<GivenDB> {
         sql.update(
                 "DELETE FROM supports WHERE exhibit = :id",
                 new MapSqlParameterSource("id", id)
+        );
+        return this;
+    }
+    
+    private static String POPULATION_COLUMNS =
+            Arrays.stream(Survey.Population.values())
+                    .map(Survey.Population::columnName)
+                    .collect(Collectors.joining(", "));
+    private static String POPULATION_PARAMS =
+            Arrays.stream(Survey.Population.values())
+                    .map(Survey.Population::sqlParam)
+                    .collect(Collectors.joining(", "));
+    public GivenDB supportExists(long eid, Survey survey) {
+        MapSqlParameterSource params =
+                new MapSqlParameterSource("exhibit", eid)
+                        .addValue("supporter", survey.supporter)
+                        .addValue("visits", survey.visits)
+                        .addValue("rating", survey.rating);
+        for (Survey.Population pop : Survey.Population.values()) {
+            params.addValue(pop.columnName(), survey.populations.get(pop.displayName()));
+        }
+        sql.update(
+                "INSERT INTO supports (" +
+                "    exhibit, supporter, visits, rating, " + POPULATION_COLUMNS +
+                ") " +
+                "VALUES (" +
+                "    :exhibit, :supporter, :visits, :rating, " + POPULATION_PARAMS +
+                ")",
+                params
         );
         return this;
     }

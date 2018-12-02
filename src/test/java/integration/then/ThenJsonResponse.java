@@ -4,13 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.tngtech.jgiven.Stage;
+import com.tngtech.jgiven.annotation.As;
 import com.tngtech.jgiven.annotation.ExpectedScenarioState;
+import com.tngtech.jgiven.annotation.Format;
+import com.tngtech.jgiven.format.PrintfFormatter;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import org.json.JSONException;
+import org.junit.Assert;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.mock.web.MockHttpServletResponse;
+import util.JoiningFormatter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import static org.junit.Assert.*;
 
@@ -26,8 +32,30 @@ public class ThenJsonResponse extends Stage<ThenJsonResponse> {
         return this;
     }
     
-    public ThenJsonResponse bodyIs(JsonNode root) throws IOException, JSONException {
+    public ThenJsonResponse bodyMatches(JsonNode root) throws IOException, JSONException {
         JSONAssert.assertEquals(root.toString(), response.getContentAsString(), false);
+        return this;
+    }
+    
+    public ThenJsonResponse bodyIsExactly(JsonNode root) throws IOException, JSONException {
+        JSONAssert.assertEquals(root.toString(), response.getContentAsString(), true);
+        return this;
+    }
+    
+    @As("body doesn't contain")
+    public ThenJsonResponse bodyDoesntContain(
+            @Format(value = JoiningFormatter.Array.class, args = { "." }) String... path
+    ) throws IOException {
+        JsonNode elem = reader.readTree(response.getContentAsString());
+        for (String component : path) {
+            if (elem.has(component)) {
+                elem = elem.get(component);
+            } else {
+                return this;
+            }
+        }
+        // if we got through the whole tree, we shouldn't have
+        Assert.fail("Body contained " + String.join(".", path));
         return this;
     }
 }

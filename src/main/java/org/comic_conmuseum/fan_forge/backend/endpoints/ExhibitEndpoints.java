@@ -97,7 +97,7 @@ public class ExhibitEndpoints {
                 comments.getComments(id)
         ));
     }
-
+    
     // TODO Return created exhibit, not just ID
     @RequestMapping(value = "/exhibit", method = RequestMethod.POST, consumes = "multipart/form-data")
     public ResponseEntity<Long> createExhibit(MultipartHttpServletRequest req, @RequestParam("data") String dataString,

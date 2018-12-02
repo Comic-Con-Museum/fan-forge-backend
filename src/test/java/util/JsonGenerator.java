@@ -43,8 +43,11 @@ public class JsonGenerator {
     public static ValueNode v(short val) { return new ShortNode(val); }
     public static ValueNode v(String val) {
         if (val == null) {
-            return NullNode.getInstance();
+            return v();
         }
         return new TextNode(val);
+    }
+    public static ValueNode v() {
+        return NullNode.getInstance();
     }
 }
