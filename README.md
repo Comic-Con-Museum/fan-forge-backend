@@ -1,5 +1,5 @@
 # Comic-Con Museum Fan Forge - Backend
-################################################################################
+
 This repository is the backend for the Comic-Con Museum fan curation website,
 Fan Forge. It provides the web API which the frontend uses to get and modify
 data. It can also be used by third-party developers to develop apps which
