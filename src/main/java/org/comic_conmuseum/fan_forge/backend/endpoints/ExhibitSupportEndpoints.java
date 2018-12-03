@@ -35,7 +35,7 @@ public class ExhibitSupportEndpoints {
             ));
         }
         for (Survey.Population pop : Survey.Population.values()) {
-            if (!data.getPopulations().containsKey(pop.displayName())) {
+            if (!data.getPopulations().containsKey(pop.display())) {
                 return ResponseEntity.badRequest().body(new ErrorResponse(
                         "Must provide all populations -- see documentation",
                         "Provide all of the populations"

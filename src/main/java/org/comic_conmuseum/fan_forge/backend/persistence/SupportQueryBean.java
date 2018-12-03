@@ -28,7 +28,7 @@ public class SupportQueryBean {
     
     private static final String POPULATIONS_COLUMN_DEFS =
             Arrays.stream(Survey.Population.values())
-                    .map(pop -> pop.columnName() + " BOOLEAN NOT NULL")
+                    .map(pop -> pop.column() + " BOOLEAN NOT NULL")
                     .collect(Collectors.joining(", "));
     public void setupTable(boolean reset) {
         LOG.info("Creating tables; resetting: {}", reset);
@@ -94,11 +94,16 @@ public class SupportQueryBean {
     
     private static final String POPULATIONS_COLUMN_NAMES =
             Arrays.stream(Survey.Population.values())
-                    .map(Survey.Population::columnName)
+                    .map(Survey.Population::column)
                     .collect(Collectors.joining(", "));
     private static final String POPULATIONS_PARAMS =
             Arrays.stream(Survey.Population.values())
                     .map(Survey.Population::sqlParam)
+                    .collect(Collectors.joining(", "));
+    private static final String POPULATIONS_SETTERS =
+            Arrays.stream(Survey.Population.values())
+                    // pop_foo = COALESCE(:pop_foo, pop_foo);
+                    .map(p -> p.column() + " = COALESCE(" + p.sqlParam() + ", " + p.column() + ")")
                     .collect(Collectors.joining(", "));
     public boolean createSupport(long eid, Survey survey) {
         LOG.info("{} supporting {}", survey.supporter, eid);
@@ -109,7 +114,7 @@ public class SupportQueryBean {
                             .addValue("visits", survey.visits)
                             .addValue("rating", survey.rating);
             for (Survey.Population pop : Survey.Population.values()) {
-                params.addValue(pop.columnName(), survey.populations.get(pop.displayName()));
+                params.addValue(pop.column(), survey.populations.get(pop.display()));
             }
             sql.update(
                     "INSERT INTO supports (" +
@@ -118,7 +123,11 @@ public class SupportQueryBean {
                     "VALUES (" +
                     "    :exhibit, :supporter, :visits, :rating, " +
                     "    " + POPULATIONS_PARAMS +
-                    ")",
+                    ") " +
+                    "ON CONFLICT UPDATE SET " +
+                    "  visits = COALESCE(:visits, visits), " +
+                    "  rating = COALESCE(:rating, rating), " +
+                    POPULATIONS_SETTERS,
                     params
             );
             return true;
@@ -175,7 +184,7 @@ public class SupportQueryBean {
     
     private static final String POPULATION_COUNT_QUERIES =
             Arrays.stream(Survey.Population.values())
-                    .map(p -> "COUNT(sid) FILTER (WHERE " + p.columnName() + ") AS " + p.columnName() + "_count")
+                    .map(p -> "COUNT(sid) FILTER (WHERE " + p.column() + ") AS " + p.column() + "_count")
                     .collect(Collectors.joining(", "));
     public SurveyAggregate getAggregateData(long eid) {
         LOG.info("Getting survey aggregate data for {}", eid);
@@ -207,7 +216,7 @@ public class SupportQueryBean {
                 (rs, rn) -> {
                     Map<String, Float> ret = new HashMap<>();
                     for (Survey.Population pop : Survey.Population.values()) {
-                        ret.put(pop.displayName(), (float) rs.getLong(pop.columnName() + "_count") / total);
+                        ret.put(pop.display(), (float) rs.getLong(pop.column() + "_count") / total);
                     }
                     return ret;
                 }
