@@ -29,8 +29,10 @@ import static util.JsonGenerator.*;
 
 @SpringBootTest(
         classes = {WebApplicationContext.class, IntegrationTestContext.class},
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"ff.add-test-data=false", "ff.reset-on-start=true"}
+        properties = {
+                "ff.add-test-data=false", "ff.reset-on-start=true",
+                "ff.close-on-init-fail=true", "ff.require-https=false"
+        }
 )
 @EnableAutoConfiguration
 @EnableWebSecurity
@@ -39,7 +41,7 @@ import static util.JsonGenerator.*;
 public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpointHit, ThenJsonResponse> {
     @Test
     @As("Nonexistent exhibit gives a 404")
-    public void nonexistentExhibitGives404() {
+    public void nonexistentExhibitGivesA404() {
         given()
                 .exhibitDoesntExist(0);
         
@@ -51,8 +53,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
-    @As("Existing exhibit result is valid")
-    public void existingExhibitGivesGoodBody() throws IOException, JSONException {
+    public void existingExhibitResultIsValid() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
                 Instant.ofEpochSecond(200), new String[] { "a", "b" },
@@ -89,8 +90,8 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
-    @As("Logged in but not supported gives supported:false")
-    public void withLoginButNoSupportShowsNotSupported() throws IOException, JSONException {
+    @As("Logged in but not supported gives isSupported:false")
+    public void authedWithoutSupport() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
                 Instant.ofEpochSecond(200), new String[] { "a", "b" },
@@ -115,7 +116,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
-    @As("Logged in and supported gives supported:true")
+    @As("Logged in and supported gives isSupported:true")
     public void withLoginAndSupportShowsSupported() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
