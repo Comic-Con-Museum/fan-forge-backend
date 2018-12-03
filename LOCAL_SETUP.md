@@ -3,7 +3,7 @@
 If you're interested in getting the Fan Forge backend up and running as quickly
 as possible on your local machine, follow these steps.
 
->   #### WARNING
+>   ### WARNING
 >   **This setup is *bad*** for anything more than local deployment. Please
     properly set up and deploy into any remote environments. If you don't know
     how, speak to your local sysadmin. This setup is for developers to have a
@@ -16,21 +16,17 @@ as possible on your local machine, follow these steps.
     your platform in the list, click on its name, and follow the instructions
     there.
  2. Start Postgres. Depending on what you chose -- the EDB installer,
-    Postgress.app, etc. -- the exact process will be different, but each has
+    Postgres.app, etc. -- the exact process will be different, but each has
     good tutorials to guide you through the process. Keep track of **the
     JDBC url** (which looks like `jdbc:postgresql://localhost:5432/postgres`),
     **the database username**, and **the database password**.
  3. Once you've finished installed PostgreSQL, download [Minio][minio-dl]. Do
     the same thing (find your platform, follow the instructions).
  4. Start Minio with the command for your platform on the downloads page. Note
-    down **the access key**, **the secret key**, and **the object store URL**,
-    each of which is printed to the console on startup by Minio.
- 5. [Download the fat JAR][fat-jar] or create it from source as described
-    above.
-    >   **NOTE**: If you don't see any releases, it means that Nic forgot to
-        put one up. You should yell at him to fix it. (And if you do see a
-        release but this note is still there, please
-        [report a bug][gh-br-tmpl])
+    **the access key**, **the secret key**, and **the object store URL**, each
+    of which is printed to the console on startup by Minio.
+ 5. [Download the fat JAR][fat-jar] or build it from source as described
+    in [README][readme].
  6. Create a file called `application.properties` in the same directory as the
     fat jar. Replace anything in brackets with the value you recorded in
     previous steps.
@@ -47,8 +43,8 @@ as possible on your local machine, follow these steps.
     
     security.pwd.secret=asd123!@#lop
     ```
- 7. Start the fat jar like any other Java jarfile. You shouldn't need to pass
-    any command-line arguments.
+ 7. Run the far JAR with `java -jar fan-forge-backend.jar` -- you don't need
+    to pass any command line options.
  8. Congratulations! You now have a development backend running. If you have
     any issues, see **Troubleshooting** below.
 
@@ -81,3 +77,4 @@ time it'll take.
  [minio-dl]: https://www.minio.io/downloads.html
  [postgres-dl]: https://www.postgresql.org/download
  [ask-question]: https://github.com/Comic-ConMuseum/fan-curation-spring/issues/new?labels=question
+ [readme]: README.md
