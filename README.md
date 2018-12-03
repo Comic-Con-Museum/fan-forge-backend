@@ -9,7 +9,7 @@ The Fan Forge website allows the Comic-Con Museum to engage with new and
 established fans in exciting ways, using upvotes, downvotes, and surveys to get
 the public involved in exhibit development and curation. 
 
-The code that powers Fan Forge is publically available to get fans to even more
+The code that powers Fan Forge is publicly available to get fans to even more
 deeply involved, by helping to create the experience they have while creating
 their museum experience. Read through the sections below to get started.
 
