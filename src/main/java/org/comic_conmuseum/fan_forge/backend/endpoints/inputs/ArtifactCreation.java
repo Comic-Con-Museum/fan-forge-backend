@@ -9,21 +9,21 @@ public class ArtifactCreation {
     private Long id;
     private String title;
     private String description;
-    private String imageName;
+    private String image;
     private Long parent;
     private boolean cover;
 
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
-    public String getImageName() { return imageName; }
+    public String getImage() { return image; }
     public Long getParent() { return parent; }
     public boolean isCover() { return cover; }
 
     public void setId(Long id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
-    public void setImageName(String imageName) { this.imageName = imageName; }
+    public void setImage(String image) { this.image = image; }
     public void setParent(Long parent) { this.parent = parent; }
     public void setCover(boolean cover) { this.cover = cover; }
     

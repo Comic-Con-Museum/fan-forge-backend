@@ -114,10 +114,10 @@ public class ExhibitEndpoints {
             for (ArtifactCreation a : data.getArtifacts()) {
                 Artifact full = a.build(user);
                 long aid = artifacts.create(full, id, user);
-                if (a.getImageName() == null) {
+                if (a.getImage() == null) {
                     return ResponseEntity.badRequest().build();
                 }
-                MultipartFile file = req.getFile(a.getImageName());
+                MultipartFile file = req.getFile(a.getImage());
                 if (file == null) {
                     return ResponseEntity.badRequest().build();
                 }
@@ -148,8 +148,8 @@ public class ExhibitEndpoints {
                     mentioned.add(a.getId());
                     artifacts.update(a.build(user));
                     // if no image provided, just don't update it!
-                    if (a.getImageName() != null) {
-                        MultipartFile file = req.getFile(a.getImageName());
+                    if (a.getImage() != null) {
+                        MultipartFile file = req.getFile(a.getImage());
                         if (file == null) {
                             return ResponseEntity.badRequest().build();
                         }
@@ -160,10 +160,10 @@ public class ExhibitEndpoints {
                     long aid = artifacts.create(a.build(user), id, user);
                     mentioned.add(aid);
                     // this time an image is required -- you can't have an artifact without one.
-                    if (a.getImageName() == null) {
+                    if (a.getImage() == null) {
                         return ResponseEntity.badRequest().build();
                     }
-                    MultipartFile file = req.getFile(a.getImageName());
+                    MultipartFile file = req.getFile(a.getImage());
                     if (file == null) {
                         return ResponseEntity.badRequest().build();
                     }
