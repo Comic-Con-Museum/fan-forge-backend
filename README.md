@@ -1,36 +1,40 @@
 # Comic-Con Museum Fan Forge - Backend
 
-> Note: This was written by one guy with no input from anyone else. If you're
-> still seeing this note, it means that there's still no input from anyone
-> else, so please take everything you read with a grain of salt.
+This repository is the backend for the Comic-Con Museum fan curation website,
+Fan Forge. It provides the web API which the frontend uses to get and modify
+data. It can also be used by third-party developers to develop apps which
+integrate with the process.
 
-The Comic-Con Museum's mission is to engage people, whether or not they're
-already part of the Comic-Con community, or even the larger comic and movie
-fan community. The Fan Forge website is a large part of that. By involving fans
-in the typically very private, very closed-off exhibit curation process, fans
-can get engaged in an entirely new way, unique to the Comic-Con museum: They
-can suggest, and even help build, the exhibits in the museum.
+The Fan Forge website allows the Comic-Con Museum to engage with new and
+established fans in exciting ways, using upvotes, downvotes, and surveys to get
+the public involved in exhibit development and curation. 
 
-This repository, specifically, is the backend. It provides the web API which
-the frontend uses to get and modify data. It can also be used by third-party
-developers to develop apps which integrate with the process.
-
-The code has been made publicly available to encourage fans to get even more
+The code that powers Fan Forge is publicly available to get fans to even more
 deeply involved, by helping to create the experience they have while creating
-their experience at the Comic-Con Museum.
+their museum experience. Read through the sections below to get started.
+
+## API documentation
+
+If you're interested in integration with Fan Forge, you'll want to look at
+[API_DOCS][api-docs]. It details how to use each of the endpoints.
+
+## Contributing
+
+If you're interested in helping with this project, see
+[CONTRIBUTING][contributing]. You don't need to be a developer to contribute!
 
 ## Running the server
-
-To run the server, you need, in order:
 
 >   **Note**: *This is not a tutorial.* It's a list of requirements. If you
     want a step-by-step guide to getting a local dev environment running
     on your machine, see [LOCAL_SETUP][local-setup].
 
+To run the server, you need, in order:
+
  1. [Java][java] 8 or greater.
 
- 2. The [far JAR][fat-jar]. Move this to an empty folder to avoid any
-    accidental conflicts.
+ 2. The fat JAR, available [here][fat-jar]. Put this in an empty folder to
+    avoid any accidental conflicts.
     
  3. A file named `application.properties` in the same directory as the fat
     JAR.
@@ -39,7 +43,7 @@ To run the server, you need, in order:
     you're using the above. If you want to use some other format, it's on you
     to translate the instructions correctly.
 
-    The format for the file will look something liek this:
+    The format for the file will look something like this:
 
     ```properties
     key.one=value of key 1
@@ -57,10 +61,8 @@ To run the server, you need, in order:
         The Fan Forge backend makes no attempts to track changes to this file
         by design.
 
- 4. A [PostgreSQL][postgres] database.
-
-    There are plans to support other SQL dialects in the future, but for now,
-    it's just PostgreSQL.
+ 4. A [PostgreSQL][postgres] database. There are plans to support other SQL
+    dialects in the future, but for now, it's just PostgreSQL.
     
     You need to specify:
     
@@ -96,7 +98,7 @@ Once you have all three set up, just run the fat JAR like any other normal
 jarfile:
 
 ```
-java -jar ff-fat.jar
+java -jar fan-forge-backend.jar
 ```
 
 It will automatically connect to the SQL server and S3 store you've provided.
@@ -106,7 +108,7 @@ If it can't reach either, it'll fail fast and tell you what's missing.
 
 There are a few more optional configuration options available.
 
- *  `spring.servlet.multipart.max-file-size`: The maximum size of an indivual
+ *  `spring.servlet.multipart.max-file-size`: The maximum size of an individual
     image in an upload. Defaults to 64 kilobytes.
  *  `spring.servlet.multipart.max-request-size`: The maximum total size of a
     request that's uploading files. Defaults to 512 kilobytes.
@@ -117,8 +119,8 @@ instability, or severely compromise security. They're available **only** to
 make debugging easier. **Do not set them to any value** in production.
 
  *  `ff.reset-on-start`: Whether or not the database and S3 will be
-    completely cleared when the server starts. This ensures that the database
-    schemae stay up-to-date through frequent code changes.
+    completely reset when the server starts. This ensures that the database
+    stays up-to-date through frequent code changes.
  *  `ff.add-test-data`: Whether or not to add a few dozen rows of test data
     to the database on startup. This ensures that there's always data to test
     against, even if the persistence is being reset with every restart.
@@ -134,8 +136,8 @@ dependencies. In this project's case, there are a few things required to run,
 which are described in **Running the server** above. However, all of the code
 can be packaged into a single Java 8 JAR.
 
-Building is easy, as long as you have Maven and an internet connection. Just
-run:
+Building is easy, as long as you have Maven and an internet connection. In the
+root directory of the repo, run:
 
 ```
 mvn clean package
@@ -150,15 +152,6 @@ it as a bug!
 
 The unit tests don't require the other setup described in **Running the
 server**. They only require the fat jar.
-
-## API documentation
-
-API documentation is available in [API_DOCS][api-docs].
-
-## Contributing
-
-If you're interested in helping with this project, see
-[CONTRIBUTING][contributing].
 
  [java]: https://www.java.com
  [minio]: https://minio.io/
