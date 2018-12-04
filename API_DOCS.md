@@ -577,7 +577,7 @@ the one whose survey result is returned.
 }
 ```
 
-## `POST /support/exhibit/{id}`
+## `PUT /support/exhibit/{id}`
 
 Mark this exhibit as supported by the current user. If the exhibit is already
 supported, overwrites any provided fields, while leaving the rest the same.
