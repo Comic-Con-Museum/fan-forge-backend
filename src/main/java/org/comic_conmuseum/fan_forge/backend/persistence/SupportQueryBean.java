@@ -44,7 +44,7 @@ public class SupportQueryBean {
                 "    rating INTEGER NOT NULL CHECK (0 <= rating AND rating <= 10), " +
                 "    " + POPULATIONS_COLUMN_DEFS + ", " +
                 // we shouldn't have the same person supporting the same exhibit more than once
-                "    UNIQUE (exhibit, supporter)" +
+                "    CONSTRAINT support_once_per_exhibit UNIQUE (exhibit, supporter)" +
                 ")",
                 PreparedStatement::execute
         );
@@ -103,7 +103,7 @@ public class SupportQueryBean {
     private static final String POPULATIONS_SETTERS =
             Arrays.stream(Survey.Population.values())
                     // pop_foo = COALESCE(:pop_foo, pop_foo);
-                    .map(p -> p.column() + " = COALESCE(" + p.sqlParam() + ", " + p.column() + ")")
+                    .map(p -> p.column() + " = COALESCE(" + p.sqlParam() + ", s." + p.column() + ")")
                     .collect(Collectors.joining(", "));
     public boolean createSupport(long eid, Survey survey) {
         LOG.info("{} supporting {}", survey.supporter, eid);
@@ -117,16 +117,16 @@ public class SupportQueryBean {
                 params.addValue(pop.column(), survey.populations.get(pop.display()));
             }
             sql.update(
-                    "INSERT INTO supports (" +
+                    "INSERT INTO supports AS s (" +
                     "    exhibit, supporter, visits, rating, " + POPULATIONS_COLUMN_NAMES +
                     ") " +
                     "VALUES (" +
                     "    :exhibit, :supporter, :visits, :rating, " +
                     "    " + POPULATIONS_PARAMS +
                     ") " +
-                    "ON CONFLICT UPDATE SET " +
-                    "  visits = COALESCE(:visits, visits), " +
-                    "  rating = COALESCE(:rating, rating), " +
+                    "ON CONFLICT ON CONSTRAINT support_once_per_exhibit DO UPDATE SET " +
+                    "  visits = COALESCE(:visits, s.visits), " +
+                    "  rating = COALESCE(:rating, s.rating), " +
                     POPULATIONS_SETTERS,
                     params
             );
@@ -137,11 +137,23 @@ public class SupportQueryBean {
         }
     }
     
+    public Survey getSupportSurvey(long eid, User by) {
+        LOG.info("Getting survey on {} by {}", eid, by.getUsername());
+        return sql.queryForObject(
+                "SELECT * FROM supports " +
+                "WHERE exhibit = :eid AND supporter = :user",
+                new MapSqlParameterSource()
+                        .addValue("eid", eid)
+                        .addValue("user", by.getId()),
+                Survey::new
+        );
+    }
+    
     public boolean deleteSupport(long eid, User by) {
         LOG.info("User {} no longer supports {}", by.getUsername(), eid);
         int removed = sql.update(
                 "DELETE FROM supports " +
-                "WHERE exhibit = :eid AND (supporter = :supporter OR :isAdmin)",
+                "WHERE exhibit = :eid AND supporter = :supporter",
                 new MapSqlParameterSource("eid", eid)
                         .addValue("supporter", by.getId())
                         .addValue("isAdmin", by.isAdmin())
