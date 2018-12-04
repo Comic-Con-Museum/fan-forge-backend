@@ -15,9 +15,9 @@ public class Survey {
             this.lowercase = this.name().toLowerCase();
         }
 
-        public String displayName() { return lowercase; }
-        public String columnName() { return "pop_" + this.lowercase; }
-        public String sqlParam() { return ":" + columnName(); }
+        public String display() { return lowercase; }
+        public String column() { return "pop_" + this.lowercase; }
+        public String sqlParam() { return ":" + column(); }
 
     }
 
@@ -38,7 +38,7 @@ public class Survey {
         this.visits = rs.getInt("visits");
         this.populations = new HashMap<>();
         for (Population pop : Population.values()) {
-            this.populations.put(pop.displayName(), rs.getBoolean("pop_" + pop));
+            this.populations.put(pop.display(), rs.getBoolean("pop_" + pop));
         }
         this.rating = rs.getInt("rating");
     }
