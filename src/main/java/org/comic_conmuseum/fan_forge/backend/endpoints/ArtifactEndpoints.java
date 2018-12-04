@@ -56,7 +56,11 @@ public class ArtifactEndpoints {
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
             id = artifacts.create(full, data.getParent(), user);
-            MultipartFile file = req.getFile("image");
+            String imageParamName = "image";
+            if (null != data.getImage()) {
+                imageParamName = data.getImage();
+            }
+            MultipartFile file = req.getFile(imageParamName);
             if (file == null) {
                 return ResponseEntity.badRequest().build();
             }
