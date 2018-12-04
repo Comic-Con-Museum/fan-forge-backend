@@ -125,7 +125,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         );
         Map<String, Boolean> pops = new HashMap<>();
         for (Survey.Population pop : Survey.Population.values()) {
-            pops.put(pop.displayName(), false);
+            pops.put(pop.display(), false);
         }
         
         given()

@@ -108,7 +108,7 @@ public class GivenDB extends Stage<GivenDB> {
     
     private static String POPULATION_COLUMNS =
             Arrays.stream(Survey.Population.values())
-                    .map(Survey.Population::columnName)
+                    .map(Survey.Population::column)
                     .collect(Collectors.joining(", "));
     private static String POPULATION_PARAMS =
             Arrays.stream(Survey.Population.values())
@@ -121,7 +121,7 @@ public class GivenDB extends Stage<GivenDB> {
                         .addValue("visits", survey.visits)
                         .addValue("rating", survey.rating);
         for (Survey.Population pop : Survey.Population.values()) {
-            params.addValue(pop.columnName(), survey.populations.get(pop.displayName()));
+            params.addValue(pop.column(), survey.populations.get(pop.display()));
         }
         sql.update(
                 "INSERT INTO supports (" +

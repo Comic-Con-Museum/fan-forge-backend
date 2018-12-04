@@ -2,6 +2,7 @@ package org.comic_conmuseum.fan_forge.backend.endpoints;
 
 import org.comic_conmuseum.fan_forge.backend.endpoints.inputs.SurveyCreation;
 import org.comic_conmuseum.fan_forge.backend.endpoints.responses.ErrorResponse;
+import org.comic_conmuseum.fan_forge.backend.endpoints.responses.SurveyView;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.endpoints.responses.SurveyAggregate;
 import org.comic_conmuseum.fan_forge.backend.persistence.SupportQueryBean;
@@ -15,12 +16,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-public class ExhibitSupportEndpoints {
+public class SupportEndpoints {
     private static final Logger LOG = LoggerFactory.getLogger("endpoints.support.exhibit");
     
     private final SupportQueryBean supports;
     
-    public ExhibitSupportEndpoints(SupportQueryBean supportQueryBean) {
+    public SupportEndpoints(SupportQueryBean supportQueryBean) {
         this.supports = supportQueryBean;
     }
     
@@ -35,7 +36,7 @@ public class ExhibitSupportEndpoints {
             ));
         }
         for (Survey.Population pop : Survey.Population.values()) {
-            if (!data.getPopulations().containsKey(pop.displayName())) {
+            if (!data.getPopulations().containsKey(pop.display())) {
                 return ResponseEntity.badRequest().body(new ErrorResponse(
                         "Must provide all populations -- see documentation",
                         "Provide all of the populations"
@@ -62,9 +63,14 @@ public class ExhibitSupportEndpoints {
             return ResponseEntity.badRequest().build();
         }
     }
+    
+    @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.GET)
+    public ResponseEntity<SurveyView> getSurvey(@PathVariable long id, @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(new SurveyView(supports.getSupportSurvey(id, user)));
+    }
 
     @RequestMapping(value = "/support/exhibit/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity upvoteExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
+    public ResponseEntity unsupportExhibit(@PathVariable int id, @AuthenticationPrincipal User user) {
         LOG.info("Unsupporting {} as {}", id, user);
         boolean wasSupporter = supports.deleteSupport(id, user);
         LOG.info("Was a supporter? {}", wasSupporter);
@@ -81,7 +87,7 @@ public class ExhibitSupportEndpoints {
     }
     
     @RequestMapping(value = "/admin/survey-data/{eid}", method = RequestMethod.GET)
-    public ResponseEntity<SurveyAggregate> getAggregate(@PathVariable long eid) {
+    public ResponseEntity<SurveyAggregate> getSurveyAggregate(@PathVariable long eid) {
         return ResponseEntity.ok(supports.getAggregateData(eid));
     }
 }
