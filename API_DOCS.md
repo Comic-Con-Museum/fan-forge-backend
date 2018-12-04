@@ -551,9 +551,36 @@ Delete a comment.
 
 You must be authorized as the author of the comment.
 
+## `GET /support/exhibit/{id}`
+
+Get the current user's support survey for the given exhibit.
+
+### Authorization
+
+You must be authorized to hit this endpoint. The user you're authorized as is
+the one whose survey result is returned.
+
+### Response body
+
+```
+{
+  visits: integer // [1-10] How many times the respondent would visit this exhibit
+  rating: integer // [0-10] Rating given by the user, for NPS calculation
+  populations: { // Which populations the respondent thinks would like this
+    // for each of these: `true` means the population would support it
+    male: boolean
+    female: boolean
+    kids: boolean
+    teenagers: boolean
+    adults: boolean
+  }
+}
+```
+
 ## `POST /support/exhibit/{id}`
 
-Mark this exhibit as supported by the current user.
+Mark this exhibit as supported by the current user. If the exhibit is already
+supported, overwrites any provided fields, while leaving the rest the same.
 
 ### Authorization
 
