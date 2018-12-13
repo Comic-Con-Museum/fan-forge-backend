@@ -100,10 +100,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
-                .exhibitExists(val).and()
-                .noSupportsFor(val.getId()).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
+                .exhibitExists(val);
         
         when()
                 .get("/exhibit/0").withAuthToken("auth");
@@ -130,9 +127,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "auth")).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
+                .supportExists(val.getId(), new Survey(4, pops, 8, "auth"));
         
         when()
                 .get("/exhibit/0").withAuthToken("auth");
@@ -160,9 +155,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else")).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
+                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else"));
         
         when()
                 .get("/exhibit/0").withAuthToken("auth");
@@ -190,8 +183,6 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else")).and()
-                .noCommentsFor(val.getId()).and()
                 .noArtifactsFor(val.getId());
         
         when()
