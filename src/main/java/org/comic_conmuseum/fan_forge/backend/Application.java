@@ -138,9 +138,10 @@ public class Application implements CommandLineRunner {
             for (int cIdx = 0; cIdx < eIdx % 8; ++cIdx) {
                 long inserted = comments.create(new Comment(
                         0, "This is a test comment; idx " + eIdx + "." + cIdx,
-                        "shouldn't be shown", cIdx % 2 == 0 ? null : lastComment,
+                        "shouldn't be shown", exhibitId,
+                        cIdx % 2 == 0 ? null : lastComment,
                         exhibitMade.plus(cIdx, ChronoUnit.HOURS)
-                ), exhibitId, supporters[cIdx % supporters.length]);
+                ), supporters[cIdx % supporters.length]);
                 if (cIdx % 2 != 0) {
                     lastComment = inserted;
                 }

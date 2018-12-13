@@ -19,6 +19,6 @@ public class CommentCreation {
     public void setParent(Long parent) { this.parent = parent; }
     
     public Comment build(User author) {
-        return new Comment(0, text, author.getId(), reply, Instant.now());
+        return new Comment(0, text, author.getId(), parent, reply, Instant.now());
     }
 }

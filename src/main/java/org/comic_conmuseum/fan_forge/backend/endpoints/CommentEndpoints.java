@@ -29,8 +29,8 @@ public class CommentEndpoints {
     }
     
     @RequestMapping(value = "/comment/{id}", method = RequestMethod.GET)
-    public ResponseEntity<CommentView> getComment(@PathVariable long id) {
-        return ResponseEntity.ok(new CommentView(comments.get(id)));
+    public ResponseEntity<Comment> getComment(@PathVariable long id) {
+        return ResponseEntity.ok(comments.get(id));
     }
     
     @RequestMapping(value = "/comment", method = RequestMethod.POST)
@@ -43,14 +43,14 @@ public class CommentEndpoints {
         Comment full = data.build(user);
         
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            final long id = comments.create(full, data.getParent(), user);
+            final long id = comments.create(full, user);
             t.commit();
             return ResponseEntity.ok(id);
         }
     }
     
     @RequestMapping(value = "/comment/{id}", method = RequestMethod.POST)
-    public ResponseEntity<CommentView> editComment(@PathVariable long id, @RequestBody CommentCreation data,
+    public ResponseEntity editComment(@PathVariable long id, @RequestBody CommentCreation data,
                                                    @AuthenticationPrincipal User user) {
         Comment full = data.build(user);
         full.setId(id);

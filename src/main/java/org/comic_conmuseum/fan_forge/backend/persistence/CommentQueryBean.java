@@ -82,12 +82,12 @@ public class CommentQueryBean {
         );
     }
     
-    public long create(Comment co, long ex, User by) throws SQLException {
-        LOG.info("{} creating comment on {}", by.getUsername(), ex);
+    public long create(Comment co, User by) throws SQLException {
+        LOG.info("{} creating comment on {}", by.getUsername(), co.getParent());
         Number key = insert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("text", co.getText())
                 .addValue("author", by.getId())
-                .addValue("exhibit", ex)
+                .addValue("exhibit", co.getParent())
                 .addValue("reply", co.getReply())
                 .addValue("created", timestampOf(co.getCreated()))
         );

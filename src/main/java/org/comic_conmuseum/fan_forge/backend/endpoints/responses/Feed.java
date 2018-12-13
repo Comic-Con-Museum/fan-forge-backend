@@ -2,7 +2,6 @@ package org.comic_conmuseum.fan_forge.backend.endpoints.responses;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.comic_conmuseum.fan_forge.backend.models.Artifact;
-import org.comic_conmuseum.fan_forge.backend.persistence.ExhibitQueryBean;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 
 import java.util.List;

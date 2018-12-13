@@ -191,6 +191,11 @@ returns a 404.
       // All fields from response body of GET /artifact/{id}, except `parent`
     }
   ]
+  comments: [
+    {
+      // All fields from response body of GET /comment/{id}, except `parent`
+    }
+  ]
   // requires login:
   isSupported: boolean // Whether or not the current user supports it
 }
@@ -483,11 +488,12 @@ Get all the details about a comment by its ID.
 
 ```
 {
-    id: integer // The ID of the comment which you... just got by ID
-    text: string // The actual text of the comment
-    author: string // The username of the comment's author
-    reply: integer | null // The comment that this is a reply to, or `null` if none
-    created: datetime // When the comment was created
+  id: integer // The ID of the comment which you... just got by ID
+  text: string // The actual text of the comment
+  author: string // The username of the comment's author
+  parent: intenger // The ID of the exhibit this comment was posted on
+  reply: integer | null // The comment that this is a reply to, or `null` if none
+  created: datetime // When the comment was created
 }
 ```
 
@@ -702,7 +708,7 @@ shows the image type.
 
 Gets all the tags being used by exhibits
 
-Returns a list of Strings, each of which is a tag.
+Returns a list of strings, each of which is a tag.
 This list is sorted alphabetically.
 
 ### Response body
@@ -715,8 +721,8 @@ For example:
 
 ```
 [
-    "alphabetically",
-    "sorted",
-    "tags"
+  "alphabetically",
+  "sorted",
+  "tags"
 ]
 ```
