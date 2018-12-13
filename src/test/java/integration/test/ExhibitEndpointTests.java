@@ -42,11 +42,14 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     @Test
     @As("Nonexistent exhibit gives a 404")
     public void nonexistentExhibitGivesA404() {
-        given() .exhibitDoesntExist(0);
+        given()
+                .exhibitDoesntExist(0);
         
-        when()  .get("/exhibit/0");
+        when()
+                .get("/exhibit/0");
         
-        then()  .statusIs(404);
+        then()
+                .statusIs(404);
     }
     
     @Test
@@ -57,15 +60,18 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
                 null, false
         );
         
-        given() .exhibitExists(val)
-        .and()  .noSupportsFor(val.getId())
-        .and()  .noCommentsFor(val.getId())
-        .and()  .noArtifactsFor(val.getId());
+        given()
+                .exhibitExists(val).and()
+                .noSupportsFor(val.getId()).and()
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId());
         
-        when()  .get("/exhibit/0");
+        when()
+                .get("/exhibit/0");
         
-        then()  .statusIs(200)
-        .and()  .bodyMatches(o(
+        then()
+                .statusIs(200).and()
+                .bodyIsExactly(o(
                         // all the data is correct
                         p("id", v(0)),
                         p("title", v("a title")),
@@ -78,9 +84,9 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
                         p("supporters", v(0)),
                         p("artifacts", a()),
                         p("comments", a())
-                ))
+                )).and()
                 // request isn't authorized, so we shouldn't have this
-        .and()  .bodyDoesntContain("isSupported");
+                .bodyDoesntContain("isSupported");
     }
     
     @Test
@@ -92,16 +98,18 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
                 null, false
         );
         
-        given() .authTokenExists("auth", new User("auth", "auth", "auth", false))
-        .and()  .exhibitExists(val)
-        .and()  .noSupportsFor(val.getId())
-        .and()  .noCommentsFor(val.getId())
-        .and()  .noArtifactsFor(val.getId());
+        given()
+                .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
+                .exhibitExists(val).and()
+                .noSupportsFor(val.getId()).and()
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId());
         
-        when()  .get("/exhibit/0").withAuthToken("auth");
+        when()
+                .get("/exhibit/0").withAuthToken("auth");
         
-        then()  .statusIs(200)
-        .and()  .bodyMatches(o(
+        then()  .statusIs(200).and()
+                .bodyMatches(o(
                         p("supported", v(false))
                 ));
     }
@@ -119,16 +127,19 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
             pops.put(pop.display(), false);
         }
         
-        given() .authTokenExists("auth", new User("auth", "auth", "auth", false))
-        .and()  .exhibitExists(val)
-        .and()  .supportExists(val.getId(), new Survey(4, pops, 8, "auth"))
-        .and()  .noCommentsFor(val.getId())
-        .and()  .noArtifactsFor(val.getId());
+        given()
+                .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
+                .exhibitExists(val).and()
+                .supportExists(val.getId(), new Survey(4, pops, 8, "auth")).and()
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId());
         
-        when()  .get("/exhibit/0").withAuthToken("auth");
+        when()
+                .get("/exhibit/0").withAuthToken("auth");
         
-        then()  .statusIs(200)
-        .and()  .bodyMatches(o(
+        then()
+                .statusIs(200).and()
+                .bodyMatches(o(
                         p("supported", v(true)),
                         p("supporters", v(1))
                 ));
@@ -146,16 +157,49 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
             pops.put(pop.display(), false);
         }
         
-        given() .authTokenExists("auth", new User("auth", "auth", "auth", false))
-        .and()  .exhibitExists(val)
-        .and()  .supportExists(val.getId(), new Survey(4, pops, 8, "someone else"))
-        .and()  .noCommentsFor(val.getId())
-        .and()  .noArtifactsFor(val.getId());
+        given()
+                .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
+                .exhibitExists(val).and()
+                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else")).and()
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId());
         
-        when()  .get("/exhibit/0").withAuthToken("auth");
+        when()
+                .get("/exhibit/0").withAuthToken("auth");
         
-        then()  .statusIs(200)
-        .and()  .bodyMatches(o(
+        then()
+                .statusIs(200).and()
+                .bodyMatches(o(
+                        p("supported", v(false)),
+                        p("supporters", v(1))
+                ));
+    }
+    
+    @Test
+    public void artifactListCorrect() throws IOException, JSONException {
+        Exhibit val = new Exhibit(
+                0, "a title", "and a description", "me!",
+                Instant.ofEpochSecond(200), new String[] { "a", "b" },
+                null, false
+        );
+        Map<String, Boolean> pops = new HashMap<>();
+        for (Survey.Population pop : Survey.Population.values()) {
+            pops.put(pop.display(), false);
+        }
+        
+        given()
+                .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
+                .exhibitExists(val).and()
+                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else")).and()
+                .noCommentsFor(val.getId()).and()
+                .noArtifactsFor(val.getId());
+        
+        when()
+                .get("/exhibit/0").withAuthToken("auth");
+        
+        then()
+                .statusIs(200).and()
+                .bodyMatches(o(
                         p("supported", v(false)),
                         p("supporters", v(1))
                 ));
