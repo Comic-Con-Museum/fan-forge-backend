@@ -172,7 +172,6 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
-    @Ignore("Test not fully implemented")
     public void artifactListCorrect() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
@@ -195,7 +194,15 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         then()
                 .statusIs(200).and()
                 .bodyMatches(o(p("artifacts", a(
-
+                        o(
+                                p("title", v("this is one artifact")),
+                                p("description", v("it has a description")),
+                                p("image", v(0)), // for now at least, same as ID -- this may change!
+                                p("creator", v("non-cover author")),
+                                p("id", v(0)),
+                                p("cover", v(false)),
+                                p("created", v("1970-01-01T00:05:00Z"))
+                        )
                 ))));
     }
 }

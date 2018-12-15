@@ -155,12 +155,13 @@ public class GivenDB extends Stage<GivenDB> {
     public GivenDB artifactExists(Artifact ar) {
         sql.update(
                 "INSERT INTO artifacts (" +
-                "    title, description, cover, creator, created, exhibit " +
+                "    aid, title, description, cover, creator, created, exhibit " +
                 ") " +
                 "VALUES (" +
-                "    :title, :description, :cover, :creator, :created, :exhibit " +
+                "    :aid, :title, :description, :cover, :creator, :created, :exhibit " +
                 ")",
                 new MapSqlParameterSource()
+                        .addValue("aid", ar.getId())
                         .addValue("title", ar.getTitle())
                         .addValue("description", ar.getDescription())
                         .addValue("cover", ar.isCover())
