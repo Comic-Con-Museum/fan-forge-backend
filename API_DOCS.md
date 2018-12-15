@@ -381,8 +381,9 @@ Get information about a specific artifact.
   title: string // A short title for the artifact
   description: string // A detailed description of what the artifact is
   image: integer // The ID of this artifact's image
-  creator: string // The username of the artifact's creator
+  parent: integer // The ID of the exhibit this artifact is associated with
   cover: boolean // Whether or not this artifact is the cover
+  creator: string // The username of the artifact's creator
   created: datetime // When this artifact was created
 }
 ```

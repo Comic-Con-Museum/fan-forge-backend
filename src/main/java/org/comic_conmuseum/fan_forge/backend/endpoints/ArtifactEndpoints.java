@@ -55,7 +55,7 @@ public class ArtifactEndpoints {
         
         long id;
         try (TransactionWrapper.Transaction t = transactions.start()) {
-            id = artifacts.create(full, data.getParent(), user);
+            id = artifacts.create(full, user);
             String imageParamName = "image";
             if (null != data.getImage()) {
                 imageParamName = data.getImage();

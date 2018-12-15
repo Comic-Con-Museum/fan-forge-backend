@@ -67,7 +67,7 @@ public class ArtifactQueryBean {
         );
     }
     
-    public long create(Artifact ar, long ex, User by) throws SQLException {
+    public long create(Artifact ar, User by) throws SQLException {
         LOG.info("{} creating artifact '{}'", by.getUsername(), ar.getTitle());
         Number key = insert.executeAndReturnKey(new MapSqlParameterSource()
                 .addValue("title", ar.getTitle())
@@ -75,7 +75,7 @@ public class ArtifactQueryBean {
                 .addValue("cover", ar.isCover())
                 .addValue("creator", by.getId())
                 .addValue("created", timestampOf(ar.getCreated()))
-                .addValue("exhibit", ex)
+                .addValue("exhibit", ar.getParent())
         );
         return idToLong(key, ar::setId);
     }
