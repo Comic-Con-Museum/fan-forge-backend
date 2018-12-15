@@ -33,7 +33,7 @@ import static util.JsonGenerator.*;
         classes = {WebApplicationContext.class, IntegrationTestContext.class},
         properties = {
                 "ff.add-test-data=false", "ff.reset-on-start=true",
-                "ff.close-on-init-fail=true", "ff.require-https=false"
+                "ff.close-on-init-fail=false", "ff.require-https=false"
         }
 )
 @EnableAutoConfiguration
@@ -185,7 +185,14 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .artifactExists(new Artifact(0, "this is one artifact", "it has a description", false, "non-cover author", 0, Instant.ofEpochSecond(300)));
+                .artifactExists(new Artifact(
+                        0, "this is one artifact", "it has a description",
+                        false, "non-cover author", 0, Instant.ofEpochSecond(300)
+                )).and()
+                .artifactExists(new Artifact(
+                        1, "this is another artifact", "it has a different description",
+                        true, "cover author", 0, Instant.ofEpochSecond(400)
+                ));
         
         when()
                 .get("/exhibit/0").withAuthToken("auth");
@@ -201,6 +208,15 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
                                 p("id", v(0)),
                                 p("cover", v(false)),
                                 p("created", v("1970-01-01T00:05:00Z"))
+                        ),
+                        o(
+                                p("title", v("this is another artifact")),
+                                p("description", v("it has a different description")),
+                                p("image", v(1)),
+                                p("creator", v("cover author")),
+                                p("id", v(1)),
+                                p("cover", v(true)),
+                                p("created", v("1970-01-01T00:06:40Z"))
                         )
                 ))));
     }
