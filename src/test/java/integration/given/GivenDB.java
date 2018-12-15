@@ -6,6 +6,7 @@ import com.tngtech.jgiven.annotation.BeforeStage;
 import com.tngtech.jgiven.annotation.Quoted;
 import com.tngtech.jgiven.integration.spring.JGivenStage;
 import com.zaxxer.hikari.util.DriverDataSource;
+import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
@@ -147,6 +148,25 @@ public class GivenDB extends Stage<GivenDB> {
         sql.update(
                 "DELETE FROM artifacts WHERE exhibit = :id",
                 new MapSqlParameterSource("id", id)
+        );
+        return this;
+    }
+
+    public GivenDB artifactExists(Artifact ar) {
+        sql.update(
+                "INSERT INTO artifacts (" +
+                "    title, description, cover, creator, created, exhibit " +
+                ") " +
+                "VALUES (" +
+                "    :title, :description, :cover, :creator, :created, :exhibit " +
+                ")",
+                new MapSqlParameterSource()
+                        .addValue("title", ar.getTitle())
+                        .addValue("description", ar.getDescription())
+                        .addValue("cover", ar.isCover())
+                        .addValue("creator", ar.getCreator())
+                        .addValue("created", timestampOf(ar.getCreated()))
+                        .addValue("exhibit", ar.getParent())
         );
         return this;
     }

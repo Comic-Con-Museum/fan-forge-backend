@@ -7,10 +7,12 @@ import integration.then.ThenJsonResponse;
 import integration.when.WhenEndpointHit;
 import integration.given.GivenDB;
 import org.comic_conmuseum.fan_forge.backend.Application;
+import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.json.JSONException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -101,10 +103,8 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .noSupportsFor(val.getId()).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
-        
+                .noSupportsFor(val.getId());
+
         when()
                 .get("/exhibit/0").withAuthToken("auth");
         
@@ -130,10 +130,8 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "auth")).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
-        
+                .supportExists(val.getId(), new Survey(4, pops, 8, "auth"));
+
         when()
                 .get("/exhibit/0").withAuthToken("auth");
         
@@ -160,10 +158,8 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else")).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
-        
+                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else"));
+
         when()
                 .get("/exhibit/0").withAuthToken("auth");
         
@@ -176,6 +172,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
     }
     
     @Test
+    @Ignore("Test not fully implemented")
     public void artifactListCorrect() throws IOException, JSONException {
         Exhibit val = new Exhibit(
                 0, "a title", "and a description", "me!",
@@ -190,18 +187,15 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .supportExists(val.getId(), new Survey(4, pops, 8, "someone else")).and()
-                .noCommentsFor(val.getId()).and()
-                .noArtifactsFor(val.getId());
+                .artifactExists(new Artifact(0, "this is one artifact", "it has a description", false, "non-cover author", 0, Instant.ofEpochSecond(300)));
         
         when()
                 .get("/exhibit/0").withAuthToken("auth");
         
         then()
                 .statusIs(200).and()
-                .bodyMatches(o(
-                        p("supported", v(false)),
-                        p("supporters", v(1))
-                ));
+                .bodyMatches(o(p("artifacts", a(
+
+                ))));
     }
 }
