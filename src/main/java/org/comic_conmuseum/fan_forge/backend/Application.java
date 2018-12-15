@@ -130,9 +130,9 @@ public class Application implements CommandLineRunner {
                         0, "artifact " + aIdx + " of " + eIdx,
                         "description of artifact",
                         aIdx == 0,
-                        null,
+                        null, exhibitId,
                         exhibitMade.plus(aIdx, ChronoUnit.DAYS)
-                ), exhibitId, supporters[aIdx]);
+                ), supporters[aIdx]);
             }
             Long lastComment = null;
             for (int cIdx = 0; cIdx < eIdx % 8; ++cIdx) {

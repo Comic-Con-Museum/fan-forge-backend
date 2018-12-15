@@ -26,15 +26,15 @@ public class Exhibit {
         this.featured = featured;
     }
 
-    public Exhibit (ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
+    public Exhibit(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
         this (
-                rs.getInt("eid"),
+                rs.getLong("eid"),
                 rs.getString("title"),
                 rs.getString("description"),
                 rs.getString("author"),
                 rs.getTimestamp("created").toInstant(),
                 (String[]) rs.getArray("tags").getArray(),
-                rs.getString("atitle") != null ? Artifact.coverFromJoined(rs) : null,
+                rs.getString("atitle") != null ? Artifact.coverFromJoined(rs, rs.getLong("eid")) : null,
                 rs.getBoolean("featured")
         );
     }

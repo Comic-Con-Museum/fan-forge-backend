@@ -28,6 +28,6 @@ public class ArtifactCreation {
     public void setCover(boolean cover) { this.cover = cover; }
     
     public Artifact build(User by) {
-        return new Artifact(id == null ? 0 : id, title, description, cover, by.getId(), Instant.now());
+        return new Artifact(id == null ? 0 : id, title, description, cover, by.getId(), parent, Instant.now());
     }
 }

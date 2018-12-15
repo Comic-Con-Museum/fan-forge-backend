@@ -7,10 +7,12 @@ import integration.then.ThenJsonResponse;
 import integration.when.WhenEndpointHit;
 import integration.given.GivenDB;
 import org.comic_conmuseum.fan_forge.backend.Application;
+import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.json.JSONException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -183,16 +185,23 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
                 .exhibitExists(val).and()
-                .noArtifactsFor(val.getId());
+                .artifactExists(new Artifact(0, "this is one artifact", "it has a description", false, "non-cover author", 0, Instant.ofEpochSecond(300)));
         
         when()
                 .get("/exhibit/0").withAuthToken("auth");
         
         then()
                 .statusIs(200).and()
-                .bodyMatches(o(
-                        p("supported", v(false)),
-                        p("supporters", v(1))
-                ));
+                .bodyMatches(o(p("artifacts", a(
+                        o(
+                                p("title", v("this is one artifact")),
+                                p("description", v("it has a description")),
+                                p("image", v(0)), // for now at least, same as ID -- this may change!
+                                p("creator", v("non-cover author")),
+                                p("id", v(0)),
+                                p("cover", v(false)),
+                                p("created", v("1970-01-01T00:05:00Z"))
+                        )
+                ))));
     }
 }
