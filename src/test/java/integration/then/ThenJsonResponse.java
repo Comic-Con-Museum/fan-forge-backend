@@ -3,6 +3,7 @@ package integration.then;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.tngtech.jgiven.Stage;
 import com.tngtech.jgiven.annotation.As;
 import com.tngtech.jgiven.annotation.ExpectedScenarioState;
@@ -48,7 +49,24 @@ public class ThenJsonResponse extends Stage<ThenJsonResponse> {
     ) throws IOException {
         JsonNode elem = reader.readTree(response.getContentAsString());
         for (String component : path) {
-            if (elem.has(component)) {
+            if (component == null) {
+                throw new IllegalArgumentException("null in path list");
+            }
+            if (elem instanceof ArrayNode) {
+                // handle arrays specially to support foo.bar.4.a
+                int idx;
+                try {
+                    idx = Integer.parseInt(component);
+                } catch (NumberFormatException e) {
+                    // object key definitely doesn't exist in an array
+                    return this;
+                }
+                if (elem.has(idx)) {
+                    elem = elem.get(idx);
+                } else {
+                    return this;
+                }
+            } else if (elem.has(component)) {
                 elem = elem.get(component);
             } else {
                 return this;
