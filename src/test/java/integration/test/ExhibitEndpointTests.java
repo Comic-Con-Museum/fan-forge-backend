@@ -12,7 +12,6 @@ import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
 import org.json.JSONException;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -177,10 +176,6 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
                 Instant.ofEpochSecond(200), new String[] { "a", "b" },
                 null, false
         );
-        Map<String, Boolean> pops = new HashMap<>();
-        for (Survey.Population pop : Survey.Population.values()) {
-            pops.put(pop.display(), false);
-        }
         
         given()
                 .authTokenExists("auth", new User("auth", "auth", "auth", false)).and()
@@ -218,6 +213,7 @@ public class ExhibitEndpointTests extends SpringScenarioTest<GivenDB, WhenEndpoi
                                 p("cover", v(true)),
                                 p("created", v("1970-01-01T00:06:40Z"))
                         )
-                ))));
+                )))).and()
+                .bodyDoesntContain("artifacts", "3");
     }
 }
