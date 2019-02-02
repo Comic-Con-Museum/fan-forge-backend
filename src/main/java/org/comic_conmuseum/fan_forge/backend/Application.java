@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
 public class Application implements CommandLineRunner {
     private static final Logger LOG = LoggerFactory.getLogger("application");
 
-    // TODO Migrate the S3 stuff to its own bean
     @Value("${s3.access-key}")
     private String accessKey;
 
