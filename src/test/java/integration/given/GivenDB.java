@@ -1,21 +1,19 @@
 package integration.given;
 
-import com.tngtech.jgiven.Stage;
-import com.tngtech.jgiven.annotation.As;
-import com.tngtech.jgiven.annotation.BeforeStage;
-import com.tngtech.jgiven.annotation.Quoted;
-import com.tngtech.jgiven.integration.spring.JGivenStage;
 import com.zaxxer.hikari.util.DriverDataSource;
 import org.comic_conmuseum.fan_forge.backend.models.Artifact;
 import org.comic_conmuseum.fan_forge.backend.models.Exhibit;
 import org.comic_conmuseum.fan_forge.backend.models.Survey;
 import org.comic_conmuseum.fan_forge.backend.models.User;
+import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
+import states.Stage;
 
 import java.sql.PreparedStatement;
 import java.util.Arrays;
@@ -24,7 +22,7 @@ import java.util.stream.Collectors;
 
 import static org.comic_conmuseum.fan_forge.backend.util.SqlTypeConverters.timestampOf;
 
-@JGivenStage
+@Component
 public class GivenDB extends Stage<GivenDB> {
     @Value("${spring.datasource.url}")
     String sqlUrl;
@@ -52,7 +50,7 @@ public class GivenDB extends Stage<GivenDB> {
     
     private NamedParameterJdbcTemplate sql;
     
-    @BeforeStage
+    @Before
     public void setUpSql() {
         this.sql = makeSql();
         this.sql.execute(
@@ -61,10 +59,12 @@ public class GivenDB extends Stage<GivenDB> {
         );
     }
     
+    @Override
+    public void reset() { }
+    
     @Autowired
     WebApplicationContext wac;
     
-    @As("exhibit $ doesn't exist")
     public GivenDB exhibitDoesntExist(long id) {
         sql.update(
                 "DELETE FROM exhibits WHERE eid = :eid",
@@ -93,8 +93,7 @@ public class GivenDB extends Stage<GivenDB> {
         return this;
     }
 
-    @As("token $ auths as")
-    public GivenDB authTokenExists(@Quoted String token, User user) {
+    public GivenDB authTokenExists(String token, User user) {
         // TODO add token to DB when that's a thing
         return this;
     }

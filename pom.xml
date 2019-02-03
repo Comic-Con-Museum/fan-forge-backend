@@ -21,8 +21,8 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <junit.version>4.12</junit.version>
-        <jgiven.version>0.17.0</jgiven.version>
         <spring.manual.version>5.0.9.RELEASE</spring.manual.version>
+        <surefireArgLine/>
     </properties>
 
     <dependencies>
@@ -74,24 +74,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.tngtech.jgiven</groupId>
-            <artifactId>jgiven-junit</artifactId>
-            <version>${jgiven.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tngtech.jgiven</groupId>
-            <artifactId>jgiven-html5-report</artifactId>
-            <version>${jgiven.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tngtech.jgiven</groupId>
-            <artifactId>jgiven-spring</artifactId>
-            <version>${jgiven.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
             <version>1.5.0</version>
@@ -109,6 +91,30 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- stolen from https://www.baeldung.com/jacoco -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.3</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <propertyName>surefireArgLine</propertyName>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -117,26 +123,7 @@
                     <forkCount>0</forkCount>
                     <trimStackTrace>false</trimStackTrace>
                     <testSourceDirectory>${basedir}/src/test/</testSourceDirectory>
-                    <systemPropertyVariables>
-                        <jgiven.report.dir>${project.build.directory}/jgiven-reports/json</jgiven.report.dir>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.tngtech.jgiven</groupId>
-                <artifactId>jgiven-maven-plugin</artifactId>
-                <version>${jgiven.version}</version>
-                <executions>
-                    <execution>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <format>html</format>
-                    <outputDirectory>${project.build.directory}/jgiven-reports/html</outputDirectory>
+                    <argLine>@{surefireArgLine}</argLine>
                 </configuration>
             </plugin>
         </plugins>

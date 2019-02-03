@@ -4,27 +4,25 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.tngtech.jgiven.Stage;
-import com.tngtech.jgiven.annotation.As;
-import com.tngtech.jgiven.annotation.ExpectedScenarioState;
-import com.tngtech.jgiven.annotation.Format;
-import com.tngtech.jgiven.format.PrintfFormatter;
-import com.tngtech.jgiven.integration.spring.JGivenStage;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.mock.web.MockHttpServletResponse;
-import util.JoiningFormatter;
+import org.springframework.stereotype.Component;
+import states.ExpectedScenarioState;
+import states.Stage;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import static org.junit.Assert.*;
 
-@JGivenStage
+@Component
 public class ThenJsonResponse extends Stage<ThenJsonResponse> {
     @ExpectedScenarioState
-    MockHttpServletResponse response;
+    private MockHttpServletResponse response;
+    
+    @Override
+    public void reset() { }
     
     private static ObjectReader reader = new ObjectMapper().reader();
     
@@ -43,10 +41,7 @@ public class ThenJsonResponse extends Stage<ThenJsonResponse> {
         return this;
     }
     
-    @As("body doesn't contain")
-    public ThenJsonResponse bodyDoesntContain(
-            @Format(value = JoiningFormatter.Array.class, args = { "." }) String... path
-    ) throws IOException {
+    public ThenJsonResponse bodyDoesntContain(String... path) throws IOException {
         JsonNode elem = reader.readTree(response.getContentAsString());
         for (String component : path) {
             if (component == null) {

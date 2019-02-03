@@ -168,17 +168,17 @@ public class Application implements CommandLineRunner {
             }
         }
         
-        try {
-            LOG.info("Initializing S3");
-            s3.setupBucket(resetOnStart);
-            LOG.info("Done initializing S3");
-        } catch (Exception e) {
-            LOG.error("Failed while initializing S3", e);
-            if (closeOnInitFail) {
-                ctx.close();
-                return;
-            }
-        }
+//        try {
+//            LOG.info("Initializing S3");
+//            s3.setupBucket(resetOnStart);
+//            LOG.info("Done initializing S3");
+//        } catch (Exception e) {
+//            LOG.error("Failed while initializing S3", e);
+//            if (closeOnInitFail) {
+//                ctx.close();
+//                return;
+//            }
+//        }
         
         try {
             if (addTestData) {
